@@ -1,0 +1,32 @@
+1. Crar entorno virtual
+python -m venv venv
+
+2. Activar e entorno
+venv\Scripts\actívate
+
+3. Dentro del entorno se hacen las instalaciones, empezando por django
+pip install Django 
+
+#Si es necesario actualiza la versión del pip
+python.exe -m pip install --upgrade pip
+
+#seguir con las instalaciones
+pip install djangorestframework
+
+4.  Instala 'djangorestframework-simplejwt', una de las librerías más populares
+# para manejar JWTs en DRF
+pip install djangorestframework-simplejwt
+
+5. # Crea el proyecto de Django. El punto '.' al final significa que lo creará en
+# el directorio actual.
+django-admin startproject Nombre_de_tu_proyecto .
+
+6.# Crea la aplicación que manejará la logica
+python manage.py startapp Nombre_de_tu_app
+
+7.Crea y actualiza tu requirements.txt, ejecuta el comando cada que instales nuevas cosas
+pip freeze > requirements.txt
+
+
+8. use pip install python-decouple para manejar variables de entorno
+from decouple import config
