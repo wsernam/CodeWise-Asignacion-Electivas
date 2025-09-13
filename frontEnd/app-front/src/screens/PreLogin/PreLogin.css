@@ -1,0 +1,22 @@
+.prelogin-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  width: 100%;
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background-color: #fdfdfd;
+}
+
+.prelogin-main {
+  flex: 1;
+  text-align: center;
+  padding: 2rem;
+}
+
+.roles-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 2rem;
+  gap: 2rem;
+}

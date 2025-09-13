@@ -1,0 +1,13 @@
+.header {
+  display: flex;
+  align-items: center;
+  padding: 1rem 2rem;
+  background: #1f297f;
+  color: white;
+  width: 100%;
+}
+
+.logo {
+  height: 50px;
+  margin-right: 1rem;
+}

@@ -1,15 +1,16 @@
-
 import React from 'react';
+import { useNavigate } from 'react-router';
+import './LoginStudent.css';
 import Header from '../../components/Header/Header';
-import './Login.css';
 import Footer from '../../components/Footer/Footer';
-import { loginAdminService } from '../../services/authService';
+
+
+import { loginStudentService } from '../../services/authService';
 import { Form, Input, Button, message } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
-import { useNavigate } from 'react-router';
 
 
-const LoginForm: React.FC = () => {
+const LoginStudent: React.FC = () => {
     const navigate = useNavigate();
 
     const handleBack = () => {
@@ -18,12 +19,12 @@ const LoginForm: React.FC = () => {
 
     const onFinish = async (values: any) => {
         try {
-            const result = await loginAdminService(values.username, values.password);
+            const result = await loginStudentService(values.username);
             message.success('Inicio de sesión exitoso');
-            console.log("Login. Respuesta del backend: ", result);
+            console.log("LoginStudent. Respuesta del backend: ", result);
         } catch (error) {
             message.error('Error en el inicio de sesión');
-            console.error("Login. Error: ", error);
+            console.error("LoginStudent. Error: ", error);
         }
     };
 
@@ -32,17 +33,17 @@ const LoginForm: React.FC = () => {
     };
 
     return (
-        <div className="login-form-container">
+        <div className="login-student-form-container">
             <Header />
-            <div className="login-content">
-                <div className="login-card">
+            <div className="login-student-content">
+                <div className="login-student-card">
                     <Button onClick={handleBack} style={{ marginBottom: 16 }} block>
                         ← Volver a selección de rol
                     </Button>
-                    <h2 className="login-title">Iniciar sesión</h2>
+                    <h2 className="login-student-title">Iniciar sesión Estudiante</h2>
                     <Form
-                        className="login-form"
-                        name="login-form"
+                        className="login-student-form"
+                        name="login-student-form"
                         initialValues={{ remember: true }}
                         onFinish={onFinish}
                         onFinishFailed={onFinishFailed}
@@ -53,15 +54,9 @@ const LoginForm: React.FC = () => {
                         >
                             <Input prefix={<UserOutlined />} placeholder="Usuario" size="large" />
                         </Form.Item>
-                        <Form.Item
-                            name="password"
-                            rules={[{ required: true, message: 'Por favor ingresa tu contraseña!' }]}
-                        >
-                            <Input.Password prefix={<LockOutlined />} placeholder="Contraseña" size="large" />
-                        </Form.Item>
                         <Form.Item>
                             <Button type="primary" htmlType="submit" block size="large">
-                                Iniciar sesión
+                                Consultar
                             </Button>
                         </Form.Item>
                     </Form>
@@ -72,4 +67,4 @@ const LoginForm: React.FC = () => {
     );
 };
 
-export default LoginForm;
+export default LoginStudent;
