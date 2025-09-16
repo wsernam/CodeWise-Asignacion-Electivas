@@ -9,6 +9,7 @@ WORKDIR /app
 # un archivo de Python, las dependencias del sistema no se reinstalan.
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
+    dos2unix \
     default-libmysqlclient-dev \
     pkg-config \
     && rm -rf /var/lib/apt/lists/*
@@ -22,7 +23,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Esto debe hacerse antes de copiar todo el proyecto para que el script
 # esté listo para su uso.
 COPY cargarUsuarios.sh /usr/local/bin/cargarUsuarios.sh
-RUN chmod +x /usr/local/bin/cargarUsuarios.sh
+# Convertimos los finales de línea de Windows (CRLF) a Unix (LF) y damos permisos de ejecución
+RUN dos2unix /usr/local/bin/cargarUsuarios.sh && \
+    chmod +x /usr/local/bin/cargarUsuarios.sh
 
 # 6. Copiar el código del proyecto
 # Ahora copiamos el resto de tu aplicación.
