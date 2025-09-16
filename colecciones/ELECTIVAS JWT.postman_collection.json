@@ -1,0 +1,18 @@
+{
+	"info": {
+		"_postman_id": "53e04c68-a5a0-4869-a3f9-d8b7f6b4ab98",
+		"name": "ELECTIVAS JWT",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "39878300"
+	},
+	"item": [
+		{
+			"name": "New Request",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		}
+	]
+}
