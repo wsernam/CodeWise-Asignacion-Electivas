@@ -25,5 +25,8 @@ router.register(r'electivas', ElectivaViewSet, basename='electiva')
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', include(router.urls))
+    path('', include(router.urls)),
+ # URLs para la gestión del estado del formulario
+    path('estado/', include('gestion_estado_formulario.urls')),
+    
 ]

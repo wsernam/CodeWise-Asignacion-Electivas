@@ -24,6 +24,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY datosBase.sh /usr/local/bin/datosBase.sh
 RUN chmod +x /usr/local/bin/datosBase.sh
 
+# Corregir finales de línea para compatibilidad con Unix (importante en Windows)
+RUN sed -i 's/\r$//' /usr/local/bin/datosBase.sh
+
 # 6. Copiar el código del proyecto
 # Ahora copiamos el resto de tu aplicación.
 COPY . .

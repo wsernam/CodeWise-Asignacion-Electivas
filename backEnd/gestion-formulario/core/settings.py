@@ -39,7 +39,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
-    'gestion_electivas'
+    'gestion_electivas',
+    'gestion_estado_formulario'
 ]
 
 MIDDLEWARE = [

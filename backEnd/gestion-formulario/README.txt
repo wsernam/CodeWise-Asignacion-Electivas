@@ -7,7 +7,7 @@ bien sea de manera local o mediante contenedores.
 
     1.1 Correr MySQL en un contenedor 
         -Primero se debe crear una network Docker para que los contenedores se puedan comunicar entre si
-        docker create network red_formulario
+        docker network create red_formulario
 
         -obtener la imagen mysql
         docker pull mysql:8.0
@@ -27,6 +27,3 @@ nota: el img_gestion_formulario es el nombre de la imagen y el . significa que e
     docker run -d --name microservicio-gestion-formulario --network red_formulario -p 8000:8000 img_gestion_formulario
 
     nota: el argumento --network red_formulario es necesario unicamente si la base de datos esta corriendo dentro de un contenedor.
-
-
-
