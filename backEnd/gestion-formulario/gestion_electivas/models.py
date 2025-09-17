@@ -12,7 +12,7 @@ class Programa(models.Model):
     pro_codigo = models.AutoField(primary_key=True)
     pro_nombre = models.CharField(max_length=150, unique=True)
     fac_codigo = models.ForeignKey(Facultad, on_delete=models.CASCADE, related_name="programas")
-
+    pro_activo = models.BooleanField(default=True)  # True=activo, False=inactivo
     def __str__(self):
         return self.pro_nombre
 

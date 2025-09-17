@@ -43,4 +43,4 @@ ENTRYPOINT ["/usr/local/bin/datosBase.sh"]
 # 9. Comando por defecto (CMD)
 # El CMD especifica los argumentos por defecto que se le pasarán al ENTRYPOINT.
 # En este caso, le decimos a nuestro script que ejecute el servidor de Django.
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+CMD ["/usr/local/bin/datosBase.sh","python", "manage.py", "runserver", "0.0.0.0:8000"]

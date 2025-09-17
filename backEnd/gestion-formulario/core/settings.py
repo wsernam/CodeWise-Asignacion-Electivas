@@ -40,7 +40,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'gestion_electivas',
-    'gestion_estado_formulario'
+    'gestion_estado_formulario',
 ]
 
 MIDDLEWARE = [
