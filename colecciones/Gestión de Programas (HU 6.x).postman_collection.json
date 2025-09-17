@@ -1,0 +1,485 @@
+{
+	"info": {
+		"_postman_id": "5b86dc53-68a8-4d56-b996-7859627f9a8e",
+		"name": "Gestión de Programas (HU 6.x)",
+		"description": "Colección para probar creación, modificación, desactivación/reactivación y consulta de Programas.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "44403206"
+	},
+	"item": [
+		{
+			"name": "6.0 Healthcheck (opcional)",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "6.1-1 Crear programa (éxito)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test('201 creado', () => pm.response.code === 201);",
+							"const body = pm.response.json();",
+							"pm.environment.set('programaId', body.pro_codigo);",
+							"pm.test('tiene nombre/facultad', () => body.pro_nombre && body.fac_codigo);"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"pro_nombre\": \"Ingeniería de Datos\",\n  \"fac_codigo\": {{facCodigo}}\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/programas/",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"programas",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "6.1-2 Crear programa (rechazo por duplicado)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test('400 por duplicado', () => pm.response.code === 400);",
+							"pm.test('mensaje duplicado', () => (pm.response.json().detalle||'').includes('ya se encuentra registrado'));"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"pro_nombre\": \"Ingeniería de Datos\",\n  \"fac_codigo\": {{facCodigo}}\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/programas/",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"programas",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "6.1-3 Crear programa (rechazo por faltantes)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test('400 por faltantes', () => pm.response.code === 400);",
+							"const j = pm.response.json();",
+							"pm.test('incluye lista de faltantes', () => Array.isArray(j.faltantes));",
+							"pm.test('mensaje faltantes', () => (j.detalle||'').includes('Debe completar todos los datos obligatorios'));"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"pro_nombre\": \"\"\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/programas/",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"programas",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "6.2-1 Modificar programa (éxito)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test('200 ok', () => pm.response.code === 200);",
+							"pm.test('nombre actualizado', () => (pm.response.json().pro_nombre||'').includes('Analytics'));"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "PATCH",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"pro_nombre\": \"Ingeniería de Datos y Analytics\"\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/programas/{{programaId}}/",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"programas",
+						"{{programaId}}",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "6.2-2 Modificar programa (rechazo por duplicado)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test('400 por duplicado', () => pm.response.code === 400);",
+							"pm.test('mensaje duplicado', () => (pm.response.json().detalle||'').includes('ya se encuentra registrado'));"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "PATCH",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"pro_nombre\": \"{{nombreExistente}}\"\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/programas/{{programaId}}/",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"programas",
+						"{{programaId}}",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "6.3-1 Desactivar programa (éxito)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test('200 ok', () => pm.response.code === 200);",
+							"pm.test('mensaje éxito', () => (pm.response.json().mensaje||'').includes('desactivado'));"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/programas/{{programaId}}/desactivar/",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"programas",
+						"{{programaId}}",
+						"desactivar",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "6.3-2 Desactivar programa (ya desactivado)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test('200 ok idempotente', () => pm.response.code === 200);",
+							"pm.test('mensaje ya desactivado', () => (pm.response.json().mensaje||'').includes('ya está desactivado'));"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/programas/{{programaId}}/desactivar/",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"programas",
+						"{{programaId}}",
+						"desactivar",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "6.3-3 Reactivar programa (éxito)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test('200 ok', () => pm.response.code === 200);",
+							"pm.test('mensaje reactivado', () => (pm.response.json().mensaje||'').includes('reactivado'));"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/programas/{{programaId}}/reactivar/",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"programas",
+						"{{programaId}}",
+						"reactivar",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "6.4-1 Consultar programas (lista)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test('200 ok', () => pm.response.code === 200);",
+							"pm.test('retorna arreglo', () => Array.isArray(pm.response.json()));"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/programas/",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"programas",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "6.4-4 Consultar por facultad (si tienes filtros DRF activos)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test('200 ok', () => pm.response.code === 200);",
+							"pm.test('todos son de esa facultad', () => pm.response.json().every(p => String(p.fac_codigo) === String(pm.environment.get('facCodigo'))));"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/programas/?fac_codigo={{facCodigo}}",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"programas",
+						""
+					],
+					"query": [
+						{
+							"key": "fac_codigo",
+							"value": "{{facCodigo}}"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "6.4-5 Consultar por nombre (si tienes SearchFilter)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test('200 ok', () => pm.response.code === 200);",
+							"pm.test('coinciden con búsqueda', () => pm.response.json().length >= 0);"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/programas/?search={{buscarNombre}}",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"programas",
+						""
+					],
+					"query": [
+						{
+							"key": "search",
+							"value": "{{buscarNombre}}"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "6.4-3 Consultar solo desactivados (si tienes filtros)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test('200 ok', () => pm.response.code === 200);",
+							"pm.test('todos inactivos', () => pm.response.json().every(p => p.pro_activo === false));"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/programas/?pro_activo=false",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"programas",
+						""
+					],
+					"query": [
+						{
+							"key": "pro_activo",
+							"value": "false"
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8000/api"
+		},
+		{
+			"key": "facCodigo",
+			"value": "1"
+		},
+		{
+			"key": "programaId",
+			"value": "1"
+		},
+		{
+			"key": "nombreExistente",
+			"value": "Ingenieria Ambiental"
+		},
+		{
+			"key": "buscarNombre",
+			"value": "Datos"
+		}
+	]
+}
