@@ -27,7 +27,6 @@ router.register(r'programas', ProgramaViewSet, basename='programa')
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', include(router.urls)),
     # URLs para la gestión del estado del formulario
     path('estado/', include('gestion_estado_formulario.urls')),
     path('api/', include(router.urls))
