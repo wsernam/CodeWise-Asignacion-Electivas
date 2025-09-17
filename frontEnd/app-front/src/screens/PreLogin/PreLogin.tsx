@@ -22,13 +22,8 @@ const PreLogin: React.FC = () => {
             onClick={() => navigate("/login-student")}
           />
           <RoleCard
-            label="Administrador"
+            label="Administrativo"
             icon="🧑‍💼"
-            onClick={() => navigate("/login")}
-          />
-          <RoleCard
-            label="Asignador"
-            icon="📋"
             onClick={() => navigate("/login")}
           />
         </div>
