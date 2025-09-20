@@ -1,0 +1,70 @@
+version: "3.9"
+
+name: plataforma-formulario
+
+services:
+  db_formulario:
+    image: mysql:8.0
+    container_name: db_formulario
+    environment:
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - app-net
+
+  servicio_seguridad_jwt:              # 👈 tu micro de seguridad
+    build:
+      context: ./servicio_seguridad_jwt   # 👈 carpeta donde está el Dockerfile de este micro
+      dockerfile: Dockerfile
+    container_name: servicio_seguridad_jwt_app
+    env_file:
+      - .env
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://db_formulario:3306/${DB_NAME}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=America/Bogota
+      SPRING_DATASOURCE_USERNAME: ${DB_USER}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+    depends_on:
+      - db_formulario
+    ports:
+      - "8081:8080"
+    networks:
+      - app-net
+    restart: unless-stopped
+
+  gestion_formulario:                  # 👈 tu micro Django
+    build:
+      context: ./gestion-formulario    # 👈 carpeta donde está el Dockerfile de Django
+    container_name: gestion_formulario_app
+    env_file:
+      - .env
+    environment:
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_HOST: db_formulario
+      DB_PORT: "3306"
+    depends_on:
+      - db_formulario
+    command: >
+      sh -c "
+      python manage.py migrate &&
+      python manage.py runserver 0.0.0.0:8000
+      "
+    ports:
+      - "8000:8000"
+    networks:
+      - app-net
+    restart: unless-stopped
+
+volumes:
+  mysql_data:
+
+networks:
+  app-net:
+    driver: bridge
