@@ -1,0 +1,40 @@
+===============================
+Comandos básicos de Docker Compose
+===============================
+
+# Levantar los servicios (construcción incluida)
+docker compose up --build
+
+# Levantar los servicios en segundo plano (modo detach)
+docker compose up -d
+
+# Detener los servicios
+docker compose down
+
+# Detener los servicios y borrar también volúmenes
+docker compose down -v
+
+# Reconstruir imágenes sin usar caché
+docker compose build --no-cache
+
+# Ver estado de los servicios
+docker compose ps
+
+
+
+
+
+===============================
+Logs (ver salida de los servicios)
+===============================
+
+# Ver logs de todos los servicios
+docker compose logs
+
+# Ver logs en tiempo real (streaming)
+docker compose logs -f
+
+# Ver logs de un servicio en particular (ejemplo: seguridad)
+docker compose logs -f seguridad
+
+
