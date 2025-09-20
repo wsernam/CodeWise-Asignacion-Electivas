@@ -1,0 +1,41 @@
+.create-program-title {
+    margin-bottom: 1.5rem;
+    font-weight: 600;
+    color: #222;
+}
+
+.create-program-container {
+    min-height: 100vh;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    background-color: #f5f6fa;
+    font-family: Arial, sans-serif;
+}
+
+.create-program-content {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 0;
+}
+
+.create-program-card {
+    background: #fff;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.10), 0 1.5px 6px rgba(0,0,0,0.08);
+    border-radius: 16px;
+    padding: 2.5rem 2rem 2rem 2rem;
+    max-width: 600px;
+    width: 100%;
+    margin: 2rem 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.create-program-form {
+    width: 100%;
+    margin: 0;
+}
