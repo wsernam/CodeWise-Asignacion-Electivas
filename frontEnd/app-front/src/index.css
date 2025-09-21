@@ -31,7 +31,6 @@ html, body, #root {
   min-width: 320px;
 }
 
-/* Esto garantiza que tus secciones puedan calcular bien el alto disponible */
 body {
   display: flex;
   flex-direction: column;
