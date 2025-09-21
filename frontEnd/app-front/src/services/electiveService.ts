@@ -1,72 +1,119 @@
-// src/services/ElectiveService.ts
+// Importamos la interfaz de Electiva para tipado fuerte
 import type { IElective } from "../Models/elective";
 
-const USE_MOCK = true; // 🔹 Cambia a false cuando tengas backend
-const API_URL = "/api/electives"; // tu endpoint en Node
-
-// Datos quemados para probar
-let mockElectives: IElective[] = [
-  { codigo: "01", nombre: "Ingeniería de Requisitos", programa: "Ingeniería de Sistemas" },
-  { codigo: "02", nombre: "ASAE", programa: "Ingeniería de Sistemas" },
-  { codigo: "03", nombre: "Microservicios", programa: "Ingeniería de Sistemas" },
+// Lista en memoria que almacena las electivas
+// Cada objeto representa una materia electiva
+let electives: IElective[] = [
+  {
+    codigo: "101",
+    nombre: "Inteligencia Artificial",
+    programa: "Ingeniería",
+    active: true,
+  },
+  {
+    codigo: "102",
+    nombre: "Ciberseguridad",
+    programa: "Ingeniería",
+    active: true,
+  },
+  {
+    codigo: "103",
+    nombre: "Historia del Arte",
+    programa: "Humanidades",
+    active: true,
+  },
 ];
 
-export const ElectiveService = {
-  // Obtener todas las electivas
-  getAll: async (): Promise<IElective[]> => {
-    if (USE_MOCK) {
-      // Simula un fetch con delay
-      return new Promise((resolve) => setTimeout(() => resolve(mockElectives), 300));
-    } else {
-      const res = await fetch(API_URL);
-      if (!res.ok) throw new Error("Error al obtener electivas");
-      return res.json();
-    }
-  },
+/**
+ * Obtener todas las electivas
+ * @returns Promise<IElective[]> - Lista completa de electivas
+ */
+export const getElectivesService = async (): Promise<IElective[]> => {
+  return electives;
+};
 
-  // Agregar electiva
-  add: async (elective: IElective) => {
-    if (USE_MOCK) {
-      mockElectives.push(elective);
-      return new Promise((resolve) => setTimeout(() => resolve(elective), 300));
-    } else {
-      const res = await fetch(API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(elective),
-      });
-      if (!res.ok) throw new Error("Error al agregar electiva");
-      return res.json();
-    }
-  },
+/**
+ * Crear una nueva electiva
+ * Verifica que no exista otra con el mismo código o nombre (ignorando mayúsculas/minúsculas)
+ * @param elective - Objeto con los datos de la nueva electiva
+ * @returns Promise<IElective> - Electiva creada
+ * @throws Error si la electiva ya existe activa o inactiva
+ */
+export const createElectiveService = async (
+  elective: IElective
+): Promise<IElective> => {
+  const existing = electives.find(
+    (e) =>
+      e.codigo === elective.codigo ||
+      e.nombre.toLowerCase() === elective.nombre.toLowerCase()
+  );
 
-  // Actualizar electiva
-  update: async (codigo: string, updated: IElective) => {
-    if (USE_MOCK) {
-      mockElectives = mockElectives.map((e) => (e.codigo === codigo ? updated : e));
-      return new Promise((resolve) => setTimeout(() => resolve(updated), 300));
-    } else {
-      const res = await fetch(`${API_URL}/${codigo}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(updated),
-      });
-      if (!res.ok) throw new Error("Error al actualizar electiva");
-      return res.json();
+  if (existing) {
+    if (!existing.active) {
+      // Si ya existe pero está inactiva, lanzamos error específico con la electiva inactiva
+      const error: any = new Error("EXISTS_INACTIVE");
+      error.existing = existing;
+      throw error;
     }
-  },
+    // Si ya existe activa, lanzamos otro error indicando que no se puede duplicar
+    const error: any = new Error("EXISTS_ACTIVE");
+    error.existing = existing;
+    throw error;
+  }
 
-  // Eliminar electiva
-  delete: async (codigo: string) => {
-    if (USE_MOCK) {
-      mockElectives = mockElectives.filter((e) => e.codigo !== codigo);
-      return new Promise((resolve) => setTimeout(() => resolve(true), 300));
-    } else {
-      const res = await fetch(`${API_URL}/${codigo}`, {
-        method: "DELETE",
-      });
-      if (!res.ok) throw new Error("Error al eliminar electiva");
-      return true;
-    }
-  },
+  // Si no existe, la agregamos a la lista
+  electives.push(elective);
+  return elective;
+};
+
+/**
+ * Actualizar una electiva existente
+ * @param codigo - Código de la electiva a actualizar
+ * @param updated - Objeto con los nuevos datos
+ * @returns Promise<IElective> - Electiva actualizada
+ * @throws Error si no se encuentra la electiva
+ */
+export const updateElectiveService = async (
+  codigo: string,
+  updated: IElective
+): Promise<IElective> => {
+  const index = electives.findIndex((e) => e.codigo === codigo);
+  if (index === -1) throw new Error("NOT_FOUND"); // No existe la electiva
+
+  // Actualizamos los datos y aseguramos que quede activa
+  electives[index] = { ...updated, active: true };
+  return electives[index];
+};
+
+/**
+ * Eliminar una electiva (desactivar)
+ * No se borra de la lista, solo se marca como inactiva
+ * @param codigo - Código de la electiva a eliminar
+ * @returns Promise<IElective> - Electiva desactivada
+ * @throws Error si no se encuentra la electiva
+ */
+export const deleteElectiveService = async (
+  codigo: string
+): Promise<IElective> => {
+  const index = electives.findIndex((e) => e.codigo === codigo);
+  if (index === -1) throw new Error("NOT_FOUND");
+
+  electives[index].active = false; // Marcamos como inactiva
+  return electives[index];
+};
+
+/**
+ * Reactivar una electiva previamente desactivada
+ * @param codigo - Código de la electiva a reactivar
+ * @returns Promise<IElective> - Electiva reactivada
+ * @throws Error si no se encuentra la electiva
+ */
+export const reactivateElectiveService = async (
+  codigo: string
+): Promise<IElective> => {
+  const index = electives.findIndex((e) => e.codigo === codigo);
+  if (index === -1) throw new Error("NOT_FOUND");
+
+  electives[index].active = true; // Marcamos como activa
+  return electives[index];
 };

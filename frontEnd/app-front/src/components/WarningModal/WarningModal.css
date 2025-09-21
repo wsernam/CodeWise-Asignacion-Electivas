@@ -1,0 +1,30 @@
+/* Fondo y bordes del modal */
+.warning-modal .ant-modal-content {
+  border: 2px solid #ff4d4f; /* rojo advertencia */
+  border-radius: 12px;
+}
+
+/* Estilo del título */
+.warning-title {
+  color: #d4380d; /* rojo institucional de advertencia */
+  font-weight: bold;
+  font-size: 18px;
+}
+
+/* Mensaje principal */
+.warning-message {
+  font-size: 16px;
+  color: #1f1f1f;
+  margin-top: 10px;
+}
+
+/* Botón de aceptar */
+.warning-modal .ant-btn-primary {
+  background-color: #d4380d;
+  border-color: #d4380d;
+}
+
+.warning-modal .ant-btn-primary:hover {
+  background-color: #a52a2a;
+  border-color: #a52a2a;
+}

@@ -1,36 +1,40 @@
-import Login from './screens/Login/Login.tsx'
-import Electives from './screens/Electives/Electives.tsx'
+// ---------------------- IMPORTS DE PANTALLAS ----------------------
+import PreLogin from "./screens/PreLogin/PreLogin.tsx";
+import LoginStudent from "./screens/LoginStudent/LoginStudent.tsx";
+import Login from "./screens/Login/Login.tsx";
+import Electives from "./screens/Electives/Electives.tsx";
 import AddElective from "./screens/Electives/AddElective"; // 👈 nuevo
-import PreLogin from './screens/PreLogin/PreLogin.tsx';
-import { createBrowserRouter } from 'react-router'
-import LoginStudent from './screens/LoginStudent/LoginStudent.tsx';
-import EditElective from './screens/Electives/EditElective.tsx';
+import EditElective from "./screens/Electives/EditElective.tsx";
 
+// ---------------------- IMPORTS DE ROUTER ----------------------
+import { createBrowserRouter } from "react-router";
+
+// ---------------------- CONFIGURACIÓN DEL ROUTER ----------------------
 const router = createBrowserRouter([
   {
-    path: '/',
+    path: "/",
     element: <PreLogin />,
   },
   {
-    path: '/login',
+    path: "/login",
     element: <Login />,
   },
   {
-    path: '/login-student',
+    path: "/login-student",
     element: <LoginStudent />,
   },
   {
-    path: '/electives',
+    path: "/electives",
     element: <Electives />,
   },
   {
-    path: '/electives/add',
-    element: <AddElective />,  
+    path: "/electives/add",
+    element: <AddElective />,
   },
   {
-    path: '/electives/edit/:codigo',
-    element: <EditElective />, 
-  }
+    path: "/electives/edit/:codigo",
+    element: <EditElective />,
+  },
 ]);
 
 export default router;
