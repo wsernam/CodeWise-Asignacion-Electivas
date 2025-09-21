@@ -1,0 +1,4 @@
+Construye las imágenes de tus microservicios:
+docker compose build
+Levanta todo (DB incluida):
+docker compose up -d

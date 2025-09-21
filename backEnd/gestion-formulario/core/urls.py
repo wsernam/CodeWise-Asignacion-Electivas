@@ -20,10 +20,12 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from gestion_electivas.views import ElectivaViewSet
 from gestion_programas.views import ProgramaViewSet
+from gestion_estudiantes.views import EstudianteViewSet
 
 router = DefaultRouter()
 router.register(r'electivas', ElectivaViewSet, basename='electiva')
 router.register(r'programas', ProgramaViewSet, basename='programa')
+router.register(r'estudiantes', EstudianteViewSet, basename='estudiante')
 
 urlpatterns = [
     path('admin/', admin.site.urls),

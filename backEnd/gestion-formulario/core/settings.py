@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'gestion_electivas',
     'gestion_estado_formulario',
+    'gestion_estudiantes'
 ]
 
 MIDDLEWARE = [
