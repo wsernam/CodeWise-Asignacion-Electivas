@@ -21,12 +21,12 @@ from rest_framework.routers import DefaultRouter
 from gestion_electivas.views import ElectivaViewSet
 from gestion_programas.views import ProgramaViewSet
 from gestion_estudiantes.views import EstudianteViewSet
-
+from seleccion_electivas.views import SeleccionElectivaViewSet
 router = DefaultRouter()
 router.register(r'electivas', ElectivaViewSet, basename='electiva')
 router.register(r'programas', ProgramaViewSet, basename='programa')
 router.register(r'estudiantes', EstudianteViewSet, basename='estudiante')
-
+router.register(r'seleccion-electivas', SeleccionElectivaViewSet, basename='seleccion-electivas')
 urlpatterns = [
     path('admin/', admin.site.urls),
     # URLs para la gestión del estado del formulario

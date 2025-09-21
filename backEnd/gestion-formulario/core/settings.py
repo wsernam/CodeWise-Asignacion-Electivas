@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'gestion_estado_formulario',
     'gestion_estudiantes',
     'gestion_oferta_electiva'
+    'seleccion_electivas',
 ]
 
 MIDDLEWARE = [
