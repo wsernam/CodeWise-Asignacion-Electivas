@@ -41,7 +41,8 @@ INSTALLED_APPS = [
     'rest_framework',
     'gestion_electivas',
     'gestion_estado_formulario',
-    'gestion_estudiantes'
+    'gestion_estudiantes',
+    'gestion_oferta_electiva'
 ]
 
 MIDDLEWARE = [
@@ -80,11 +81,11 @@ WSGI_APPLICATION = 'core.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': config('DB_NAME'),
-        'USER': config('DB_USER'),
-        'PASSWORD': config('DB_PASSWORD'),
-        'HOST': config('DB_HOST'),
-        'PORT': config('DB_PORT'),
+        'NAME': config('FORM_DB_NAME'),
+        'USER': config('FORM_DB_USER'),
+        'PASSWORD': config('FORM_DB_PASSWORD'),
+        'HOST': config('FORM_DB_HOST'),
+        'PORT': config('FORM_DB_PORT'),
     }
 }
 

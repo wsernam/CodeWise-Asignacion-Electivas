@@ -8,6 +8,7 @@ class Facultad(models.Model):
         return self.fac_nombre
 
 
+
 class Programa(models.Model):
     pro_codigo = models.AutoField(primary_key=True)
     pro_nombre = models.CharField(max_length=150, unique=True)

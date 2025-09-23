@@ -1,70 +1,113 @@
-version: "3.9"
-
-name: plataforma-formulario
 
 services:
+  # -------------------------------
+  # Servicio base de Datos de USUARIOS (MySQL)
+  # -------------------------------
+  db_usuarios:
+    image: mysql:8.0               # Imagen oficial de MySQL versión 8.0
+    container_name: db_usuarios    # Nombre del contenedor (visible en Docker)
+    restart: always                # Reinicia el contenedor automáticamente si se detiene
+    env_file:
+      - .env  # Archivo .env con variables de entorno
+    environment:
+      MYSQL_DATABASE: ${AUTH_DB_NAME}        # Nombre de la base de datos (definido en .env)
+      MYSQL_USER: ${AUTH_DB_USER}            # Usuario de la base de datos (definido en .env)
+      MYSQL_PASSWORD: ${AUTH_DB_PASSWORD}    # Contraseña del usuario (definida en .env)
+      MYSQL_ROOT_PASSWORD: ${AUTH_DB_PASSWORD}  # Contraseña del root (requerida por MySQL)
+    volumes:
+      - volumen_db_usuarios:/var/lib/mysql # Monta un volumen persistente en /var/lib/mysql TODOS USAR TAMBIEN /var/lib/mysql POR CONVENCIÓN 
+    ports:
+      - "3306:3306"  # Expone el puerto 3306 (MySQL) para acceso desde fuera del contenedor
+    # IMPORTANTE Healthcheck para asegurarse de que MySQL esté listo antes de que Django intente conectarse
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "db_usuarios", "-u${AUTH_DB_USER}", "-p${AUTH_DB_PASSWORD}"]
+      interval: 5s
+      timeout: 10s
+      retries: 5
+      start_period: 20s
+
+  # -------------------------------
+  # Servicio para la base de datos FORMULARIO
+  # -------------------------------
   db_formulario:
     image: mysql:8.0
     container_name: db_formulario
+    restart: always    # Reinicia el contenedor automáticamente si se detiene
+    env_file:
+      - .env  # Archivo .env con variables de entorno
     environment:
-      MYSQL_DATABASE: ${DB_NAME}
-      MYSQL_USER: ${DB_USER}
-      MYSQL_PASSWORD: ${DB_PASSWORD}
-      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${FORM_DB_NAME}
+      MYSQL_USER: ${FORM_DB_USER}
+      MYSQL_PASSWORD: ${FORM_DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${FORM_DB_ROOT_PASSWORD}
+    volumes:
+      - volumen_db_formulario:/var/lib/mysql
     ports:
       - "3307:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "db_formulario", "-u${FORM_DB_USER}", "-p${FORM_DB_PASSWORD}"]
+      interval: 5s
+      timeout: 10s
+      retries: 5
+      start_period: 20s
+
+
+  # -------------------------------
+  # Microservicio de seguridad (JWT)
+  # -------------------------------
+  seguridad:
+    build:
+      context: ./servicio_seguridad_jwt  # Ruta donde está el servicio y su Dockerfile
+      dockerfile: Dockerfile             # Nombre del Dockerfile a usar
+    container_name: seguridad_service    # Nombre del contenedor para el microservicio
     volumes:
-      - mysql_data:/var/lib/mysql
-    networks:
-      - app-net
-
-  servicio_seguridad_jwt:              # 👈 tu micro de seguridad
-    build:
-      context: ./servicio_seguridad_jwt   # 👈 carpeta donde está el Dockerfile de este micro
-      dockerfile: Dockerfile
-    container_name: servicio_seguridad_jwt_app
-    env_file:
-      - .env
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://db_formulario:3306/${DB_NAME}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=America/Bogota
-      SPRING_DATASOURCE_USERNAME: ${DB_USER}
-      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
-    depends_on:
-      - db_formulario
+      - ./servicio_seguridad_jwt:/app   # Monta todo el proyecto en /app dentro del contenedor
+                 # IMPORTANTE: usar la misma convención en todos los microservicios
     ports:
-      - "8081:8080"
-    networks:
-      - app-net
-    restart: unless-stopped
+      - "8000:8000"  # Expone el puerto 8000 para acceder al servicio de seguridad
+    env_file:
+      - ./servicio_seguridad_jwt/.env  # Archivo .env con variables de configuración
+    depends_on:
+      db_usuarios:
+        condition: service_healthy  # IMPORTANTE  Espera a que la base de datos esté saludable
 
-  gestion_formulario:                  # 👈 tu micro Django
+  # -------------------------------
+  # Microservicio GESTION DE FORMULARIO
+  # -------------------------------
+  gestion_formulario:                 
     build:
-      context: ./gestion-formulario    # 👈 carpeta donde está el Dockerfile de Django
-    container_name: gestion_formulario_app
+      context: ./gestion-formulario
+      dockerfile: Dockerfile    
+    container_name: gestion_formulario
+    volumes:
+      - ./gestion-formulario:/app   # Monta todo el proyecto en /app dentro del contenedor
+                 # IMPORTANTE: usar la misma convención en todos los microservicios
+    ports:
+      - "8001:8000"  # Expone el puerto 8000 para acceder al servicio
+
     env_file:
       - .env
     environment:
-      DB_NAME: ${DB_NAME}
-      DB_USER: ${DB_USER}
-      DB_PASSWORD: ${DB_PASSWORD}
-      DB_HOST: db_formulario
-      DB_PORT: "3306"
+      DB_NAME: ${FORM_DB_NAME}
+      DB_USER: ${FORM_DB_USER}
+      DB_PASSWORD: ${FORM_DB_PASSWORD}
+      DB_HOST: ${FORM_DB_HOST}
+      DB_PORT: ${FORM_DB_PORT}
     depends_on:
-      - db_formulario
+      db_formulario:
+        condition: service_healthy
+
     command: >
       sh -c "
       python manage.py migrate &&
       python manage.py runserver 0.0.0.0:8000
       "
-    ports:
-      - "8000:8000"
-    networks:
-      - app-net
-    restart: unless-stopped
 
+
+
+# -------------------------------
+# Definición de volúmenes persistentes
+# -------------------------------
 volumes:
-  mysql_data:
-
-networks:
-  app-net:
-    driver: bridge
+  volumen_db_usuarios:  # Volumen nombrado para almacenar datos de MySQL
+  volumen_db_formulario:

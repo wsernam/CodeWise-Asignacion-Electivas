@@ -31,5 +31,6 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     # URLs para la gestión del estado del formulario
     path('estado/', include('gestion_estado_formulario.urls')),
+    path('ofertaElectiva/', include('gestion_oferta_electiva.urls')),
     path('api/', include(router.urls))
 ]
