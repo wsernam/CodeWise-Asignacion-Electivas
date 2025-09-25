@@ -8,6 +8,7 @@ import { useNavigate, useParams } from "react-router";
 // Store de electivas (Zustand)
 import { useElectiveStore } from "../../store/electiveStore";
 import type { IElective } from "../../Models/elective";
+import Navbar from "../../components/Navbar/Navbar";
 
 /**
  * Componente para editar una electiva existente
@@ -56,6 +57,7 @@ const EditElective: React.FC = () => {
     <div className="login-form-container">
       {/* Encabezado */}
       <Header />
+      <Navbar />
 
       <div className="login-content">
         <div className="login-card">

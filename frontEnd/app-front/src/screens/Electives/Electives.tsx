@@ -4,6 +4,7 @@ import { useElectiveStore } from "../../store/electiveStore";
 // Componentes de la interfaz
 import Header from "../../components/Header/Header";
 import Footer from "../../components/Footer/Footer";
+import Navbar from "../../components/Navbar/Navbar";
 import ConfirmModal from "../../components/ConfirmModal/ConfirmModal";
 // Navegación entre rutas
 import { useNavigate } from "react-router";
@@ -73,6 +74,7 @@ const Electives: React.FC = () => {
     <div className="electives-form-container">
       {/* Encabezado de la página */}
       <Header />
+      <Navbar />
 
       {/* Contenido principal */}
       <div className="electives-content">

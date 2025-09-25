@@ -11,6 +11,7 @@ import type { IElective } from "../../Models/elective";
 // Modales de advertencia y confirmación
 import WarningModal from "../../components/WarningModal/WarningModal";
 import ConfirmModal from "../../components/ConfirmModal/ConfirmModal";
+import Navbar from "../../components/Navbar/Navbar";
 
 /**
  * Componente para agregar una nueva electiva
@@ -89,6 +90,7 @@ const AddElective: React.FC = () => {
     <div className="login-form-container">
       {/* Encabezado */}
       <Header />
+      <Navbar />
 
       <div className="login-content">
         <div className="login-card">

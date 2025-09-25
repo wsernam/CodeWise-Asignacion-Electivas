@@ -1,39 +1,53 @@
 import './CreateProgram.css';
-import React from 'react';
+import React, { useState } from 'react';
 import Header from '../../../components/Header/Header';
 import Footer from '../../../components/Footer/Footer';
 import { useNavigate } from 'react-router';
 import { useProgramStore } from '../../../store/programStore';
-
-import { Form, Input, Button, message, Select } from 'antd';
+import { Form, Input, Button, Select, Modal } from 'antd';
+import Navbar from '../../../components/Navbar/Navbar';
+import WarningModal from '../../../components/WarningModal/WarningModal';
 
 const CreateProgramForm: React.FC = () => {
     const navigate = useNavigate();
     const createAndAddProgram = useProgramStore(state => state.createAndAddProgram);
 
+    // Estado para el modal de advertencia (errores)
+    const [warning, setWarning] = useState<{ open: boolean; message: string }>({
+        open: false,
+        message: "",
+    });
+
+    // Estado para el modal de éxito
+    const [success, setSuccess] = useState(false);
+
     const handleBack = () => {
-        navigate('/programs'); // Redirecciona a la lista de programas
+        navigate('/programs');
     };
 
     const onFinish = async (values: any) => {
-        try{
+        try {
             await createAndAddProgram({
                 codigo: values.programCode,
                 nombre: values.programName,
                 facultad: values.facultad
             });
-            message.success('Programa creado exitosamente');
-            navigate('/programs'); // Redirecciona a la lista de programas
-        } catch(error) {
-            message.error('Error al crear el programa');
+            setSuccess(true); // Muestra modal de éxito
+        } catch (error) {
+            setWarning({
+                open: true,
+                message: "Error al crear el programa. Por favor, intenta de nuevo.",
+            });
             console.error("CreateProgram. Error: ", error);
         }
-        
-    }
+    };
 
     const onFinishFailed = (errorInfo: any) => {
-        console.log('Failed:', errorInfo);
-    }
+        setWarning({
+            open: true,
+            message: "Por favor completa todos los campos obligatorios.",
+        });
+    };
 
     const { Option } = Select;
 
@@ -44,6 +58,7 @@ const CreateProgramForm: React.FC = () => {
     return (
         <div className="create-program-container">
             <Header />
+            <Navbar />
             <div className="create-program-content">
                 <div className="create-program-card">
                     <Button onClick={handleBack} style={{ marginBottom: 16 }} block>
@@ -82,7 +97,6 @@ const CreateProgramForm: React.FC = () => {
                                     </Option>
                                 ))}
                             </Select>
-
                         </Form.Item>
 
                         <Form.Item>
@@ -94,6 +108,28 @@ const CreateProgramForm: React.FC = () => {
                 </div>
             </div>
             <Footer />
+
+            {/* Modal de advertencia */}
+            <WarningModal
+                open={warning.open}
+                message={warning.message}
+                onClose={() => setWarning({ open: false, message: "" })}
+            />
+
+            {/* Modal de éxito */}
+            <Modal
+                open={success}
+                onOk={() => {
+                    setSuccess(false);
+                    navigate('/programs');
+                }}
+                onCancel={() => setSuccess(false)}
+                okText="Ir a la lista"
+                cancelButtonProps={{ style: { display: "none" } }}
+                centered
+            >
+                <p>¡Programa creado exitosamente!</p>
+            </Modal>
         </div>
     );
 }

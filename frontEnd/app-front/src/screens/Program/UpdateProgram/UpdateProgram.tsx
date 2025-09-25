@@ -2,6 +2,7 @@ import './UpdateProgram.css';
 import React from 'react';
 import Header from '../../../components/Header/Header';
 import Footer from '../../../components/Footer/Footer';
+import Navbar from '../../../components/Navbar/Navbar';
 import { useNavigate, useParams } from 'react-router';
 import { useProgramStore } from '../../../store/programStore';
 
@@ -81,6 +82,7 @@ const UpdateProgramForm: React.FC = () => {
     return (
         <div className="update-program-container">
             <Header />
+            <Navbar />
             <div className="update-program-content">
                 <div className="update-program-card">
                     <Button onClick={handleBack} style={{ marginBottom: 16 }} block>

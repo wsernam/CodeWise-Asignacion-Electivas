@@ -7,6 +7,7 @@ import { Input, Button, Table, Space } from 'antd';
 import { EditOutlined, EyeOutlined, PlusOutlined, SearchOutlined } from '@ant-design/icons';
 import { useProgramStore } from '../../../store/programStore';
 import type { Program } from '../../../models/program';
+import Navbar from '../../../components/Navbar/Navbar';
 
 const ListProgram: React.FC = () => {
 
@@ -58,6 +59,7 @@ const ListProgram: React.FC = () => {
         <>
             <div className='consult-program-container'>
                 <Header />
+                <Navbar />
                 <div className="consult-program-content">
                     <div className="consult-program-actions">
                         <Input
