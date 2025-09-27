@@ -2,6 +2,7 @@
 import PreLogin from "./screens/PreLogin/PreLogin.tsx";
 import LoginStudent from "./screens/LoginStudent/LoginStudent.tsx";
 import Login from "./screens/Login/Login.tsx";
+import Dashboard from "./screens/Dashboard/Dashboard.tsx";
 import Electives from "./screens/Electives/Electives.tsx";
 import AddElective from "./screens/Electives/AddElective";
 import EditElective from "./screens/Electives/EditElective.tsx";
@@ -50,6 +51,10 @@ const router = createBrowserRouter([
   {
     path: "/program/edit/:codigo",
     element: <UpdateProgramForm />,
+  },
+  {
+    path: "/dashboard",
+    element: <Dashboard />,
   },
 ]);
 
