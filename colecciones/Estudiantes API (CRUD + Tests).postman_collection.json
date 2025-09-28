@@ -1,0 +1,596 @@
+{
+	"info": {
+		"_postman_id": "0b9b28af-d671-4c85-95a2-38d5fc0ff08c",
+		"name": "Estudiantes API (CRUD + Tests)",
+		"description": "Colección para probar creación, validaciones, actualización, activación/desactivación y eliminación de Estudiantes en DRF.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "44403206"
+	},
+	"item": [
+		{
+			"name": "0. Healthcheck (opcional)",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "1. Pick first Programa (set {{proCodigo}})",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"200 OK\", function () { pm.response.to.have.status(200); });",
+							"let data = pm.response.json();",
+							"if (Array.isArray(data) && data.length > 0) {",
+							"  let first = data[0];",
+							"  let id = first.pro_codigo || first.id || first.pk;",
+							"  pm.collectionVariables.set('proCodigo', id);",
+							"  pm.test('proCodigo seteado', function(){ pm.expect(!!id).to.eql(true); });",
+							"} else if (data && data.results && data.results.length > 0) {",
+							"  let first = data.results[0];",
+							"  let id = first.pro_codigo || first.id || first.pk;",
+							"  pm.collectionVariables.set('proCodigo', id);",
+							"  pm.test('proCodigo seteado (paginated)', function(){ pm.expect(!!id).to.eql(true); });",
+							"} else {",
+							"  pm.test('No hay programas: crea uno antes de seguir', function(){ pm.expect(false).to.eql(true); });",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/programas/",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"programas",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "2. Crear Estudiante (éxito)",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"// Genera correo único por ejecución",
+							"const ts = Date.now();",
+							"const email = `estudiante.${ts}@example.com`;",
+							"pm.collectionVariables.set('studentEmail', email);"
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test('201 creado', function () { pm.response.to.have.status(201); });",
+							"const body = pm.response.json();",
+							"pm.collectionVariables.set('estudianteId', body.est_codigo || body.id || body.pk);",
+							"pm.test('Tiene est_correo', function () { pm.expect(body).to.have.property('est_correo'); });",
+							"pm.test('FK pro_codigo presente', function () { pm.expect(body).to.have.property('pro_codigo'); });"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"est_nombre\": \"{{$randomFirstName}}\",\n  \"est_apellido\": \"{{$randomLastName}}\",\n  \"est_correo\": \"{{studentEmail}}\",\n  \"pro_codigo\": {{proCodigo}},\n  \"est_activo\": true\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/estudiantes/",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"estudiantes",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "3. Crear Estudiante (correo duplicado -> 400)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test('400 Bad Request', function () { pm.response.to.have.status(400); });",
+							"let j = pm.response.json();",
+							"pm.test('Mensaje de correo duplicado', function(){",
+							"  const msg = JSON.stringify(j).toLowerCase();",
+							"  pm.expect(msg.includes('correo') || msg.includes('est_correo') || msg.includes('unique')).to.eql(true);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"est_nombre\": \"Repetido\",\n  \"est_apellido\": \"Correo\",\n  \"est_correo\": \"{{studentEmail}}\",\n  \"pro_codigo\": {{proCodigo}},\n  \"est_activo\": true\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/estudiantes/",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"estudiantes",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "4. Crear Estudiante (FK inválido -> 400)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test('400 Bad Request', function () { pm.response.to.have.status(400); });"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"est_nombre\": \"FK\",\n  \"est_apellido\": \"Invalido\",\n  \"est_correo\": \"fk.{{ $timestamp }}@example.com\",\n  \"pro_codigo\": {{invalidProgId}},\n  \"est_activo\": true\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/estudiantes/",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"estudiantes",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "5. Crear Estudiante (email inválido -> 400)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test('400 Bad Request', function () { pm.response.to.have.status(400); });"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"est_nombre\": \"Email\",\n  \"est_apellido\": \"Invalido\",\n  \"est_correo\": \"no-es-email\",\n  \"pro_codigo\": {{proCodigo}},\n  \"est_activo\": true\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/estudiantes/",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"estudiantes",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "6. Listar Estudiantes (GET)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test('200 OK', function () { pm.response.to.have.status(200); });",
+							"let data = pm.response.json();",
+							"pm.test('Retorna arreglo o paginado', function(){",
+							"  pm.expect(Array.isArray(data) || (data && data.results)).to.eql(true);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/estudiantes/",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"estudiantes",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "7. Obtener Detalle (GET by id)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test('200 OK', function () { pm.response.to.have.status(200); });",
+							"const body = pm.response.json();",
+							"pm.test('Coincide id', function(){",
+							"  pm.expect(String(body.est_codigo||body.id||body.pk)).to.eql(String(pm.collectionVariables.get('estudianteId')));",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/estudiantes/{{estudianteId}}/",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"estudiantes",
+						"{{estudianteId}}",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "8. Actualizar (PUT)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test('200 OK', function () { pm.response.to.have.status(200); });",
+							"let b = pm.response.json();",
+							"pm.test('Nombre y apellido actualizados', function(){",
+							"  pm.expect(b.est_nombre).to.eql('NombrePUT');",
+							"  pm.expect(b.est_apellido).to.eql('ApellidoPUT');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"est_nombre\": \"NombrePUT\",\n  \"est_apellido\": \"ApellidoPUT\",\n  \"est_correo\": \"{{studentEmail}}\",\n  \"pro_codigo\": {{proCodigo}},\n  \"est_activo\": true\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/estudiantes/{{estudianteId}}/",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"estudiantes",
+						"{{estudianteId}}",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "9. Actualizar Parcial (PATCH est_nombre)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test('200 OK', function () { pm.response.to.have.status(200); });",
+							"let b = pm.response.json();",
+							"pm.test('Nombre actualizado', function(){",
+							"  pm.expect(b.est_nombre).to.eql('NombrePATCH');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "PATCH",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"est_nombre\": \"NombrePATCH\"\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/estudiantes/{{estudianteId}}/",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"estudiantes",
+						"{{estudianteId}}",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "10. Desactivar (PATCH est_activo=false)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test('200 OK', function () { pm.response.to.have.status(200); });",
+							"let b = pm.response.json();",
+							"pm.test('est_activo false', function(){",
+							"  pm.expect(b.est_activo).to.eql(false);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "PATCH",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{ \"est_activo\": false }"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/estudiantes/{{estudianteId}}/",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"estudiantes",
+						"{{estudianteId}}",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "11. Verificar Desactivado (GET)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test('200 OK', function () { pm.response.to.have.status(200); });",
+							"let b = pm.response.json();",
+							"pm.test('Sigue false', function(){ pm.expect(b.est_activo).to.eql(false); });"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/estudiantes/{{estudianteId}}/",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"estudiantes",
+						"{{estudianteId}}",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "12. Reactivar (PATCH est_activo=true)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test('200 OK', function () { pm.response.to.have.status(200); });",
+							"let b = pm.response.json();",
+							"pm.test('est_activo true', function(){ pm.expect(b.est_activo).to.eql(true); });"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "PATCH",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{ \"est_activo\": true }"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/estudiantes/{{estudianteId}}/",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"estudiantes",
+						"{{estudianteId}}",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "13. Eliminar (DELETE -> 204)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test('204 No Content', function () { pm.response.to.have.status(204); });"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/estudiantes/{{estudianteId}}/",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"estudiantes",
+						"{{estudianteId}}",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "14. Obtener eliminado (GET -> 404)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test('404 Not Found', function () { pm.response.to.have.status(404); });"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/estudiantes/{{estudianteId}}/",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"estudiantes",
+						"{{estudianteId}}",
+						""
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8000/api"
+		},
+		{
+			"key": "proCodigo",
+			"value": ""
+		},
+		{
+			"key": "invalidProgId",
+			"value": "999999"
+		},
+		{
+			"key": "estudianteId",
+			"value": ""
+		},
+		{
+			"key": "studentEmail",
+			"value": ""
+		}
+	]
+}
