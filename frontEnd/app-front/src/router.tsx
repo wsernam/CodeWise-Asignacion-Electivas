@@ -1,15 +1,15 @@
 // ---------------------- IMPORTS DE PANTALLAS ----------------------
 import PreLogin from "./screens/PreLogin/PreLogin.tsx";
 import LoginStudent from "./screens/LoginStudent/LoginStudent.tsx";
-import Login from "./screens/Login/Login.tsx";
+import LoginAdmin from "./screens/LoginAdmin/LoginAdmin.tsx";
 import Dashboard from "./screens/Dashboard/Dashboard.tsx";
-import Electives from "./screens/Electives/Electives.tsx";
+import Electives from "./screens/Electives/ListElective.tsx";
 import AddElective from "./screens/Electives/AddElective";
 import EditElective from "./screens/Electives/EditElective.tsx";
 
-import CreateProgram from "./screens/Program/CreateProgram/CreateProgram.tsx";
-import ListProgram from "./screens/Program/ListProgram/ListProgram.tsx";
-import UpdateProgramForm from "./screens/Program/UpdateProgram/UpdateProgram.tsx";
+import CreateProgram from "./screens/Program/CreateProgram.tsx";
+import ListProgram from "./screens/Program/ListProgram.tsx";
+import EditProgram from "./screens/Program/EditProgram.tsx";
 
 // ---------------------- IMPORTS DE ROUTER ----------------------
 import { createBrowserRouter } from "react-router";
@@ -21,8 +21,8 @@ const router = createBrowserRouter([
     element: <PreLogin />,
   },
   {
-    path: "/login",
-    element: <Login />,
+    path: "/login-admin",
+    element: <LoginAdmin />,
   },
   {
     path: "/login-student",
@@ -45,12 +45,12 @@ const router = createBrowserRouter([
     element: <ListProgram />,
   },
   {
-    path: "/program/createProgram",
+    path: "/programs/create",
     element: <CreateProgram />,
   },
   {
-    path: "/program/edit/:codigo",
-    element: <UpdateProgramForm />,
+    path: "/programs/edit/:codigo",
+    element: <EditProgram />,
   },
   {
     path: "/dashboard",

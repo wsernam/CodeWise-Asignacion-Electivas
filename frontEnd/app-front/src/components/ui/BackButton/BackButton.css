@@ -1,0 +1,19 @@
+/* src/components/ui/BackButton/BackButton.css */
+.back-button {
+  background: transparent;
+  color: #1f297f;
+  border: 1px solid #1f297f;
+  border-radius: 6px;
+  padding: 0.6rem 1.2rem;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 500;
+  width: 100%;
+  transition: all 0.2s ease;
+}
+
+.back-button:hover {
+  background: #1f297f;
+  color: white;
+  transform: translateY(-1px);
+}

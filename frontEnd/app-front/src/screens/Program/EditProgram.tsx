@@ -5,111 +5,104 @@ import Footer from "../../components/layout/Footer/Footer";
 import Navbar from "../../components/layout/Navbar/Navbar";
 import Card from "../../components/ui/Card/Card";
 import Button from "../../components/ui/Button/Button";
-import { useNavigate, useParams } from "react-router";
-
-// Stores globales
-import { useElectiveStore } from "../../store/electiveStore";
+import { useNavigate, useParams } from "react-router"; // Hook para parámetros URL
 import { useProgramStore } from "../../store/programStore";
-
-// Tipos
-import type { IElective } from "../../models/elective";
+import type { Program } from "../../models/program";
 
 const { Option } = Select;
 
-const EditElective: React.FC = () => {
+const EditProgram: React.FC = () => {
   // ========== HOOKS Y ESTADO ==========
   const [form] = Form.useForm();
   const navigate = useNavigate();
 
-  // Obtener código de la URL
+  // useParams obtiene los parámetros de la URL (/edit/:codigo)
   const { codigo } = useParams<{ codigo: string }>();
 
-  // Stores
-  const electives = useElectiveStore((state) => state.electives);
-  const updateElective = useElectiveStore((state) => state.updateElective);
-  const fetchElectives = useElectiveStore((state) => state.fetchElectives);
-
+  // Extraer datos y funciones del store
   const programs = useProgramStore((state) => state.programs);
+  const updateProgram = useProgramStore((state) => state.updateProgram);
   const fetchPrograms = useProgramStore((state) => state.fetchPrograms);
 
   const [loading, setLoading] = useState(false);
-  const [electiveFound, setElectiveFound] = useState(false);
+  const [programFound, setProgramFound] = useState(false);
 
-  // ========== EFFECTS ==========
+  // ========== DATOS ESTÁTICOS ==========
+  const facultades = [
+    "Facultad de Ingeniería Electrónica y de Telecomunicaciones",
+    "Facultad de Ingeniería Civil",
+    "Facultad de Ciencias Naturales y Exactas",
+  ];
+
+  // ========== EFFECTS (CICLO DE VIDA) ==========
 
   /**
-   * useEffect 1: Cargar datos iniciales
-   * Se ejecuta al montar el componente
+   * useEffect 1: Cargar programas si no están disponibles
+   * Se ejecuta cuando el componente se monta o cuando cambian las dependencias
    */
   useEffect(() => {
-    // Cargar datos si no están disponibles
-    if (electives.length === 0) {
-      fetchElectives();
-    }
     if (programs.length === 0) {
-      fetchPrograms();
+      fetchPrograms(); // Cargar datos del store
     }
-  }, [fetchElectives, fetchPrograms, electives.length, programs.length]);
+  }, [fetchPrograms, programs.length]);
 
   /**
-   * useEffect 2: Cargar datos de la electiva a editar
-   * Se ejecuta cuando tenemos el código y los datos cargados
+   * useEffect 2: Cargar datos del programa a editar
+   * Se ejecuta cuando tenemos el código de la URL y los programas cargados
    */
   useEffect(() => {
-    if (codigo && electives.length > 0) {
-      // Buscar la electiva por código y que esté activa
-      const elective = electives.find((e) => e.codigo === codigo && e.active);
+    if (codigo && programs.length > 0) {
+      // Buscar el programa por código y que esté activo
+      const program = programs.find(
+        (p) => p.codigo === codigo && p.active !== false
+      );
 
-      if (elective) {
-        // Llenar el formulario con los datos actuales
+      if (program) {
+        // Llenar el formulario con los datos existentes
         form.setFieldsValue({
-          codigo: elective.codigo,
-          nombre: elective.nombre,
-          programa: elective.programa,
+          codigo: program.codigo,
+          nombre: program.nombre,
+          facultad: program.facultad,
         });
-        setElectiveFound(true);
+        setProgramFound(true); // Marcar que encontramos el programa
       } else {
-        message.error("Electiva no encontrada o está inactiva");
-        navigate("/electives");
+        message.error("Programa no encontrado o está inactivo");
+        navigate("/programs"); // Redirigir si no existe
       }
     }
-  }, [codigo, electives, form, navigate]);
+  }, [codigo, programs, form, navigate]);
 
   // ========== VALIDACIONES ==========
 
   const validateNombre = (_: any, value: string) => {
     if (!value) {
-      return Promise.reject("Por favor ingresa el nombre");
+      return Promise.reject("Por favor ingresa el nombre del programa");
     }
-    if (value.length < 3) {
-      return Promise.reject("El nombre debe tener al menos 3 caracteres");
+    if (value.length < 5) {
+      return Promise.reject("El nombre debe tener al menos 5 caracteres");
     }
-    if (value.length > 100) {
-      return Promise.reject("El nombre no puede exceder 100 caracteres");
+    if (value.length > 150) {
+      return Promise.reject("El nombre no puede exceder 150 caracteres");
     }
     if (/^\s+|\s+$/.test(value)) {
       return Promise.reject(
         "El nombre no puede empezar o terminar con espacios"
       );
     }
-    if (/\d/.test(value)) {
-      return Promise.reject("El nombre no puede contener números");
-    }
     if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]+$/.test(value)) {
       return Promise.reject("El nombre solo puede contener letras y espacios");
     }
 
     // Validación especial: no permitir nombres duplicados
-    const existingElective = electives.find(
-      (e) =>
-        e.nombre.toLowerCase() === value.toLowerCase() &&
-        e.codigo !== codigo && // Excluir la electiva actual
-        e.active
+    const existingProgram = programs.find(
+      (p) =>
+        p.nombre.toLowerCase() === value.toLowerCase() &&
+        p.codigo !== codigo && // Excluir el programa actual
+        p.active !== false
     );
-
-    if (existingElective) {
+    if (existingProgram) {
       return Promise.reject(
-        `Ya existe una electiva activa con el nombre "${value}"`
+        `Ya existe un programa activo con el nombre "${value}"`
       );
     }
 
@@ -119,10 +112,10 @@ const EditElective: React.FC = () => {
   // ========== MANEJADORES ==========
 
   const handleCancel = () => {
-    navigate("/electives");
+    navigate("/programs");
   };
 
-  const onFinish = async (values: IElective) => {
+  const onFinish = async (values: Program) => {
     if (!codigo) return; // Seguridad: si no hay código, no hacer nada
 
     setLoading(true);
@@ -130,18 +123,28 @@ const EditElective: React.FC = () => {
       // Preparar datos para actualizar
       const cleanedValues = {
         ...values,
-        codigo: codigo, // Mantener el código original
+        codigo: codigo, // Mantener el código original (no editable)
         nombre: values.nombre.trim().replace(/\s+/g, " "),
         active: true,
       };
 
       // Actualizar en el store
-      await updateElective(codigo, cleanedValues);
-      message.success("Electiva actualizada correctamente");
-      navigate("/electives");
+      await updateProgram(codigo, cleanedValues);
+      message.success("Programa actualizado correctamente");
+      navigate("/programs");
     } catch (error: any) {
-      console.error("Error al actualizar electiva:", error);
-      message.error("Error al actualizar la electiva");
+      console.error("Error al actualizar programa:", error);
+
+      // Manejo específico de errores
+      if (error.message === "NAME_EXISTS" && error.existing) {
+        message.error(
+          `Ya existe un programa activo con el nombre "${values.nombre}"`
+        );
+      } else if (error.message === "NOT_FOUND") {
+        message.error("Programa no encontrado");
+      } else {
+        message.error("Error al actualizar el programa");
+      }
     } finally {
       setLoading(false);
     }
@@ -149,18 +152,18 @@ const EditElective: React.FC = () => {
 
   // ========== RENDERIZADO CONDICIONAL ==========
 
-  // Si no encontramos la electiva (pero ya cargamos los datos)
-  if (!electiveFound && electives.length > 0) {
+  // Si no encontramos el programa (y ya cargamos los datos)
+  if (!programFound && programs.length > 0) {
     return (
       <div className="auth-page">
         <Header />
         <Navbar />
         <div className="auth-page-content">
           <Card padding="xl">
-            <h2>Electiva no encontrada</h2>
-            <p>La electiva que intentas editar no existe o está inactiva.</p>
-            <Button variant="primary" onClick={() => navigate("/electives")}>
-              ← Volver a lista de electivas
+            <h2>Programa no encontrado</h2>
+            <p>El programa que intentas editar no existe o está inactivo.</p>
+            <Button variant="primary" onClick={() => navigate("/programs")}>
+              ← Volver a lista de programas
             </Button>
           </Card>
         </div>
@@ -177,51 +180,51 @@ const EditElective: React.FC = () => {
 
       <div className="auth-page-content">
         <Card padding="xl">
-          <h2>Editar Electiva</h2>
+          <h2>Editar Programa</h2>
 
           <Form
             form={form}
-            name="edit-elective-form"
+            name="edit-program-form"
             onFinish={onFinish}
             layout="vertical"
             disabled={loading}
             autoComplete="off"
           >
             {/* Código (solo lectura) */}
-            <Form.Item name="codigo" label="Código">
+            <Form.Item name="codigo" label="Código del Programa">
               <Input
-                disabled
+                disabled // No editable
                 size="large"
-                style={{ backgroundColor: "#f5f5f5", color: "#666" }}
+                style={{ backgroundColor: "#f5f5f5", color: "#666" }} // Estilo visual para disabled
               />
             </Form.Item>
 
             {/* Nombre (editable) */}
             <Form.Item
               name="nombre"
-              label="Nombre de la Electiva"
+              label="Nombre del Programa"
               rules={[{ validator: validateNombre }]}
               hasFeedback
             >
               <Input
-                placeholder="Ejemplo: Desarrollo Web Avanzado"
+                placeholder="Ejemplo: Ingeniería de Software"
                 size="large"
-                maxLength={100}
+                maxLength={150}
                 showCount
               />
             </Form.Item>
 
-            {/* Programa (editable) */}
+            {/* Facultad (editable) */}
             <Form.Item
-              name="programa"
-              label="Programa Académico"
+              name="facultad"
+              label="Facultad"
               rules={[
-                { required: true, message: "Por favor selecciona el programa" },
+                { required: true, message: "Por favor selecciona la facultad" },
               ]}
               hasFeedback
             >
               <Select
-                placeholder="Selecciona un programa"
+                placeholder="Selecciona la facultad"
                 size="large"
                 showSearch
                 optionFilterProp="children"
@@ -231,11 +234,10 @@ const EditElective: React.FC = () => {
                     .toLowerCase()
                     .includes(input.toLowerCase()) ?? false
                 }
-                notFoundContent="No se encontraron programas"
               >
-                {programs.map((program) => (
-                  <Option key={program.codigo} value={program.nombre}>
-                    {program.nombre}
+                {facultades.map((facultad) => (
+                  <Option key={facultad} value={facultad}>
+                    {facultad}
                   </Option>
                 ))}
               </Select>
@@ -261,7 +263,7 @@ const EditElective: React.FC = () => {
                 size="medium"
                 disabled={loading}
               >
-                ← Volver a lista de electivas
+                ← Volver a lista de programas
               </Button>
             </Form.Item>
           </Form>
@@ -273,4 +275,4 @@ const EditElective: React.FC = () => {
   );
 };
 
-export default EditElective;
+export default EditProgram;

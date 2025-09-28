@@ -1,5 +1,6 @@
 export interface Program {
-    codigo: string;
-    nombre: string;
-    facultad: string;
+  codigo: string;
+  nombre: string;
+  facultad: string;
+  active: boolean;
 }

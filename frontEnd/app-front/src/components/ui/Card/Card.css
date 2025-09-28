@@ -1,0 +1,78 @@
+/* src/components/ui/Card/Card.css */
+.card {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1), 0 5px 15px rgba(0, 0, 0, 0.07),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  position: relative;
+  overflow: hidden;
+}
+
+.card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+}
+
+.card-content {
+  padding: 2.5rem;
+}
+
+/* Variantes de padding */
+.card-padding-sm .card-content {
+  padding: 1.5rem;
+}
+
+.card-padding-lg .card-content {
+  padding: 2rem;
+}
+
+.card-padding-xl .card-content {
+  padding: 2.5rem;
+}
+
+/* Títulos dentro de la card */
+.card h2 {
+  margin-bottom: 2rem;
+  font-weight: 600;
+  color: #2d3748;
+  text-align: center;
+  font-size: 1.75rem;
+  line-height: 1.2;
+}
+
+/* Espaciado para los formularios dentro de la card */
+.card .ant-form-item {
+  margin-bottom: 1.5rem;
+}
+
+.card .ant-form-item:last-child {
+  margin-bottom: 1rem;
+}
+
+/* Sección del botón volver */
+.back-button-section {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+@media (max-width: 768px) {
+  .card-content {
+    padding: 2rem 1.5rem;
+  }
+
+  .card-padding-xl .card-content {
+    padding: 2rem 1.5rem;
+  }
+
+  .card h2 {
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+}

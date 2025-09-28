@@ -1,39 +1,45 @@
-import React, { useState } from "react";
-import { Form, Input, Button, message } from "antd";
-// Componentes de la interfaz
-import Header from "../../components/Header/Header";
-import Footer from "../../components/Footer/Footer";
-// Navegación entre rutas
+import React, { useState, useEffect } from "react";
+import { Form, Input, message, Select } from "antd";
+import Header from "../../components/layout/Header/Header";
+import Footer from "../../components/layout/Footer/Footer";
 import { useNavigate } from "react-router";
-// Store de electivas
-import { useElectiveStore } from "../../store/electiveStore";
-import type { IElective } from "../../Models/elective";
-// Modales de advertencia y confirmación
-import WarningModal from "../../components/WarningModal/WarningModal";
-import ConfirmModal from "../../components/ConfirmModal/ConfirmModal";
-import Navbar from "../../components/Navbar/Navbar";
+import WarningModal from "../../components/shared/WarningModal/WarningModal";
+import ConfirmModal from "../../components/shared/ConfirmModal/ConfirmModal";
+import Navbar from "../../components/layout/Navbar/Navbar";
+import Card from "../../components/ui/Card/Card";
+import Button from "../../components/ui/Button/Button";
 
-/**
- * Componente para agregar una nueva electiva
- * Maneja casos especiales: electiva ya activa o electiva existente pero desactivada
- */
+// Stores globales para estado
+import { useElectiveStore } from "../../store/electiveStore";
+import { useProgramStore } from "../../store/programStore";
+
+// Tipos e interfaces
+import type { IElective } from "../../models/elective";
+
+const { Option } = Select;
+
 const AddElective: React.FC = () => {
+  // ========== HOOKS Y ESTADO ==========
   const [form] = Form.useForm();
   const navigate = useNavigate();
 
-  // Funciones de la store
+  // Funciones del store de electivas
   const addElective = useElectiveStore((state) => state.addElective);
   const reactivateElective = useElectiveStore(
     (state) => state.reactivateElective
   );
+  const electives = useElectiveStore((state) => state.electives);
 
-  // Estado para controlar modal de advertencia
+  // Funciones del store de programas (para el dropdown)
+  const programs = useProgramStore((state) => state.programs);
+  const fetchPrograms = useProgramStore((state) => state.fetchPrograms);
+
+  // ========== ESTADO LOCAL ==========
   const [warning, setWarning] = useState<{ open: boolean; message: string }>({
     open: false,
     message: "",
   });
 
-  // Estado para controlar modal de confirmación (reactivar electiva inactiva)
   const [confirm, setConfirm] = useState<{
     open: boolean;
     codigo: string;
@@ -44,150 +50,238 @@ const AddElective: React.FC = () => {
     nombre: "",
   });
 
-  // Función para cancelar y volver a la lista de electivas
-  const handleCancel = () => {
-    navigate("/electives");
-  };
+  const [loading, setLoading] = useState(false);
+
+  // ========== EFFECTS ==========
 
   /**
-   * onFinish: función que se ejecuta al enviar el formulario
-   * Intenta agregar la electiva, maneja errores y casos especiales
+   * useEffect: Cargar programas al montar el componente
+   * Necesario para llenar el dropdown de programas
    */
+  useEffect(() => {
+    fetchPrograms();
+  }, [fetchPrograms]);
+
+  // ========== VALIDACIONES ==========
+
+  const validateCodigo = (_: any, value: string) => {
+    if (!value) {
+      return Promise.reject("Por favor ingresa el código");
+    }
+    if (!/^\d+$/.test(value)) {
+      return Promise.reject("El código debe contener solo números");
+    }
+    if (value.length < 2 || value.length > 10) {
+      return Promise.reject("El código debe tener entre 2 y 10 dígitos");
+    }
+    return Promise.resolve();
+  };
+
+  const validateNombre = (_: any, value: string) => {
+    if (!value) {
+      return Promise.reject("Por favor ingresa el nombre");
+    }
+    if (value.length < 3) {
+      return Promise.reject("El nombre debe tener al menos 3 caracteres");
+    }
+    if (value.length > 100) {
+      return Promise.reject("El nombre no puede exceder 100 caracteres");
+    }
+    if (/^\s+|\s+$/.test(value)) {
+      return Promise.reject(
+        "El nombre no puede empezar o terminar con espacios"
+      );
+    }
+    if (/\d/.test(value)) {
+      return Promise.reject("El nombre no puede contener números");
+    }
+    if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]+$/.test(value)) {
+      return Promise.reject("El nombre solo puede contener letras y espacios");
+    }
+    return Promise.resolve();
+  };
+
+  // ========== MANEJADOR PRINCIPAL ==========
+
   const onFinish = async (values: IElective) => {
+    setLoading(true);
     try {
-      // Intentamos agregar la electiva
-      await addElective({ ...values, active: true });
+      // Limpiar y estandarizar datos
+      const cleanedValues = {
+        ...values,
+        nombre: values.nombre.trim().replace(/\s+/g, " "), // Unificar espacios
+        active: true,
+      };
+
+      // Intentar agregar al store
+      await addElective(cleanedValues);
       message.success("Electiva agregada correctamente");
-      form.resetFields();
-      navigate("/electives");
+      form.resetFields(); // Limpiar formulario
+      navigate("/electives"); // Redirigir a lista
     } catch (err: any) {
-      // Caso: electiva existe pero está desactivada
-      if (err.message === "EXISTS_INACTIVE") {
+      console.error("Error al agregar electiva:", err);
+
+      // Manejo específico de errores de duplicación
+      if (err.message === "EXISTS_INACTIVE" && err.existing) {
+        setWarning({
+          open: true,
+          message: `Ya existe una electiva "${err.existing.nombre}" con el código "${err.existing.codigo}" pero está inactiva.`,
+        });
         setConfirm({
           open: true,
           codigo: err.existing.codigo,
           nombre: err.existing.nombre,
         });
+      } else if (err.message === "EXISTS_ACTIVE" && err.existing) {
+        message.error(
+          `Ya existe una electiva activa con el código "${err.existing.codigo}" o nombre "${err.existing.nombre}"`
+        );
+      } else {
+        message.error("Error inesperado al agregar la electiva");
       }
-      // Caso: electiva ya existe activa
-      else if (err.message === "EXISTS_ACTIVE") {
-        setWarning({
-          open: true,
-          message: `Ya existe la electiva "${err.existing.nombre}", asociada al programa "${err.existing.programa}".`,
-        });
-      }
-      // Otros errores genéricos
-      else {
-        setWarning({
-          open: true,
-          message: "Error al agregar la electiva",
-        });
-      }
+    } finally {
+      setLoading(false);
     }
   };
 
+  // ========== MANEJADORES DE MODALES ==========
+
+  const handleReactivate = async () => {
+    try {
+      await reactivateElective(confirm.codigo);
+      message.success(`Electiva "${confirm.nombre}" reactivada correctamente`);
+      setConfirm({ open: false, codigo: "", nombre: "" });
+      setWarning({ open: false, message: "" });
+      navigate("/electives");
+    } catch (error) {
+      message.error("Error al reactivar la electiva");
+    }
+  };
+
+  const handleCancel = () => {
+    setConfirm({ open: false, codigo: "", nombre: "" });
+    setWarning({ open: false, message: "" });
+  };
+
+  // ========== RENDERIZADO ==========
   return (
-    <div className="login-form-container">
-      {/* Encabezado */}
+    <div className="form-page-container">
       <Header />
       <Navbar />
 
-      <div className="login-content">
-        <div className="login-card">
-          {/* Botón para volver a la lista */}
-          <Button onClick={handleCancel} style={{ marginBottom: 16 }} block>
-            ← Volver a lista de electivas
-          </Button>
+      <div className="form-page-content">
+        <Card className="form-card" padding="xl">
+          <h2 className="form-title">Agregar Nueva Electiva</h2>
 
-          <h2 className="login-title">Agregar Nueva Electiva</h2>
-
-          {/* Formulario para agregar electiva */}
           <Form
             form={form}
-            className="login-form"
             name="add-elective-form"
             onFinish={onFinish}
             layout="vertical"
+            disabled={loading}
+            autoComplete="off"
           >
-            {/* Código de la electiva */}
+            {/* Campo código */}
             <Form.Item
               name="codigo"
               label="Código"
-              rules={[
-                { required: true, message: "Por favor ingresa el código" },
-              ]}
-            >
-              <Input placeholder="Ejemplo: 04" size="large" />
-            </Form.Item>
-
-            {/* Nombre de la electiva */}
-            <Form.Item
-              name="nombre"
-              label="Nombre"
-              rules={[
-                { required: true, message: "Por favor ingresa el nombre" },
-                {
-                  validator: (_, value) =>
-                    value && /\d/.test(value)
-                      ? Promise.reject("El nombre no puede contener números")
-                      : Promise.resolve(),
-                },
-              ]}
-            >
-              <Input placeholder="Ejemplo: Desarrollo Web" size="large" />
-            </Form.Item>
-
-            {/* Programa de la electiva */}
-            <Form.Item
-              name="programa"
-              label="Programa"
-              rules={[
-                { required: true, message: "Por favor ingresa el programa" },
-                {
-                  validator: (_, value) =>
-                    value && /\d/.test(value)
-                      ? Promise.reject("El programa no puede contener números")
-                      : Promise.resolve(),
-                },
-              ]}
+              rules={[{ validator: validateCodigo }]}
+              hasFeedback
             >
               <Input
-                placeholder="Ejemplo: Ingeniería de Sistemas"
+                placeholder="Ejemplo: 104"
                 size="large"
+                maxLength={10}
+                showCount
               />
             </Form.Item>
 
-            {/* Botón para guardar */}
+            {/* Campo nombre */}
+            <Form.Item
+              name="nombre"
+              label="Nombre de la Electiva"
+              rules={[{ validator: validateNombre }]}
+              hasFeedback
+            >
+              <Input
+                placeholder="Ejemplo: Desarrollo Web Avanzado"
+                size="large"
+                maxLength={100}
+                showCount
+              />
+            </Form.Item>
+
+            {/* Dropdown de programas */}
+            <Form.Item
+              name="programa"
+              label="Programa Académico"
+              rules={[
+                { required: true, message: "Por favor selecciona el programa" },
+              ]}
+              hasFeedback
+            >
+              <Select
+                placeholder="Selecciona un programa"
+                size="large"
+                showSearch
+                optionFilterProp="children"
+                filterOption={(input, option) =>
+                  option?.children
+                    ?.toString()
+                    .toLowerCase()
+                    .includes(input.toLowerCase()) ?? false
+                }
+                notFoundContent="No se encontraron programas"
+              >
+                {programs.map((program) => (
+                  <Option key={program.codigo} value={program.nombre}>
+                    {program.nombre}
+                  </Option>
+                ))}
+              </Select>
+            </Form.Item>
+
+            {/* Botones de acción */}
             <Form.Item>
-              <Button type="primary" htmlType="submit" block size="large">
-                Guardar
+              <Button
+                type="submit"
+                variant="primary"
+                size="medium"
+                disabled={loading}
+              >
+                {loading ? "Guardando..." : "Guardar Electiva"}
+              </Button>
+            </Form.Item>
+
+            <Form.Item>
+              <Button
+                variant="ghost"
+                onClick={() => navigate("/electives")}
+                size="medium"
+                disabled={loading}
+              >
+                ← Volver a lista de electivas
               </Button>
             </Form.Item>
           </Form>
-        </div>
+        </Card>
       </div>
 
-      {/* Pie de página */}
       <Footer />
 
-      {/* Modal de advertencia */}
+      {/* Modal de advertencia (electiva inactiva) */}
       <WarningModal
         open={warning.open}
         message={warning.message}
-        onClose={() => setWarning({ open: false, message: "" })}
+        onClose={handleCancel}
       />
 
-      {/* Modal de confirmación para reactivar electiva inactiva */}
+      {/* Modal de confirmación (reactivación) */}
       <ConfirmModal
         open={confirm.open}
-        message={`La electiva ${confirm.nombre} ya existe pero está desactivada. ¿Deseas reactivarla?`}
-        onConfirm={async () => {
-          await reactivateElective(confirm.codigo);
-          message.success("Electiva reactivada");
-          setConfirm({ open: false, codigo: "", nombre: "" });
-          navigate("/electives");
-        }}
-        onCancel={() => setConfirm({ open: false, codigo: "", nombre: "" })}
+        message={`¿Deseas reactivar la electiva "${confirm.nombre}"?`}
+        onConfirm={handleReactivate}
+        onCancel={handleCancel}
       />
     </div>
   );

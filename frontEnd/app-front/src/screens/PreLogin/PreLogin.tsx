@@ -1,34 +1,57 @@
 import { useNavigate } from "react-router";
-import Header from "../../components/Header/Header";
-import Footer from "../../components/Footer/Footer";
-import RoleCard from "../../components/RoleCard/RoleCard";
+
+import Header from "../../components/layout/Header/Header";
+import Footer from "../../components/layout/Footer/Footer";
+import RoleCard from "../../components/shared/RoleCard/RoleCard";
+
 import "./PreLogin.css";
 
+/**
+ * COMPONENTE: PreLogin
+ * Pantalla de bienvenida que permite seleccionar entre estudiante y administrativo
+ * Es la puerta de entrada a la aplicación
+ */
 const PreLogin: React.FC = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="prelogin-container">
+    <div className="auth-page">
+      {/* Header de la aplicación */}
       <Header />
 
-      <main className="prelogin-main">
-        <h2>Por favor, selecciona tu rol</h2>
-        <p>Aquí va info ej: requisitos/pasos de cómo preinscribir una electiva</p>
+      {/* Contenido principal centrado */}
+      <div className="auth-page-content">
+        <main className="prelogin-main">
+          {/* Título y descripción */}
+          <h2>Por favor, selecciona tu rol</h2>
+          <p>Sistema de preinscripción de electivas - Universidad del Cauca</p>
 
-        <div className="roles-container">
-          <RoleCard
-            label="Estudiante"
-            icon="👨‍🎓"
-            onClick={() => navigate("/login-student")}
-          />
-          <RoleCard
-            label="Administrativo"
-            icon="🧑‍💼"
-            onClick={() => navigate("/login")}
-          />
-        </div>
-      </main>
+          {/* Contenedor de las tarjetas de rol */}
+          <div className="roles-container">
+            {/*
+             * ROLE CARD - ESTUDIANTE
+             * label: Texto que muestra la tarjeta
+             * iconType: Tipo de ícono a mostrar (definido en RoleCard)
+             * onClick: Función que se ejecuta al hacer clic
+             */}
+            <RoleCard
+              label="Estudiante"
+              iconType="student"
+              onClick={() => navigate("/login-student")}
+            />
 
+            {/*
+             * ROLE CARD - ADMINISTRATIVO
+             * Navega al login con usuario y contraseña
+             */}
+            <RoleCard
+              label="Administrativo"
+              iconType="admin"
+              onClick={() => navigate("/login-admin")}
+            />
+          </div>
+        </main>
+      </div>
       <Footer />
     </div>
   );

@@ -1,13 +1,14 @@
-// src/screens/Dashboard/Dashboard.tsx
 import React, { useEffect, useMemo, useState } from "react";
-import Header from "../../components/Header/Header";
-import Navbar from "../../components/Navbar/Navbar";
-import Footer from "../../components/Footer/Footer";
+
+import Header from "../../components/layout/Header/Header";
+import Footer from "../../components/layout/Footer/Footer";
+import Navbar from "../../components/layout/Navbar/Navbar";
+import Card from "../../components/ui/Card/Card";
+
 import { useElectiveStore } from "../../store/electiveStore";
-import type { IElective } from "../../Models/elective";
 import "./Dashboard.css";
 
-// Recharts
+//  Librería de gráficas
 import {
   ResponsiveContainer,
   BarChart,
@@ -21,52 +22,58 @@ import {
   Cell,
 } from "recharts";
 
+// Colores para gráficas
 const COLORS = [
-  "#4f46e5",
-  "#06b6d4",
-  "#f59e0b",
-  "#ef4444",
-  "#10b981",
-  "#8b5cf6",
+  "#1E40AF",
+  "#3B82F6",
+  "#60A5FA",
+  "#93C5FD",
+  "#BFDBFE",
+  "#DBEAFE",
 ];
 
+// Capacidad máxima de cada electiva
 const CAPACITY_PER_ELECTIVE = 30;
 
 const Dashboard: React.FC = () => {
+  // ====== Datos globales desde el store ======
   const electives = useElectiveStore((s) => s.electives);
   const fetchElectives = useElectiveStore((s) => s.fetchElectives);
 
+  // Cargar electivas al montar el componente
   useEffect(() => {
     fetchElectives();
   }, [fetchElectives]);
 
-  const [enrollments, setEnrollments] = useState<Record<string, number>>({});
+  // ====== Estado local ======
+  const [enrollments, setEnrollments] = useState<Record<string, number>>({}); // inscritos por electiva
+  const [programaSeleccionado, setProgramaSeleccionado] = useState("Todos"); // filtro
 
+  // ====== Procesamiento de datos ======
+  // Simulación de inscripciones (⚠️ aquí deberías conectar con backend real)
   useEffect(() => {
     const map: Record<string, number> = {};
     electives.forEach((e, i) => {
-      const numericPart =
-        parseInt((e.codigo || "").replace(/\D/g, ""), 10) || (i + 1) * 5;
-      map[e.codigo] = Math.max(0, numericPart % (CAPACITY_PER_ELECTIVE + 1));
+      // Si no hay inscripciones reales, generamos un valor pseudoaleatorio
+      const base = (i + 3) * 7;
+      map[e.codigo] = base % (CAPACITY_PER_ELECTIVE + 1);
     });
     setEnrollments(map);
   }, [electives]);
 
-  // 🔹 programas únicos
+  // Lista de programas disponibles para filtrar
   const programas = useMemo(() => {
     const setProg = new Set(electives.map((e) => e.programa));
     return ["Todos", ...Array.from(setProg)];
   }, [electives]);
 
-  const [programaSeleccionado, setProgramaSeleccionado] = useState("Todos");
-
-  // 🔹 electivas filtradas
+  // Electivas filtradas por programa
   const filteredElectives = useMemo(() => {
     if (programaSeleccionado === "Todos") return electives;
     return electives.filter((e) => e.programa === programaSeleccionado);
   }, [electives, programaSeleccionado]);
 
-  // KPIs
+  // ====== KPIs ======
   const totalElectives = filteredElectives.length;
   const activeElectives = filteredElectives.filter((e) => e.active).length;
   const totalEnrollments = filteredElectives.reduce(
@@ -79,7 +86,8 @@ const Dashboard: React.FC = () => {
       )
     : 0;
 
-  // Pie chart (solo cuando programaSeleccionado = Todos)
+  // ====== Datos para gráficas ======
+  // Distribución de inscritos por programa
   const pieData = useMemo(() => {
     const grouped: Record<string, number> = {};
     electives.forEach((e) => {
@@ -89,7 +97,7 @@ const Dashboard: React.FC = () => {
     return Object.entries(grouped).map(([name, value]) => ({ name, value }));
   }, [electives, enrollments]);
 
-  // Bar chart
+  // Top 10 electivas más demandadas
   const barData = useMemo(() => {
     return filteredElectives
       .map((e) => ({
@@ -101,7 +109,8 @@ const Dashboard: React.FC = () => {
       .slice(0, 10);
   }, [filteredElectives, enrollments]);
 
-  // Top5 / Low5
+  // ====== Tablas ======
+  // Ordenar todas las electivas por inscritos
   const sortedByEnroll = useMemo(
     () =>
       filteredElectives
@@ -118,177 +127,183 @@ const Dashboard: React.FC = () => {
   const top5 = sortedByEnroll.slice(0, 5);
   const low5 = sortedByEnroll.slice(-5).reverse();
 
-  // semáforo
+  // 🚦 Color semáforo según ocupación
   const occupancyColor = (inscritos: number) => {
     const pct = Math.round((inscritos / CAPACITY_PER_ELECTIVE) * 100);
-    if (pct >= 95) return "#ef4444"; // rojo
-    if (pct >= 70) return "#f59e0b"; // ámbar
-    return "#10b981"; // verde
+    if (pct >= 95) return "#EF4444"; // Rojo: casi lleno
+    if (pct >= 70) return "#F59E0B"; // Amarillo: medio alto
+    return "#10B981"; // Verde: saludable
   };
 
+  // ====== 🖼️ Render ======
   return (
-    <div className="dashboard-container">
+    <div className="auth-page">
       <Header />
       <Navbar />
 
-      <main className="dashboard-main">
-        {/* 🔹 Selector de programa */}
-        <div className="dashboard-filter">
-          <label htmlFor="programa">Filtrar por programa:</label>
-          <select
-            id="programa"
-            value={programaSeleccionado}
-            onChange={(e) => setProgramaSeleccionado(e.target.value)}
-          >
-            {programas.map((p) => (
-              <option key={p} value={p}>
-                {p}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* KPI row */}
-        <section className="kpi-row">
-          <div className="kpi-card">
-            <div className="kpi-title">Electivas totales</div>
-            <div className="kpi-value">{totalElectives}</div>
-          </div>
-
-          <div className="kpi-card">
-            <div className="kpi-title">Electivas activas</div>
-            <div className="kpi-value">{activeElectives}</div>
-          </div>
-
-          <div className="kpi-card">
-            <div className="kpi-title">Estudiantes inscritos</div>
-            <div className="kpi-value">{totalEnrollments}</div>
-          </div>
-
-          <div className="kpi-card">
-            <div className="kpi-title">Ocupación promedio</div>
-            <div className="kpi-value">{occupancyPercent}%</div>
-            <div className="kpi-progress">
-              <div
-                className="kpi-progress-bar"
-                style={{ width: `${Math.min(100, occupancyPercent)}%` }}
-              />
+      <div className="auth-page-content">
+        <div className="dashboard-main">
+          {/* 🔎 Filtro */}
+          <Card padding="lg" className="filter-card">
+            <div className="dashboard-filter">
+              <label htmlFor="programa">Filtrar por programa:</label>
+              <select
+                id="programa"
+                value={programaSeleccionado}
+                onChange={(e) => setProgramaSeleccionado(e.target.value)}
+              >
+                {programas.map((p) => (
+                  <option key={p} value={p}>
+                    {p}
+                  </option>
+                ))}
+              </select>
             </div>
-          </div>
-        </section>
+          </Card>
 
-        {/* Charts */}
-        <section className="charts-row">
-          <div className="chart-card">
-            <h3 className="chart-title">
-              Top electivas por inscritos ({programaSeleccionado})
-            </h3>
-            <div className="chart-wrap">
-              <ResponsiveContainer width="100%" height={260}>
-                <BarChart data={barData}>
-                  <XAxis dataKey="name" tick={{ fontSize: 12 }} />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Bar dataKey="inscritos" name="Inscritos" fill="#4f46e5" />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
+          {/* 📌 KPIs */}
+          <div className="kpi-row">
+            <Card padding="lg">
+              <div className="kpi-card">
+                <div className="kpi-title">Electivas totales</div>
+                <div className="kpi-value">{totalElectives}</div>
+              </div>
+            </Card>
+            <Card padding="lg">
+              <div className="kpi-card">
+                <div className="kpi-title">Electivas activas</div>
+                <div className="kpi-value">{activeElectives}</div>
+              </div>
+            </Card>
+            <Card padding="lg">
+              <div className="kpi-card">
+                <div className="kpi-title">Estudiantes inscritos</div>
+                <div className="kpi-value">{totalEnrollments}</div>
+              </div>
+            </Card>
+            <Card padding="lg">
+              <div className="kpi-card">
+                <div className="kpi-title">Ocupación promedio</div>
+                <div className="kpi-value">{occupancyPercent}%</div>
+                <div className="kpi-progress">
+                  <div
+                    className="kpi-progress-bar"
+                    style={{ width: `${Math.min(100, occupancyPercent)}%` }}
+                  />
+                </div>
+              </div>
+            </Card>
           </div>
 
-          {/* 🔹 Mostrar PieChart solo cuando el filtro sea "Todos" */}
-          {programaSeleccionado === "Todos" && (
-            <div className="chart-card">
-              <h3 className="chart-title">
-                Distribución por programa (inscritos)
-              </h3>
+          {/* 📊 Gráficas */}
+          <div className="charts-row">
+            {/* Top 10 electivas */}
+            <Card padding="lg">
+              <h3>Top electivas por inscritos ({programaSeleccionado})</h3>
               <div className="chart-wrap">
                 <ResponsiveContainer width="100%" height={260}>
-                  <PieChart>
-                    <Pie
-                      data={pieData}
-                      dataKey="value"
-                      nameKey="name"
-                      outerRadius={90}
-                      innerRadius={35}
-                      label
-                    >
-                      {pieData.map((_, idx) => (
-                        <Cell key={idx} fill={COLORS[idx % COLORS.length]} />
-                      ))}
-                    </Pie>
+                  <BarChart data={barData}>
+                    <XAxis dataKey="name" tick={{ fontSize: 12 }} />
+                    <YAxis />
                     <Tooltip />
-                  </PieChart>
+                    <Legend />
+                    <Bar dataKey="inscritos" name="Inscritos" fill="#1E40AF" />
+                  </BarChart>
                 </ResponsiveContainer>
               </div>
-            </div>
-          )}
-        </section>
+            </Card>
 
-        {/* Tables */}
-        <section className="tables-row">
-          <div className="table-card">
-            <h4>Top 5 más demandadas ({programaSeleccionado})</h4>
-            <table className="small-table">
-              <thead>
-                <tr>
-                  <th>#</th>
-                  <th>Nombre</th>
-                  <th>Inscritos</th>
-                  <th>Semáforo</th>
-                </tr>
-              </thead>
-              <tbody>
-                {top5.map((r, i) => (
-                  <tr key={r.codigo}>
-                    <td>{i + 1}</td>
-                    <td>{r.nombre}</td>
-                    <td>{r.inscritos}</td>
-                    <td>
-                      <span
-                        className="semaphore"
-                        style={{ background: occupancyColor(r.inscritos) }}
-                        title={`${Math.round(
-                          (r.inscritos / CAPACITY_PER_ELECTIVE) * 100
-                        )}% lleno`}
-                      />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            {/* Distribución por programa */}
+            {programaSeleccionado === "Todos" && (
+              <Card padding="lg">
+                <h3>Distribución por programa (inscritos)</h3>
+                <div className="chart-wrap">
+                  <ResponsiveContainer width="100%" height={260}>
+                    <PieChart>
+                      <Pie
+                        data={pieData}
+                        dataKey="value"
+                        nameKey="name"
+                        outerRadius={90}
+                        innerRadius={35}
+                        label
+                      >
+                        {pieData.map((_, idx) => (
+                          <Cell key={idx} fill={COLORS[idx % COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+              </Card>
+            )}
           </div>
 
-          <div className="table-card">
-            <h4>Top 5 menos demandadas ({programaSeleccionado})</h4>
-            <table className="small-table">
-              <thead>
-                <tr>
-                  <th>#</th>
-                  <th>Nombre</th>
-                  <th>Inscritos</th>
-                  <th>Semáforo</th>
-                </tr>
-              </thead>
-              <tbody>
-                {low5.map((r, i) => (
-                  <tr key={r.codigo}>
-                    <td>{i + 1}</td>
-                    <td>{r.nombre}</td>
-                    <td>{r.inscritos}</td>
-                    <td>
-                      <span
-                        className="semaphore"
-                        style={{ background: occupancyColor(r.inscritos) }}
-                      />
-                    </td>
+          {/* 📋 Tablas */}
+          <div className="tables-row">
+            {/* Top 5 más demandadas */}
+            <Card padding="lg">
+              <h4>Top 5 más demandadas ({programaSeleccionado})</h4>
+              <table className="small-table">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Nombre</th>
+                    <th>Inscritos</th>
+                    <th>Semáforo</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {top5.map((r, i) => (
+                    <tr key={r.codigo}>
+                      <td>{i + 1}</td>
+                      <td>{r.nombre}</td>
+                      <td>{r.inscritos}</td>
+                      <td>
+                        <span
+                          className="semaphore"
+                          style={{ background: occupancyColor(r.inscritos) }}
+                        />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </Card>
+
+            {/* Top 5 menos demandadas */}
+            <Card padding="lg">
+              <h4>Top 5 menos demandadas ({programaSeleccionado})</h4>
+              <table className="small-table">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Nombre</th>
+                    <th>Inscritos</th>
+                    <th>Semáforo</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {low5.map((r, i) => (
+                    <tr key={r.codigo}>
+                      <td>{i + 1}</td>
+                      <td>{r.nombre}</td>
+                      <td>{r.inscritos}</td>
+                      <td>
+                        <span
+                          className="semaphore"
+                          style={{ background: occupancyColor(r.inscritos) }}
+                        />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </Card>
           </div>
-        </section>
-      </main>
+        </div>
+      </div>
 
       <Footer />
     </div>
