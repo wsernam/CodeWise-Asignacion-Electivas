@@ -1,4 +1,6 @@
 from rest_framework import serializers
+from rest_framework.validators import UniqueValidator
+
 from .models import Facultad, Electiva
 
 class FacultadSerializer(serializers.ModelSerializer):
@@ -8,13 +10,16 @@ class FacultadSerializer(serializers.ModelSerializer):
 
 
 class ElectivaSerializer(serializers.ModelSerializer):
+    ele_nombre = serializers.CharField(
+        validators=[
+            UniqueValidator(
+                queryset=Electiva.objects.all(),
+                message="El nombre de la electiva ya está en uso."
+            )
+        ]
+    )
     class Meta:
         model = Electiva
         fields = '__all__'   # incluye todos los campos del modelo
+        
     
-    def validate_ele_nombre(self, value):
-        if Electiva.objects.filter(ele_nombre=value).exists():
-            raise serializers.ValidationError(
-                {"error": "El nombre ya está en uso."}  # <- personalizado
-            )
-        return value

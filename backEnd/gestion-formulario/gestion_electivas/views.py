@@ -3,6 +3,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 from .models import Electiva
 from .serializers import ElectivaSerializer
+from rest_framework.exceptions import NotFound
 import logging
 
 logger = logging.getLogger(__name__)
@@ -10,7 +11,13 @@ logger = logging.getLogger(__name__)
 class ElectivaViewSet(viewsets.ModelViewSet):
     queryset = Electiva.objects.all()
     serializer_class = ElectivaSerializer
-
+   
+    def get_object(self):
+        try:
+            return super().get_object()
+        except Exception:
+            raise NotFound(detail="La electiva no existe.")
+    
     def get_queryset(self):
         """
         Filtra según el parámetro ?status=all o ?status=active
