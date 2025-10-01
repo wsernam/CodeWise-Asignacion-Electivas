@@ -9,16 +9,77 @@
 		{
 			"name": "Crear oferta",
 			"request": {
-				"method": "GET",
-				"header": []
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"ofe_anio\": 2025,\n    \"ofe_num_semestre\": 1,\n    \"ele_codigo\": 1,\n    \"pro_codigo\": 1\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://127.0.0.1:8001/ofertaElectiva/ofertas/",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8001",
+					"path": [
+						"ofertaElectiva",
+						"ofertas",
+						""
+					]
+				}
 			},
 			"response": []
 		},
 		{
 			"name": "Editar Oferta",
 			"request": {
-				"method": "GET",
-				"header": []
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"ofe_anio\": 2026,\n    \"ofe_num_semestre\": 2,\n    \"ele_codigo\": 1,\n    \"pro_codigo\": 1\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://127.0.0.1:8001/ofertaElectiva/ofertas/1/",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8001",
+					"path": [
+						"ofertaElectiva",
+						"ofertas",
+						"1",
+						""
+					]
+				}
 			},
 			"response": []
 		},
@@ -26,7 +87,25 @@
 			"name": "Listar Oferta por Año y Semesre",
 			"request": {
 				"method": "GET",
-				"header": []
+				"header": [],
+				"url": {
+					"raw": "http://127.0.0.1:8001/ofertaElectiva/ofertas/2025/1/",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8001",
+					"path": [
+						"ofertaElectiva",
+						"ofertas",
+						"2025",
+						"1",
+						""
+					]
+				}
 			},
 			"response": []
 		},
@@ -34,7 +113,26 @@
 			"name": "Listar por año, semestre y programa",
 			"request": {
 				"method": "GET",
-				"header": []
+				"header": [],
+				"url": {
+					"raw": "http://127.0.0.1:8001/ofertaElectiva/ofertas/2025/1/1/",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8001",
+					"path": [
+						"ofertaElectiva",
+						"ofertas",
+						"2025",
+						"1",
+						"1",
+						""
+					]
+				}
 			},
 			"response": []
 		}
