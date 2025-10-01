@@ -1,0 +1,77 @@
+.manage-form-container {
+  min-height: 100vh;
+  background: #f5f6fa;
+  display: flex;
+  flex-direction: column;
+}
+
+.manage-form-content {
+  flex: 1;
+  padding: 2rem 2vw;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.manage-form-header {
+  text-align: center;
+  margin-bottom: 2rem;
+  color: #1f297f;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.manage-form-status-row {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.manage-form-table {
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto 2rem auto;
+}
+
+.manage-form-program-section {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 16px rgba(31, 41, 127, 0.08);
+  padding: 1.5rem 2rem;
+  margin-bottom: 1.5rem;
+  min-width: 260px;
+}
+
+.manage-form-electives-list {
+  margin-top: 1rem;
+}
+
+.manage-form-electives-list span {
+  font-weight: 500;
+  color: #1f297f;
+}
+
+.ant-checkbox-group {
+  display: flex;
+  flex-direction: column;
+  margin-top: 0.5rem;
+}
+
+.ant-checkbox-wrapper {
+  margin: 0.25rem 0;
+  font-size: 1rem;
+}
+
+@media (max-width: 900px) {
+  .manage-form-table {
+    max-width: 98vw;
+    padding: 0;
+  }
+  .manage-form-program-section {
+    padding: 1rem;
+    min-width: unset;
+  }
+}

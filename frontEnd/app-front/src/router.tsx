@@ -10,6 +10,8 @@ import CreateProgram from "./screens/Program/CreateProgram/CreateProgram.tsx";
 import ListProgram from "./screens/Program/ListProgram/ListProgram.tsx";
 import UpdateProgramForm from "./screens/Program/UpdateProgram/UpdateProgram.tsx";
 
+import ManageForm from "./screens/Form/activateForm/ManageForm.tsx";
+
 // ---------------------- IMPORTS DE ROUTER ----------------------
 import { createBrowserRouter } from "react-router";
 
@@ -51,6 +53,10 @@ const router = createBrowserRouter([
     path: "/program/edit/:codigo",
     element: <UpdateProgramForm />,
   },
+  {
+    path:"/form/manage",
+    element: <ManageForm />
+  }
 ]);
 
 export default router;
