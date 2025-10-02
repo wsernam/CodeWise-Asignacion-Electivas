@@ -5,3 +5,4 @@ export const API_BASE_URL = "http://localhost:3000/"; // Cambiar al URL del back
 export const LOGIN_URL = `${API_BASE_URL}api/login`;
 export const STUDENT_DATA_URL = `${API_BASE_URL}api/student`;
 export const PROGRAMS_URL = `${API_BASE_URL}api/programs`;
+export const FORM_URL = `${API_BASE_URL}api/forms`;
