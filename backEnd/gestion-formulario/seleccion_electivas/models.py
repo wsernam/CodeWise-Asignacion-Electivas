@@ -1,5 +1,6 @@
 from django.db import models
 
+
 class Estudiante(models.Model):
     est_codigo = models.AutoField(primary_key=True)
     est_nombre = models.CharField(max_length=100)
@@ -43,6 +44,7 @@ class SeleccionEstudianteElectiva(models.Model):
             'ele_codigo',
             'sel_prioridad'
         )
+
 
     def __str__(self):
         return f"Selección {self.sel_codigo} - Estudiante {self.est_codigo_id} - Electiva {self.ele_codigo_id}"

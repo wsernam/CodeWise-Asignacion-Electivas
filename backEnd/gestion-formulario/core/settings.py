@@ -80,11 +80,11 @@ WSGI_APPLICATION = 'core.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': config('DB_NAME'),
-        'USER': config('DB_USER'),
-        'PASSWORD': config('DB_PASSWORD'),
-        'HOST': config('DB_HOST'),
-        'PORT': config('DB_PORT'),
+        'NAME': config('FORM_DB_NAME'),
+        'USER': config('FORM_DB_USER'),
+        'PASSWORD': config('FORM_DB_PASSWORD'),
+        'HOST': config('FORM_DB_HOST'),
+        'PORT': config('FORM_DB_PORT'),
     }
 }
 
@@ -107,11 +107,13 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
+REST_FRAMEWORK = {
+    "EXCEPTION_HANDLER": "utilidades.controlador_excepciones.controlador_excepciones"
+}
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'es-co'
 
 TIME_ZONE = 'UTC'
 

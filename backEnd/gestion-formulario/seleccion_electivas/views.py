@@ -4,7 +4,8 @@ from rest_framework.decorators import action
 from django.db import transaction
 from .models import SeleccionEstudianteElectiva
 from .serializers import CrearSeleccionElectivaDTO, SeleccionEstudianteElectivaSerializer
-
+from gestion_electivas.views import ElectivaViewSet
+from gestion_electivas.models import Electiva
 # Create your views here.
 class SeleccionElectivaViewSet(viewsets.ModelViewSet):
     queryset = SeleccionEstudianteElectiva.objects.all()
@@ -83,4 +84,14 @@ class SeleccionElectivaViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        return Response(list(queryset), status=status.HTTP_200_OK)
+        electivas_estudiante = []
+        for seleccion in queryset:
+            electiva_info = {
+                "ele_codigo": seleccion["ele_codigo"],
+                "sel_prioridad": seleccion["sel_prioridad"],
+                "ele_nombre": Electiva.objects.get(ele_codigo=seleccion["ele_codigo"]).ele_nombre
+            }
+            electivas_estudiante.append(electiva_info)
+        return Response(list(electivas_estudiante), status=status.HTTP_200_OK)
+    
+    
