@@ -11,7 +11,7 @@ import CreateProgram from "./screens/Program/CreateProgram.tsx";
 import ListProgram from "./screens/Program/ListProgram.tsx";
 import EditProgram from "./screens/Program/EditProgram.tsx";
 
-import ManageForm from "./screens/Form/activateForm/ManageForm.tsx";
+import ManageForm from "./screens/Form/manageForm/ManageForm.tsx";
 
 // ---------------------- IMPORTS DE ROUTER ----------------------
 import { createBrowserRouter } from "react-router";
