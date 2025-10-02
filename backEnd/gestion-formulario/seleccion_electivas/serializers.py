@@ -7,11 +7,16 @@ class ElectivaPrioridadDTO(serializers.Serializer):
     ele_codigo = serializers.IntegerField()
     sel_prioridad = serializers.IntegerField()
 
+class ConsultaElectivaEstudianteDTO(serializers.Serializer):
+    ele_codigo = serializers.IntegerField()
+    ele_nombre = serializers.CharField(max_length=100)
+    sel_prioridad = serializers.IntegerField()
 class CrearSeleccionElectivaDTO(serializers.Serializer):
     est_codigo = serializers.IntegerField()
     sel_anio = serializers.IntegerField()
     sel_num_semestre = serializers.ChoiceField(choices=[1, 2])
     electivas = ElectivaPrioridadDTO(many=True)
+
     def validate_duplicados(self, data):
         # Contar ele_codigo y sel_prioridad
         electivas = data["electivas"]
@@ -33,11 +38,13 @@ class CrearSeleccionElectivaDTO(serializers.Serializer):
             )
         if errores_duplicados:
             raise ValidationError(errores_duplicados)
+    
     def validate(self,data):
         """
         Verifica que ninguna de las electivas esté ya registrada en la base de datos
         con la misma combinación única: (sel_anio, sel_num_semestre, ele_codigo, est_codigo).
         """
+        # Primero valida que no haya duplicados en la misma solicitud
         self.validate_duplicados(data)
         est_codigo = data["est_codigo"]
         sel_anio = data["sel_anio"]
