@@ -15,3 +15,8 @@ class OfertaElectivaSerializer(serializers.ModelSerializer):
         # También podrías listarlos explícitamente:
         # fields = ['ofe_codigo', 'ofe_anio', 'ofe_num_semestre', 'ele_codigo', 'pro_codigo']
         fields = '__all__'
+
+class ElectivaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Electiva
+        fields = ['ele_codigo', 'ele_nombre']
