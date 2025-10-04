@@ -11,7 +11,7 @@ import CreateProgram from "./screens/Program/CreateProgram.tsx";
 import ListProgram from "./screens/Program/ListProgram.tsx";
 import EditProgram from "./screens/Program/EditProgram.tsx";
 
-import ManageForm from "./screens/Form/manageForm/ManageForm.tsx";
+import FormAdmin from "./screens/FormAdmin/FormAdmin.tsx";
 
 // ---------------------- IMPORTS DE ROUTER ----------------------
 import { createBrowserRouter } from "react-router";
@@ -59,9 +59,9 @@ const router = createBrowserRouter([
     element: <Dashboard />,
   },
   {
-    path:"/form/manage",
-    element: <ManageForm />
-  }
+    path: "/form-admin",
+    element: <FormAdmin />,
+  },
 ]);
 
 export default router;

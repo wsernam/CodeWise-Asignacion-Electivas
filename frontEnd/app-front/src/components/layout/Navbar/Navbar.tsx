@@ -20,8 +20,8 @@ const Navbar: React.FC = () => {
         Electivas
       </Link>
       <Link
-        to="/formulario"
-        className={location.pathname.startsWith("/formulario") ? "active" : ""}
+        to="/form-admin"
+        className={location.pathname.startsWith("/form-admin") ? "active" : ""}
       >
         Formulario
       </Link>
