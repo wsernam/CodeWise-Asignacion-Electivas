@@ -37,6 +37,11 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'gestion_hojas_de_calculo',
+    'referencias',
+    # Apps de terceros requeridas
+    'rest_framework',        
+    'import_export',
 ]
 
 MIDDLEWARE = [
