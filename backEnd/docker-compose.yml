@@ -16,6 +16,8 @@ services:
       MYSQL_ROOT_PASSWORD: ${AUTH_DB_PASSWORD}  # Contraseña del root (requerida por MySQL)
     volumes:
       - volumen_db_usuarios:/var/lib/mysql # Monta un volumen persistente en /var/lib/mysql TODOS USAR TAMBIEN /var/lib/mysql POR CONVENCIÓN 
+    networks:
+      - app-net
     ports:
       - "3306:3306"  # Expone el puerto 3306 (MySQL) para acceso desde fuera del contenedor
     # IMPORTANTE Healthcheck para asegurarse de que MySQL esté listo antes de que Django intente conectarse
@@ -69,15 +71,10 @@ services:
       MYSQL_ROOT_PASSWORD: ${ASIGNACION_DB_ROOT_PASSWORD}
     volumes:
       - volumen_db_asignacion:/var/lib/mysql
-    ports:
-      - "3308:3306"
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "db_asignacion", "-u${ASIGNACION_DB_USER}", "-p${ASIGNACION_DB_PASSWORD}"]
-      interval: 5s
-      timeout: 10s
-      retries: 5
-      start_period: 20s
-    command: --host_cache_size=0
+    networks:
+      - app-net
+
+  
 
 
   # -------------------------------
@@ -225,3 +222,8 @@ volumes:
   volumen_db_formulario:
   volumen_db_asignacion:
   rabbitmq_data:       # Volumen para datos de RabbitMQ
+  mysql_data:
+
+networks:
+  app-net:
+    driver: bridge
