@@ -1,6 +1,6 @@
 // programStore.ts - Store completo siguiendo el modelo de electivas
 import { create } from "zustand";
-import type { Program } from "../models/program";
+import type { Program } from "../Models/program";
 
 import {
   getPrograms,

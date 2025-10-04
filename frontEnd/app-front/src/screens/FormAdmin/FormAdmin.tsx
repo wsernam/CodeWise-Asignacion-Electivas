@@ -11,7 +11,7 @@ import WarningModal from "../../components/shared/WarningModal/WarningModal";
 import { useNavigate } from "react-router";
 import { useElectiveStore } from "../../store/electiveStore";
 import { useFormStore } from "../../store/formAdminStore";
-import type { FormAdmin } from "../../models/formAdmin";
+import type { FormAdmin } from "../../Models/formAdmin";
 // Solo usamos DatePicker de Ant Design
 import { DatePicker } from "antd";
 
@@ -25,12 +25,8 @@ const ManageForm: React.FC = () => {
   const fetchElectives = useElectiveStore((state) => state.fetchElectives);
 
   const forms = useFormStore((state) => state.forms);
-  const fetchForms = useFormStore((state) => state.fetchForms);
-  const createAndAddForm = useFormStore((state) => state.createAndAddForm);
-  const activateAndSetForm = useFormStore((state) => state.activateAndSetForm);
-  const deactivateAndUnsetForm = useFormStore(
-    (state) => state.deactivateAndUnsetForm
-  );
+  const offerElectives = useFormStore((state) => state.offerElectives);
+  const changeFormStatus = useFormStore((state) => state.changeFormStatus);
 
   // Estado local
   const [enabled, setEnabled] = useState(false);
@@ -47,11 +43,10 @@ const ManageForm: React.FC = () => {
     message: "",
   });
 
-  // Cargar electivas y formularios al montar el componente
+  // Cargar electivas al montar el componente
   useEffect(() => {
     fetchElectives();
-    fetchForms();
-  }, [fetchElectives, fetchForms]);
+  }, [fetchElectives]);
 
   // Agrupa electivas por programa
   const electivesByProgram = electives.reduce((acc: any, curr) => {
@@ -64,10 +59,10 @@ const ManageForm: React.FC = () => {
   // Cargar estado de form activo
   useEffect(() => {
     if (forms.length > 0) {
-      const activeForm = forms.find((f) => f.for_estado);
+      const activeForm = forms.find((f) => f.for_status);
       if (activeForm) {
         setEnabled(true);
-        setDates([activeForm.for_fecha_inicio, activeForm.for_fecha_fin]);
+        setDates([activeForm.for_start_date, activeForm.for_end_date]);
         setSelected(activeForm.electivesByProgram);
       } else {
         setEnabled(false);
@@ -120,41 +115,12 @@ const ManageForm: React.FC = () => {
 
   // Ejecuta la acción de habilitar/deshabilitar tras confirmar
   const handleConfirm = async () => {
-    setShowConfirm(false);
-    if (confirmAction === "disable") {
-      const activeForm = forms.find((f) => f.for_estado);
-      if (activeForm) {
-        try {
-          await deactivateAndUnsetForm(activeForm.for_codigo);
-          setEnabled(false);
-          setWarning({ open: true, message: "Formulario deshabilitado." });
-        } catch (error) {
-          setWarning({
-            open: true,
-            message: "Error al deshabilitar el formulario.",
-          });
-        }
-      }
-    } else if (confirmAction === "enable") {
-      const nuevoForm: FormAdmin = {
-        for_codigo: Date.now(),
-        for_estado: true,
-        for_fecha_inicio: dates[0],
-        for_fecha_fin: dates[1],
-        electivesByProgram: selected,
-      };
-      try {
-        await createAndAddForm(nuevoForm);
-        setEnabled(true);
-        setWarning({ open: true, message: "Formulario habilitado." });
-      } catch (error) {
-        setWarning({
-          open: true,
-          message: "Error al habilitar el formulario.",
-        });
-      }
+    // Logica para habilitar/deshabilitar el formulario
+    // A la espera de como se implemente en el backend
+    if (confirmAction === "enable") {
+      setEnabled(true);
+      await offerElectives();
     }
-    setConfirmAction(null);
   };
 
   // Guardar la configuración del formulario
@@ -167,15 +133,8 @@ const ManageForm: React.FC = () => {
       });
       return;
     }
-    const form: FormAdmin = {
-      for_codigo: Date.now(),
-      for_estado: enabled,
-      for_fecha_inicio: dates[0],
-      for_fecha_fin: dates[1],
-      electivesByProgram: selected,
-    };
     try {
-      await createAndAddForm(form);
+      await offerElectives();
       setWarning({
         open: true,
         message: "Configuración del formulario guardada.",
