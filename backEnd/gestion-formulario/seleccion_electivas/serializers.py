@@ -1,11 +1,14 @@
 from rest_framework import serializers
 from .models import SeleccionEstudianteElectiva
+from gestion_electivas.models import Electiva
 from rest_framework.exceptions import ValidationError
 from collections import Counter
 
 class ElectivaPrioridadDTO(serializers.Serializer):
-    ele_codigo = serializers.IntegerField()
     sel_prioridad = serializers.IntegerField()
+    ele_codigo = serializers.IntegerField()
+    ele_nombre = serializers.CharField(max_length=100)
+
 
 class ConsultaElectivaEstudianteDTO(serializers.Serializer):
     ele_codigo = serializers.IntegerField()

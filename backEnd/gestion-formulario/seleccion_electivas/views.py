@@ -1,26 +1,20 @@
-from rest_framework import viewsets, status
+from rest_framework import viewsets, status, mixins
 from rest_framework.response import Response
 from rest_framework.decorators import action
-from django.db import transaction
 from .models import SeleccionEstudianteElectiva
 from .serializers import CrearSeleccionElectivaDTO, SeleccionEstudianteElectivaSerializer
-from gestion_electivas.views import ElectivaViewSet
 from gestion_electivas.models import Electiva
+from utilidades.rabbitMQ_publicador import publicar_mensaje
 # Create your views here.
-class SeleccionElectivaViewSet(viewsets.ModelViewSet):
+class SeleccionElectivaViewSet(mixins.CreateModelMixin,
+                               mixins.ListModelMixin,
+                               viewsets.GenericViewSet):
+
     queryset = SeleccionEstudianteElectiva.objects.all()
     serializer_class = SeleccionEstudianteElectivaSerializer
    
    
-    def create(self, request, *args, **kwargs):
-        return Response(
-            {"detail": "Use el endpoint /seleccion-electivas/create_seleccion para crear selecciones"},
-            status=status.HTTP_405_METHOD_NOT_ALLOWED,
-        )
-  
-    @transaction.atomic
-    @action(detail=False, methods=["post"])
-    def create_seleccion(self, request):
+    def create(self, request):
         """
         Crea una selección de electivas para un estudiante.
         Recibe:
@@ -29,8 +23,8 @@ class SeleccionElectivaViewSet(viewsets.ModelViewSet):
             "sel_anio": 2025,
             "sel_num_semestre": 1,
             "electivas": [
-                {"ele_codigo": 101, "sel_prioridad": 1},
-                {"ele_codigo": 102, "sel_prioridad": 2}
+                {"ele_codigo": 101, "sel_prioridad": 1, "ele_nombre": "Matemáticas"},
+                {"ele_codigo": 102, "sel_prioridad": 2, "ele_nombre": "Física"},
             ]
         }
         """
@@ -54,7 +48,8 @@ class SeleccionElectivaViewSet(viewsets.ModelViewSet):
                 sel_prioridad=electiva["sel_prioridad"],
             )
             created_records.append(obj.sel_codigo)
-
+        # Publicar mensaje en RabbitMQ
+        publicar_mensaje(request.data)
         return Response(
             {"message": "Selección creada exitosamente"},
             status=status.HTTP_201_CREATED,
