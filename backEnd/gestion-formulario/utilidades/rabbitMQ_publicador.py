@@ -1,7 +1,7 @@
 import pika, json
 from django.conf import settings
 
-def publish_message(message: dict):
+def publicar_mensaje(message: dict):
     credentials = pika.PlainCredentials(settings.RABBITMQ_USER, settings.RABBITMQ_PASS)
     connection = pika.BlockingConnection(
         pika.ConnectionParameters(
