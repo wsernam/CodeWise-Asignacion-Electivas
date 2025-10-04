@@ -42,7 +42,8 @@ INSTALLED_APPS = [
     'gestion_electivas',
     'gestion_estado_formulario',
     'gestion_estudiantes',
-    'gestion_oferta_electiva'
+    'gestion_oferta_electiva',
+    "corsheaders"
 ]
 
 MIDDLEWARE = [
@@ -53,6 +54,11 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    "corsheaders.middleware.CorsMiddleware"
+]
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",
 ]
 
 ROOT_URLCONF = 'core.urls'

@@ -1,0 +1,125 @@
+:root {
+  /* 
+   * Notación: color-tipo-intensidad (ej: primary-blue-500)
+   */
+  --primary-blue: #1e40af; /* Azul principal */
+  --primary-blue-light: #3b82f6; /* Azul medio */
+  --primary-blue-lighter: #60a5fa; /* Azul claro */
+  --primary-red: #8e211c; /* Rojo para errores/advertencias */
+  --accent-color: #2563eb; /* Color de acento para botones importantes */
+
+  /* 
+   * ESCALA DE GRISES - Para textos, fondos y bordes
+  */
+  --gray-light: #f8fafc; /* Gris claro para fondos */
+  --gray-medium: #e2e8f0; /* Gris medio para bordes */
+  --gray-dark: #374151; /* Gris oscuro para textos secundarios */
+  --black: #000000; /* Negro para textos principales */
+
+  --font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+
+  --space-sm: 0.5rem; /* 8px - Espacio pequeño */
+  --space-md: 1rem; /* 16px - Espacio medio */
+  --space-lg: 1.5rem; /* 24px - Espacio grande */
+  --space-xl: 2rem; /* 32px - Espacio extra grande */
+}
+
+/*
+   RESET CSS - "LIMPIAR LA PIZARRA" ANTES DE DIBUJAR
+  */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+/*
+  ESTILOS BASE DEL CUERPO
+  */
+body {
+  font-family: var(--font-family);
+  background: linear-gradient(
+    135deg,
+    #ffffff 0%,
+    #1e40af 100%
+  ); /* Fondo degradado de blanco a azul */
+  color: #222; /* Color de texto principal */
+  line-height: 1.5; /* Espacio entre líneas para mejor lectura */
+}
+
+/*
+   CLASES PARA PÁGINAS DE AUTENTICACIÓN
+   */
+.auth-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.auth-page-content {
+  flex: 1;
+  display: flex;
+  justify-content: center; /* Centrar horizontalmente */
+  align-items: center; /* Centrar verticalmente */
+  padding: 2rem; /* Espacio interno */
+}
+
+/* 
+   ESTILOS PARA FORMULARIOS
+   */
+.form-page-container {
+  min-height: 100vh; /* Altura completa mínima */
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  background: transparent; /* Fondo transparente */
+  font-family: var(--font-family);
+}
+
+.form-page-content {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+}
+
+.form-card {
+  max-width: 500px; /* Ancho máximo para no estirarse demasiado */
+  width: 100%; /* Ocupar el 100% hasta el máximo */
+}
+
+.form-title {
+  margin-bottom: 1.5rem; /* Espacio debajo del título */
+  font-weight: 600; /* Texto semi-negrita */
+  color: #222;
+  text-align: center; /* Centrar el texto */
+}
+
+.back-button {
+  margin-bottom: 1rem; /* Espacio debajo del botón volver */
+}
+
+/*
+   DISEÑO RESPONSIVE - PARA MÓVILES Y TABLETS
+  */
+@media (max-width: 768px) {
+  /* 
+   * Aplica cuando la pantalla es menor a 768px
+   */
+  .auth-page-content {
+    padding: 1rem; /* Menos padding en móviles */
+  }
+
+  .form-page-content {
+    padding: 1rem;
+  }
+}

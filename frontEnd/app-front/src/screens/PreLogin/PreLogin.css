@@ -1,0 +1,71 @@
+/* PreLogin.css */
+.prelogin-main {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 60vh;
+  width: 100%;
+  max-width: 800px;
+}
+
+.prelogin-main h2 {
+  color: var(--primary-blue);
+  margin-bottom: 1rem;
+  font-size: 2.5rem;
+  font-weight: 600;
+}
+
+.prelogin-main p {
+  color: var(--gray-dark);
+  font-size: 1.2rem;
+  max-width: 600px;
+  margin-bottom: 3rem;
+  line-height: 1.6;
+}
+
+.roles-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 4rem;
+  margin-top: 2rem;
+  flex-wrap: wrap;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .prelogin-main {
+    min-height: 50vh;
+    padding: 1rem;
+  }
+
+  .prelogin-main h2 {
+    font-size: 2rem;
+  }
+
+  .prelogin-main p {
+    font-size: 1.1rem;
+    margin-bottom: 2rem;
+  }
+
+  .roles-container {
+    gap: 2rem;
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 480px) {
+  .prelogin-main h2 {
+    font-size: 1.8rem;
+  }
+
+  .prelogin-main p {
+    font-size: 1rem;
+  }
+
+  .roles-container {
+    gap: 1.5rem;
+  }
+}

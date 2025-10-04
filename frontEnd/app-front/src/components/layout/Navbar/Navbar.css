@@ -1,0 +1,20 @@
+.navbar {
+  display: flex;
+  gap: 2rem;
+  justify-content: center;
+  margin: 1.5rem 0 1rem 0;
+  font-size: 1rem;
+}
+
+.navbar a {
+  color: #1f297f;
+  text-decoration: underline;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.navbar a.active,
+.navbar a:hover {
+  color: #0d133d;
+  text-decoration: none;
+}

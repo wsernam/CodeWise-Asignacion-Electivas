@@ -1,0 +1,64 @@
+/* src/components/ui/Button/Button.css */
+.btn {
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  text-decoration: none;
+  text-align: center;
+  width: 100%;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Variantes */
+.btn--primary {
+  background-color: #1f297f;
+  color: #fff;
+}
+
+.btn--primary:hover:not(:disabled) {
+  background-color: #14206d;
+  transform: translateY(-1px);
+}
+
+.btn--secondary {
+  background-color: #8e211c;
+  color: #fff;
+}
+
+.btn--ghost {
+  background-color: transparent;
+  color: #1f297f;
+  border: 1px solid #1f297f;
+}
+
+.btn--ghost:hover:not(:disabled) {
+  background-color: #1f297f;
+  color: #fff;
+}
+
+/* Tamaños */
+.btn--small {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+}
+
+.btn--medium {
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+}
+
+.btn--large {
+  padding: 1rem 2rem;
+  font-size: 1.125rem;
+}
