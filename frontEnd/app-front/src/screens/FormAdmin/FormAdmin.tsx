@@ -1,237 +1,349 @@
-import "./FormAdmin.css";
 import React, { useState, useEffect } from "react";
+import { Select } from "antd";
+
+// Components
 import Header from "../../components/layout/Header/Header";
 import Footer from "../../components/layout/Footer/Footer";
 import Navbar from "../../components/layout/Navbar/Navbar";
-import BackButton from "../../components/ui/BackButton/BackButton";
 import Card from "../../components/ui/Card/Card";
 import Button from "../../components/ui/Button/Button";
-import ConfirmModal from "../../components/shared/ConfirmModal/ConfirmModal";
 import WarningModal from "../../components/shared/WarningModal/WarningModal";
-import { useNavigate } from "react-router";
+import ConfirmModal from "../../components/shared/ConfirmModal/ConfirmModal";
+import SuccessModal from "../../components/shared/SuccessModal/SuccessModal";
+// Stores
 import { useElectiveStore } from "../../store/electiveStore";
 import { useFormStore } from "../../store/formAdminStore";
-import type { FormAdmin } from "../../Models/formAdmin";
-// Solo usamos DatePicker de Ant Design
-import { DatePicker } from "antd";
+import type { FormAdmin as FormAdminType } from "../../models/formAdmin";
 
-const { RangePicker } = DatePicker;
+const { Option } = Select;
 
-const ManageForm: React.FC = () => {
-  const navigate = useNavigate();
+const FormAdmin: React.FC = () => {
+  // ========== STORES ==========
+  const { electives, fetchElectives } = useElectiveStore();
+  const { offerElectives, currentForm } = useFormStore();
 
-  // Stores
-  const electives = useElectiveStore((state) => state.electives);
-  const fetchElectives = useElectiveStore((state) => state.fetchElectives);
+  // ========== ESTADO LOCAL ==========
+  const [year, setYear] = useState<number>(new Date().getFullYear());
+  const [semester, setSemester] = useState<1 | 2>(1);
+  const [status, setStatus] = useState<boolean>(false);
+  const [selectedElectives, setSelectedElectives] = useState<{
+    [programa: string]: string[];
+  }>({});
 
-  const forms = useFormStore((state) => state.forms);
-  const offerElectives = useFormStore((state) => state.offerElectives);
-  const changeFormStatus = useFormStore((state) => state.changeFormStatus);
-
-  // Estado local
-  const [enabled, setEnabled] = useState(false);
-  const [dates, setDates] = useState<any>([]);
-  const [selected, setSelected] = useState<{ [programa: string]: string[] }>(
-    {}
-  );
   const [showConfirm, setShowConfirm] = useState(false);
-  const [confirmAction, setConfirmAction] = useState<
-    "enable" | "disable" | null
-  >(null);
+  const [showSuccess, setShowSuccess] = useState(false); // ← ESTADO PARA ÉXITO
   const [warning, setWarning] = useState<{ open: boolean; message: string }>({
     open: false,
     message: "",
   });
 
-  // Cargar electivas al montar el componente
+  // ========== EFECTOS ==========
+
+  // Cargar electivas al inicio
   useEffect(() => {
     fetchElectives();
   }, [fetchElectives]);
 
-  // Agrupa electivas por programa
-  const electivesByProgram = electives.reduce((acc: any, curr) => {
-    const prog = curr.programa || "Sin programa";
-    if (!acc[prog]) acc[prog] = [];
-    acc[prog].push(curr);
+  // Cargar configuración existente si hay
+  useEffect(() => {
+    if (currentForm) {
+      setYear(currentForm.for_year);
+      setSemester(currentForm.for_semester as 1 | 2);
+      setStatus(currentForm.for_status);
+      setSelectedElectives(currentForm.electivesByProgram);
+    }
+  }, [currentForm]);
+
+  // ========== FUNCIONES AUXILIARES ==========
+
+  /**
+   * Genera lista de años para el dropdown
+   */
+  const getYearOptions = (): number[] => {
+    const currentYear = new Date().getFullYear();
+    return [currentYear, currentYear + 1, currentYear + 2];
+  };
+
+  /**
+   * Agrupa electivas por programa
+   */
+  const electivesByProgram = electives.reduce((acc: any, elective) => {
+    const program = elective.programa || "Sin programa";
+    if (!acc[program]) acc[program] = [];
+    acc[program].push(elective);
     return acc;
   }, {});
 
-  // Cargar estado de form activo
-  useEffect(() => {
-    if (forms.length > 0) {
-      const activeForm = forms.find((f) => f.for_status);
-      if (activeForm) {
-        setEnabled(true);
-        setDates([activeForm.for_start_date, activeForm.for_end_date]);
-        setSelected(activeForm.electivesByProgram);
-      } else {
-        setEnabled(false);
-      }
-    }
-  }, [forms]);
-
-  // Verifica si hay al menos una electiva seleccionada
-  const hasSelectedElectives = Object.values(selected).some(
-    (arr) => arr.length > 0
+  /**
+   * Verifica si hay electivas seleccionadas
+   */
+  const hasSelectedElectives = Object.values(selectedElectives).some(
+    (electives) => electives.length > 0
   );
 
-  // Maneja el cambio de fechas
-  const handleDateChange = (values: any) => setDates(values);
+  // ========== MANEJADORES ==========
 
-  // Maneja el cambio de selección de electivas
-  const handleCheckboxChange = (
+  /**
+   * Maneja el cambio de selección de electivas
+   */
+  const handleElectiveSelection = (
     program: string,
     codigo: string,
-    checked: boolean
+    isChecked: boolean
   ) => {
-    setSelected((prev) => {
-      const prevArr = prev[program] || [];
+    setSelectedElectives((prev) => {
+      const programElectives = prev[program] || [];
       return {
         ...prev,
-        [program]: checked
-          ? [...prevArr, codigo]
-          : prevArr.filter((c) => c !== codigo),
+        [program]: isChecked
+          ? [...programElectives, codigo]
+          : programElectives.filter((id) => id !== codigo),
       };
     });
   };
 
-  // Mostrar modal de confirmación antes de habilitar/deshabilitar
-  const handleToggle = () => {
-    if (enabled) {
-      setConfirmAction("disable");
-    } else {
-      if (!hasSelectedElectives) {
-        setWarning({
-          open: true,
-          message:
-            "Debe seleccionar al menos una electiva antes de habilitar el formulario.",
-        });
-        return;
-      }
-      setConfirmAction("enable");
+  /**
+   * Valida el formulario antes de mostrar confirmación
+   */
+  const handleSave = () => {
+    if (!hasSelectedElectives) {
+      setWarning({ open: true, message: "Selecciona al menos una electiva." });
+      return;
     }
     setShowConfirm(true);
   };
 
-  // Ejecuta la acción de habilitar/deshabilitar tras confirmar
-  const handleConfirm = async () => {
-    // Logica para habilitar/deshabilitar el formulario
-    // A la espera de como se implemente en el backend
-    if (confirmAction === "enable") {
-      setEnabled(true);
-      await offerElectives();
-    }
-  };
+  /**
+   * Ejecuta el guardado después de la confirmación
+   */
+  const handleConfirmSave = async () => {
+    setShowConfirm(false);
 
-  // Guardar la configuración del formulario
-  const handleSave = async () => {
-    if (!hasSelectedElectives) {
-      setWarning({
-        open: true,
-        message:
-          "Debe seleccionar al menos una electiva antes de guardar la configuración.",
-      });
-      return;
-    }
+    const formConfig: FormAdminType = {
+      for_year: year,
+      for_semester: semester,
+      for_status: status,
+      for_start_date: new Date().toISOString().split("T")[0], // Fecha actual
+      for_end_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+        .toISOString()
+        .split("T")[0], // 30 días después
+      electivesByProgram: selectedElectives,
+    };
+
     try {
-      await offerElectives();
+      await offerElectives(formConfig);
+      setShowSuccess(true); // ← CORREGIDO: Usar showSuccess en lugar de showConfirm
+    } catch (error) {
       setWarning({
         open: true,
-        message: "Configuración del formulario guardada.",
+        message: "Error al guardar. Revisa la configuración.",
       });
-    } catch (error) {
-      setWarning({ open: true, message: "Error al guardar la configuración." });
     }
   };
 
+  // ========== RENDERIZADO ==========
   return (
-    <div className="auth-page">
+    <div className="form-page-container">
       <Header />
       <Navbar />
-      <div className="auth-page-content">
-        <Card padding="xl" className="electives-card">
-          <BackButton onClick={() => navigate(-1)} />
-          <h2 className="electives-title">
-            Gestión del Formulario de Asignación de Electivas
-          </h2>
-          <div className="actions-bar">
-            <span>
-              <b>Estado actual:</b> {enabled ? "Habilitado" : "Deshabilitado"}
-            </span>
-            <RangePicker
-              className="manage-form-date-range"
-              onChange={handleDateChange}
-              value={dates}
-              format="DD/MM/YYYY"
-            />
-            <Button
-              type="button"
-              className="manage-form-toggle-btn"
-              variant="primary"
-              onClick={handleToggle}
+
+      <div className="form-page-content">
+        <div style={{ maxWidth: "900px", width: "100%" }}>
+          <Card className="form-card" padding="xl">
+            <h2 className="form-title">Configuración de Oferta de Electivas</h2>
+
+            {/* Panel de Configuración */}
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "var(--space-xl)",
+                marginBottom: "var(--space-xl)",
+                padding: "var(--space-md)",
+                background: "var(--gray-light)",
+                borderRadius: "8px",
+                flexWrap: "wrap",
+              }}
             >
-              {enabled ? "Deshabilitar Formulario" : "Habilitar Formulario"}
-            </Button>
-          </div>
-          <div className="manage-form-programs-row">
-            {Object.keys(electivesByProgram).map((program) => (
-              <div className="manage-form-program-card" key={program}>
-                <div className="manage-form-program-title">
-                  <b>{program}</b>
-                  <span style={{ color: "#1f297f", marginLeft: 6 }}>
-                    Electivas:
-                  </span>
-                </div>
-                <div className="manage-form-electives-list">
-                  {electivesByProgram[program].map((e: any) => (
-                    <label
-                      className="manage-form-checkbox-label"
-                      key={e.codigo}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={selected[program]?.includes(e.codigo) || false}
-                        onChange={(ev) =>
-                          handleCheckboxChange(
-                            program,
-                            e.codigo,
-                            ev.target.checked
-                          )
-                        }
-                      />
-                      {e.nombre}{" "}
-                      <span style={{ color: "#888" }}>({e.codigo})</span>
-                    </label>
+              {/* Año */}
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "var(--space-sm)",
+                }}
+              >
+                <span style={{ fontWeight: 600 }}>Año:</span>
+                <Select value={year} onChange={setYear} style={{ width: 100 }}>
+                  {getYearOptions().map((year) => (
+                    <Option key={year} value={year}>
+                      {year}
+                    </Option>
                   ))}
-                </div>
+                </Select>
               </div>
-            ))}
-          </div>
-          <div style={{ textAlign: "center", marginTop: 32 }}>
-            <Button
-              type="button"
-              variant="primary"
-              size="large"
-              onClick={handleSave}
+
+              {/* Semestre */}
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "var(--space-sm)",
+                }}
+              >
+                <span style={{ fontWeight: 600 }}>Semestre:</span>
+                <Select
+                  value={semester}
+                  onChange={setSemester}
+                  style={{ width: 80 }}
+                >
+                  <Option value={1}>1</Option>
+                  <Option value={2}>2</Option>
+                </Select>
+              </div>
+
+              {/* Estado */}
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "var(--space-sm)",
+                }}
+              >
+                <span style={{ fontWeight: 600 }}>Estado:</span>
+                <Select
+                  value={status}
+                  onChange={setStatus}
+                  style={{ width: 140 }}
+                >
+                  <Option value={true}>Habilitado</Option>
+                  <Option value={false}>Deshabilitado</Option>
+                </Select>
+              </div>
+            </div>
+
+            {/* Lista de Electivas por Programa */}
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
+                gap: "var(--space-lg)",
+                marginBottom: "var(--space-xl)",
+              }}
             >
-              Guardar Configuración
-            </Button>
-          </div>
-        </Card>
+              {Object.entries(electivesByProgram).map(
+                ([program, electivesList]) => (
+                  <div
+                    key={program}
+                    style={{
+                      background: "var(--gray-light)",
+                      border: "1px solid var(--gray-medium)",
+                      borderRadius: "8px",
+                      padding: "var(--space-md)",
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        marginBottom: "var(--space-md)",
+                        paddingBottom: "var(--space-sm)",
+                        borderBottom: "1px solid var(--gray-medium)",
+                      }}
+                    >
+                      <h3 style={{ margin: 0, fontSize: "1.1rem" }}>
+                        {program}
+                      </h3>
+                      <span
+                        style={{
+                          color: "var(--primary-blue)",
+                          fontSize: "0.9rem",
+                        }}
+                      >
+                        {selectedElectives[program]?.length || 0} seleccionadas
+                      </span>
+                    </div>
+
+                    <div
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: "var(--space-sm)",
+                      }}
+                    >
+                      {(electivesList as any[]).map((elective) => (
+                        <label
+                          key={elective.codigo}
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "var(--space-sm)",
+                            padding: "var(--space-sm)",
+                            borderRadius: "4px",
+                            cursor: "pointer",
+                          }}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={
+                              selectedElectives[program]?.includes(
+                                elective.codigo
+                              ) || false
+                            }
+                            onChange={(e) =>
+                              handleElectiveSelection(
+                                program,
+                                elective.codigo,
+                                e.target.checked
+                              )
+                            }
+                          />
+                          <span style={{ flex: 1 }}>{elective.nombre}</span>
+                          <span
+                            style={{
+                              color: "var(--gray-dark)",
+                              fontSize: "0.85rem",
+                            }}
+                          >
+                            ({elective.codigo})
+                          </span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                )
+              )}
+            </div>
+
+            {/* Botón Guardar */}
+            <div style={{ textAlign: "center" }}>
+              <Button variant="primary" size="large" onClick={handleSave}>
+                Guardar Configuración {year}-{semester}
+              </Button>
+            </div>
+          </Card>
+        </div>
       </div>
+
       <Footer />
-      {/* Modal de confirmación */}
+
+      {/* Modal de Confirmación */}
       <ConfirmModal
         open={showConfirm}
-        message={
-          confirmAction === "enable"
-            ? "Habilitar formulario \n¿Está seguro que desea habilitar el formulario?"
-            : "Deshabilitar formulario \n¿Está seguro que desea deshabilitar el formulario?"
-        }
-        onConfirm={handleConfirm}
+        message={`¿Estás seguro de guardar la configuración para el período ${year}-${semester}?`}
+        onConfirm={handleConfirmSave}
         onCancel={() => setShowConfirm(false)}
       />
-      {/* Modal de advertencia */}
+
+      {/* Modal de Éxito */}
+      <SuccessModal
+        open={showSuccess}
+        message={`Configuración ${year}-${semester} guardada exitosamente.`}
+        onClose={() => setShowSuccess(false)}
+      />
+
+      {/* Modal de Advertencia */}
       <WarningModal
         open={warning.open}
         message={warning.message}
@@ -241,4 +353,4 @@ const ManageForm: React.FC = () => {
   );
 };
 
-export default ManageForm;
+export default FormAdmin;

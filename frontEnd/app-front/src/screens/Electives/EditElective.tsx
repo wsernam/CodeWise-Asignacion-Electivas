@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from "react";
-import { Form, Input, message, Select } from "antd";
+import { Form, Input, Select } from "antd";
 import Header from "../../components/layout/Header/Header";
 import Footer from "../../components/layout/Footer/Footer";
 import Navbar from "../../components/layout/Navbar/Navbar";
 import Card from "../../components/ui/Card/Card";
 import Button from "../../components/ui/Button/Button";
 import { useNavigate, useParams } from "react-router";
+import WarningModal from "../../components/shared/WarningModal/WarningModal";
+import SuccessModal from "../../components/shared/SuccessModal/SuccessModal";
 
 // Stores globales
 import { useElectiveStore } from "../../store/electiveStore";
@@ -32,8 +34,15 @@ const EditElective: React.FC = () => {
   const programs = useProgramStore((state) => state.programs);
   const fetchPrograms = useProgramStore((state) => state.fetchPrograms);
 
-  const [loading, setLoading] = useState(false);
   const [electiveFound, setElectiveFound] = useState(false);
+  const [warning, setWarning] = useState<{ open: boolean; message: string }>({
+    open: false,
+    message: "",
+  });
+  const [success, setSuccess] = useState<{ open: boolean; message: string }>({
+    open: false,
+    message: "",
+  });
 
   // ========== EFFECTS ==========
 
@@ -69,11 +78,13 @@ const EditElective: React.FC = () => {
         });
         setElectiveFound(true);
       } else {
-        message.error("Electiva no encontrada o está inactiva");
-        navigate("/electives");
+        setWarning({
+          open: true,
+          message: "Electiva no encontrada o está inactiva",
+        });
       }
     }
-  }, [codigo, electives, form, navigate]);
+  }, [codigo, electives, form]);
 
   // ========== VALIDACIONES ==========
 
@@ -125,7 +136,6 @@ const EditElective: React.FC = () => {
   const onFinish = async (values: IElective) => {
     if (!codigo) return; // Seguridad: si no hay código, no hacer nada
 
-    setLoading(true);
     try {
       // Preparar datos para actualizar
       const cleanedValues = {
@@ -137,13 +147,30 @@ const EditElective: React.FC = () => {
 
       // Actualizar en el store
       await updateElective(codigo, cleanedValues);
-      message.success("Electiva actualizada correctamente");
-      navigate("/electives");
+
+      // Éxito: usar modal de éxito
+      setSuccess({
+        open: true,
+        message: "Electiva actualizada correctamente",
+      });
     } catch (error: any) {
       console.error("Error al actualizar electiva:", error);
-      message.error("Error al actualizar la electiva");
-    } finally {
-      setLoading(false);
+      setWarning({
+        open: true,
+        message: "Error al actualizar la electiva",
+      });
+    }
+  };
+
+  const handleSuccessClose = () => {
+    setSuccess({ open: false, message: "" });
+    navigate("/electives"); // Redirigir solo cuando el usuario cierre el modal
+  };
+
+  const handleWarningClose = () => {
+    setWarning({ open: false, message: "" });
+    if (warning.message.includes("no encontrada")) {
+      navigate("/electives"); // Redirigir solo si es error de "no encontrada"
     }
   };
 
@@ -152,12 +179,12 @@ const EditElective: React.FC = () => {
   // Si no encontramos la electiva (pero ya cargamos los datos)
   if (!electiveFound && electives.length > 0) {
     return (
-      <div className="auth-page">
+      <div className="form-page-container">
         <Header />
         <Navbar />
-        <div className="auth-page-content">
-          <Card padding="xl">
-            <h2>Electiva no encontrada</h2>
+        <div className="form-page-content">
+          <Card className="form-card" padding="xl">
+            <h2 className="form-title">Electiva no encontrada</h2>
             <p>La electiva que intentas editar no existe o está inactiva.</p>
             <Button variant="primary" onClick={() => navigate("/electives")}>
               ← Volver a lista de electivas
@@ -171,20 +198,19 @@ const EditElective: React.FC = () => {
 
   // ========== RENDERIZADO PRINCIPAL ==========
   return (
-    <div className="auth-page">
+    <div className="form-page-container">
       <Header />
       <Navbar />
 
-      <div className="auth-page-content">
-        <Card padding="xl">
-          <h2>Editar Electiva</h2>
+      <div className="form-page-content">
+        <Card className="form-card" padding="xl">
+          <h2 className="form-title">Editar Electiva</h2>
 
           <Form
             form={form}
             name="edit-elective-form"
             onFinish={onFinish}
             layout="vertical"
-            disabled={loading}
             autoComplete="off"
           >
             {/* Código (solo lectura) */}
@@ -243,24 +269,13 @@ const EditElective: React.FC = () => {
 
             {/* Botones de acción */}
             <Form.Item>
-              <Button
-                type="submit"
-                variant="primary"
-                size="medium"
-                disabled={loading}
-              >
-                {loading ? "Guardando..." : "Guardar cambios"}
+              <Button type="submit" variant="primary" size="medium">
+                Guardar cambios
               </Button>
             </Form.Item>
 
             <Form.Item>
-              <Button
-                variant="ghost"
-                onClick={handleCancel}
-                className="back-button"
-                size="medium"
-                disabled={loading}
-              >
+              <Button variant="ghost" onClick={handleCancel} size="medium">
                 ← Volver a lista de electivas
               </Button>
             </Form.Item>
@@ -269,6 +284,20 @@ const EditElective: React.FC = () => {
       </div>
 
       <Footer />
+
+      {/* Modal de advertencia/error */}
+      <WarningModal
+        open={warning.open}
+        message={warning.message}
+        onClose={handleWarningClose}
+      />
+
+      {/* Modal de éxito */}
+      <SuccessModal
+        open={success.open}
+        message={success.message}
+        onClose={handleSuccessClose}
+      />
     </div>
   );
 };

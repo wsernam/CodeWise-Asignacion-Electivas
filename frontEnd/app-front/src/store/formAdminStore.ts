@@ -1,25 +1,29 @@
 import { create } from "zustand";
-import type { FormAdmin } from "../Models/formAdmin";
-import {
-  offerElectives,
-  changeFormStatus
-} from "../services/formAdminService";
+import type { FormAdmin } from "../models/formAdmin";
+import { offerElectives, changeFormStatus } from "../services/formAdminService";
 
 interface FormState {
   forms: FormAdmin[];
-  offerElectives: () => Promise<void>;
-  changeFormStatus: (form: FormAdmin) => Promise<void>;
+  currentForm: FormAdmin | null; // Manejar el formulario actual
+  offerElectives: (formData: FormAdmin) => Promise<void>;
+  changeFormStatus: (formData: FormAdmin) => Promise<void>;
+  setCurrentForm: (form: FormAdmin) => void;
 }
 
 export const useFormStore = create<FormState>((set) => ({
   forms: [],
+  currentForm: null,
 
-  offerElectives: async () => {
-    await offerElectives();
+  // Ofrece electivas con la configuración actual
+  offerElectives: async (formData: FormAdmin) => {
+    await offerElectives(formData);
+    set({ currentForm: formData });
   },
 
-  changeFormStatus: async (form: FormAdmin) => {
-    await changeFormStatus(form);
-    // Aquí podrías actualizar el estado si es necesario
-  }
+  // Cambia el estado del formulario
+  changeFormStatus: async (formData: FormAdmin) => {
+    await changeFormStatus(formData);
+    set({ currentForm: formData });
+  },
+  setCurrentForm: (form: FormAdmin) => set({ currentForm: form }),
 }));
