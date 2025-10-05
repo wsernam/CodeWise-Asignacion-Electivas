@@ -1,158 +1,160 @@
 import React, { useEffect, useState } from "react";
-import { Form, Input, message, Select } from "antd";
+import { Form, Input, Select } from "antd";
 import Header from "../../components/layout/Header/Header";
 import Footer from "../../components/layout/Footer/Footer";
 import Navbar from "../../components/layout/Navbar/Navbar";
 import Card from "../../components/ui/Card/Card";
 import Button from "../../components/ui/Button/Button";
-import { useNavigate, useParams } from "react-router"; // Hook para parámetros URL
+import { useNavigate, useParams } from "react-router";
 import { useProgramStore } from "../../store/programStore";
-import type { Program } from "../../models/program";
+import type { IProgram as Program } from "../../models/program";
+import SuccessModal from "../../components/shared/SuccessModal/SuccessModal";
+import WarningModal from "../../components/shared/WarningModal/WarningModal";
 
 const { Option } = Select;
 
 const EditProgram: React.FC = () => {
-  // ========== HOOKS Y ESTADO ==========
   const [form] = Form.useForm();
   const navigate = useNavigate();
-
-  // useParams obtiene los parámetros de la URL (/edit/:codigo)
   const { codigo } = useParams<{ codigo: string }>();
+  const formValues = Form.useWatch([], form);
 
-  // Extraer datos y funciones del store
+  const [touchedFields, setTouchedFields] = useState({
+    nombre: false,
+    facultad: false,
+  });
+  const [isFormValid, setIsFormValid] = useState(false);
+  const [programFound, setProgramFound] = useState(false);
+  const [success, setSuccess] = useState<{ open: boolean; message: string }>({
+    open: false,
+    message: "",
+  });
+  const [warning, setWarning] = useState<{ open: boolean; message: string }>({
+    open: false,
+    message: "",
+  });
+
   const programs = useProgramStore((state) => state.programs);
   const updateProgram = useProgramStore((state) => state.updateProgram);
   const fetchPrograms = useProgramStore((state) => state.fetchPrograms);
 
-  const [loading, setLoading] = useState(false);
-  const [programFound, setProgramFound] = useState(false);
-
-  // ========== DATOS ESTÁTICOS ==========
   const facultades = [
     "Facultad de Ingeniería Electrónica y de Telecomunicaciones",
     "Facultad de Ingeniería Civil",
     "Facultad de Ciencias Naturales y Exactas",
   ];
 
-  // ========== EFFECTS (CICLO DE VIDA) ==========
-
-  /**
-   * useEffect 1: Cargar programas si no están disponibles
-   * Se ejecuta cuando el componente se monta o cuando cambian las dependencias
-   */
   useEffect(() => {
     if (programs.length === 0) {
-      fetchPrograms(); // Cargar datos del store
+      fetchPrograms();
     }
   }, [fetchPrograms, programs.length]);
 
-  /**
-   * useEffect 2: Cargar datos del programa a editar
-   * Se ejecuta cuando tenemos el código de la URL y los programas cargados
-   */
   useEffect(() => {
     if (codigo && programs.length > 0) {
-      // Buscar el programa por código y que esté activo
       const program = programs.find(
         (p) => p.codigo === codigo && p.active !== false
       );
 
       if (program) {
-        // Llenar el formulario con los datos existentes
         form.setFieldsValue({
           codigo: program.codigo,
           nombre: program.nombre,
           facultad: program.facultad,
         });
-        setProgramFound(true); // Marcar que encontramos el programa
+        setProgramFound(true);
       } else {
-        message.error("Programa no encontrado o está inactivo");
-        navigate("/programs"); // Redirigir si no existe
+        setWarning({
+          open: true,
+          message: "Programa no encontrado o está inactivo",
+        });
       }
     }
-  }, [codigo, programs, form, navigate]);
-
-  // ========== VALIDACIONES ==========
+  }, [codigo, programs, form]);
 
   const validateNombre = (_: any, value: string) => {
-    if (!value) {
+    if (!value)
       return Promise.reject("Por favor ingresa el nombre del programa");
-    }
-    if (value.length < 5) {
+    if (value.length < 5)
       return Promise.reject("El nombre debe tener al menos 5 caracteres");
-    }
-    if (value.length > 150) {
+    if (value.length > 150)
       return Promise.reject("El nombre no puede exceder 150 caracteres");
-    }
-    if (/^\s+|\s+$/.test(value)) {
+    if (/^\s+|\s+$/.test(value))
       return Promise.reject(
         "El nombre no puede empezar o terminar con espacios"
       );
-    }
-    if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]+$/.test(value)) {
+    if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]+$/.test(value))
       return Promise.reject("El nombre solo puede contener letras y espacios");
-    }
 
-    // Validación especial: no permitir nombres duplicados
     const existingProgram = programs.find(
       (p) =>
         p.nombre.toLowerCase() === value.toLowerCase() &&
-        p.codigo !== codigo && // Excluir el programa actual
+        p.codigo !== codigo &&
         p.active !== false
     );
-    if (existingProgram) {
+    if (existingProgram)
       return Promise.reject(
         `Ya existe un programa activo con el nombre "${value}"`
       );
-    }
 
     return Promise.resolve();
   };
 
-  // ========== MANEJADORES ==========
-
-  const handleCancel = () => {
-    navigate("/programs");
+  const handleFieldTouch = (fieldName: keyof typeof touchedFields) => {
+    setTouchedFields((prev) => ({ ...prev, [fieldName]: true }));
   };
 
-  const onFinish = async (values: Program) => {
-    if (!codigo) return; // Seguridad: si no hay código, no hacer nada
+  React.useEffect(() => {
+    const checkValidity = async () => {
+      try {
+        await form.validateFields();
+        setIsFormValid(true);
+      } catch {
+        setIsFormValid(false);
+      }
+    };
 
-    setLoading(true);
+    if (touchedFields.nombre || touchedFields.facultad) {
+      checkValidity();
+    }
+  }, [form, formValues, touchedFields]);
+
+  const onFinish = async (values: Program) => {
+    if (!codigo) return;
+
     try {
-      // Preparar datos para actualizar
       const cleanedValues = {
         ...values,
-        codigo: codigo, // Mantener el código original (no editable)
+        codigo: codigo,
         nombre: values.nombre.trim().replace(/\s+/g, " "),
         active: true,
       };
 
-      // Actualizar en el store
       await updateProgram(codigo, cleanedValues);
-      message.success("Programa actualizado correctamente");
-      navigate("/programs");
+      setSuccess({
+        open: true,
+        message: "Programa actualizado correctamente",
+      });
     } catch (error: any) {
-      console.error("Error al actualizar programa:", error);
-
-      // Manejo específico de errores
-      if (error.message === "NAME_EXISTS" && error.existing) {
-        message.error(
-          `Ya existe un programa activo con el nombre "${values.nombre}"`
-        );
-      } else if (error.message === "NOT_FOUND") {
-        message.error("Programa no encontrado");
-      } else {
-        message.error("Error al actualizar el programa");
-      }
-    } finally {
-      setLoading(false);
+      setWarning({
+        open: true,
+        message: "Error al actualizar el programa",
+      });
     }
   };
 
-  // ========== RENDERIZADO CONDICIONAL ==========
+  const handleSuccessClose = () => {
+    setSuccess({ open: false, message: "" });
+    navigate("/programs");
+  };
 
-  // Si no encontramos el programa (y ya cargamos los datos)
+  const handleWarningClose = () => {
+    setWarning({ open: false, message: "" });
+    if (warning.message.includes("no encontrado")) {
+      navigate("/programs");
+    }
+  };
+
   if (!programFound && programs.length > 0) {
     return (
       <div className="auth-page">
@@ -172,7 +174,6 @@ const EditProgram: React.FC = () => {
     );
   }
 
-  // ========== RENDERIZADO PRINCIPAL ==========
   return (
     <div className="auth-page">
       <Header />
@@ -187,41 +188,40 @@ const EditProgram: React.FC = () => {
             name="edit-program-form"
             onFinish={onFinish}
             layout="vertical"
-            disabled={loading}
             autoComplete="off"
           >
-            {/* Código (solo lectura) */}
             <Form.Item name="codigo" label="Código del Programa">
               <Input
-                disabled // No editable
+                disabled
                 size="large"
-                style={{ backgroundColor: "#f5f5f5", color: "#666" }} // Estilo visual para disabled
+                style={{ backgroundColor: "#f5f5f5", color: "#666" }}
               />
             </Form.Item>
 
-            {/* Nombre (editable) */}
             <Form.Item
               name="nombre"
               label="Nombre del Programa"
               rules={[{ validator: validateNombre }]}
-              hasFeedback
+              hasFeedback={touchedFields.nombre}
+              validateStatus={touchedFields.nombre ? undefined : ""}
             >
               <Input
                 placeholder="Ejemplo: Ingeniería de Software"
                 size="large"
                 maxLength={150}
                 showCount
+                onBlur={() => handleFieldTouch("nombre")}
               />
             </Form.Item>
 
-            {/* Facultad (editable) */}
             <Form.Item
               name="facultad"
               label="Facultad"
               rules={[
                 { required: true, message: "Por favor selecciona la facultad" },
               ]}
-              hasFeedback
+              hasFeedback={touchedFields.facultad}
+              validateStatus={touchedFields.facultad ? undefined : ""}
             >
               <Select
                 placeholder="Selecciona la facultad"
@@ -234,6 +234,8 @@ const EditProgram: React.FC = () => {
                     .toLowerCase()
                     .includes(input.toLowerCase()) ?? false
                 }
+                onBlur={() => handleFieldTouch("facultad")}
+                onSelect={() => handleFieldTouch("facultad")}
               >
                 {facultades.map((facultad) => (
                   <Option key={facultad} value={facultad}>
@@ -243,27 +245,24 @@ const EditProgram: React.FC = () => {
               </Select>
             </Form.Item>
 
-            {/* Botones de acción */}
             <Form.Item>
               <Button
                 type="submit"
                 variant="primary"
                 size="medium"
-                disabled={loading}
+                disabled={!isFormValid}
               >
-                {loading ? "Guardando..." : "Guardar cambios"}
+                Guardar
               </Button>
             </Form.Item>
 
             <Form.Item>
               <Button
                 variant="ghost"
-                onClick={handleCancel}
-                className="back-button"
+                onClick={() => navigate("/programs")}
                 size="medium"
-                disabled={loading}
               >
-                ← Volver a lista de programas
+                Volver
               </Button>
             </Form.Item>
           </Form>
@@ -271,6 +270,17 @@ const EditProgram: React.FC = () => {
       </div>
 
       <Footer />
+
+      <SuccessModal
+        open={success.open}
+        message={success.message}
+        onClose={handleSuccessClose}
+      />
+      <WarningModal
+        open={warning.open}
+        message={warning.message}
+        onClose={handleWarningClose}
+      />
     </div>
   );
 };

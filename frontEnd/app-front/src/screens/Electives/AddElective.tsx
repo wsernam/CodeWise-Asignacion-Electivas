@@ -9,31 +9,23 @@ import SuccessModal from "../../components/shared/SuccessModal/SuccessModal";
 import Navbar from "../../components/layout/Navbar/Navbar";
 import Card from "../../components/ui/Card/Card";
 import Button from "../../components/ui/Button/Button";
-
-// Stores globales para estado
 import { useElectiveStore } from "../../store/electiveStore";
 import { useProgramStore } from "../../store/programStore";
-
-// Tipos e interfaces
 import type { IElective } from "../../models/elective";
 
 const { Option } = Select;
 
 const AddElective: React.FC = () => {
-  // ========== HOOKS Y ESTADO ==========
   const [form] = Form.useForm();
   const navigate = useNavigate();
+  const formValues = Form.useWatch([], form);
 
-  // Funciones del store de electivas
-  const addElective = useElectiveStore((state) => state.addElective);
-  const reactivateElective = useElectiveStore(
-    (state) => state.reactivateElective
-  );
-  // Funciones del store de programas (para el dropdown)
-  const programs = useProgramStore((state) => state.programs);
-  const fetchPrograms = useProgramStore((state) => state.fetchPrograms);
-
-  // ========== ESTADO LOCAL ==========
+  const [touchedFields, setTouchedFields] = useState({
+    codigo: false,
+    nombre: false,
+    programa: false,
+  });
+  const [isFormValid, setIsFormValid] = useState(false);
   const [warning, setWarning] = useState<{ open: boolean; message: string }>({
     open: false,
     message: "",
@@ -52,89 +44,85 @@ const AddElective: React.FC = () => {
     message: "",
   });
 
-  // ========== EFFECTS ==========
+  const addElective = useElectiveStore((state) => state.addElective);
+  const reactivateElective = useElectiveStore(
+    (state) => state.reactivateElective
+  );
+  const programs = useProgramStore((state) => state.programs);
+  const fetchPrograms = useProgramStore((state) => state.fetchPrograms);
+
   useEffect(() => {
     fetchPrograms();
   }, [fetchPrograms]);
 
-  // ========== VALIDACIONES ==========
-
   const validateCodigo = (_: any, value: string) => {
-    if (!value) {
-      return Promise.reject("Por favor ingresa el código");
-    }
-
-    // Validar longitud
-    if (value.length < 2 || value.length > 10) {
+    if (!value) return Promise.reject("Por favor ingresa el código");
+    if (value.length < 2 || value.length > 10)
       return Promise.reject("El código debe tener entre 2 y 10 caracteres");
-    }
-
-    // Validar que tenga al menos una letra y un número
-    if (!/[a-zA-Z]/.test(value)) {
+    if (!/[a-zA-Z]/.test(value))
       return Promise.reject("El código debe contener al menos una letra");
-    }
-
-    if (!/\d/.test(value)) {
+    if (!/\d/.test(value))
       return Promise.reject("El código debe contener al menos un número");
-    }
-
-    // Validar que solo contenga letras y números
-    if (!/^[a-zA-Z0-9]+$/.test(value)) {
+    if (!/^[a-zA-Z0-9]+$/.test(value))
       return Promise.reject("El código solo puede contener letras y números");
-    }
     return Promise.resolve();
   };
 
   const validateNombre = (_: any, value: string) => {
-    if (!value) {
-      return Promise.reject("Por favor ingresa el nombre");
-    }
-    if (value.length < 3) {
+    if (!value) return Promise.reject("Por favor ingresa el nombre");
+    if (value.length < 3)
       return Promise.reject("El nombre debe tener al menos 3 caracteres");
-    }
-    if (value.length > 100) {
+    if (value.length > 100)
       return Promise.reject("El nombre no puede exceder 100 caracteres");
-    }
-    if (/^\s+|\s+$/.test(value)) {
+    if (/^\s+|\s+$/.test(value))
       return Promise.reject(
         "El nombre no puede empezar o terminar con espacios"
       );
-    }
-    if (/\d/.test(value)) {
+    if (/\d/.test(value))
       return Promise.reject("El nombre no puede contener números");
-    }
-    if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]+$/.test(value)) {
+    if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]+$/.test(value))
       return Promise.reject("El nombre solo puede contener letras y espacios");
-    }
     return Promise.resolve();
   };
 
-  // ========== MANEJADOR PRINCIPAL ==========
+  const handleFieldTouch = (fieldName: keyof typeof touchedFields) => {
+    setTouchedFields((prev) => ({ ...prev, [fieldName]: true }));
+  };
+
+  React.useEffect(() => {
+    const checkValidity = async () => {
+      try {
+        await form.validateFields();
+        setIsFormValid(true);
+      } catch {
+        setIsFormValid(false);
+      }
+    };
+
+    if (
+      touchedFields.codigo ||
+      touchedFields.nombre ||
+      touchedFields.programa
+    ) {
+      checkValidity();
+    }
+  }, [form, formValues, touchedFields]);
 
   const onFinish = async (values: IElective) => {
     try {
-      // Limpiar y estandarizar datos - DEJAR TEXTO ORIGINAL
       const cleanedValues = {
         ...values,
-        nombre: values.nombre.trim().replace(/\s+/g, " "), // Mantener formato original
+        nombre: values.nombre.trim().replace(/\s+/g, " "),
         active: true,
       };
 
-      // Intentar agregar al store
       await addElective(cleanedValues);
 
-      // Éxito: usar modal de éxito
       setSuccess({
         open: true,
         message: `Electiva "${cleanedValues.nombre}" agregada correctamente`,
       });
-
-      // Limpiar formulario inmediatamente
-      form.resetFields();
     } catch (err: any) {
-      console.error("Error al agregar electiva:", err);
-
-      // Manejo específico de errores de duplicación - USANDO MODALES
       if (err.message === "EXISTS_INACTIVE" && err.existing) {
         setWarning({
           open: true,
@@ -146,7 +134,6 @@ const AddElective: React.FC = () => {
           nombre: err.existing.nombre,
         });
       } else if (err.message === "EXISTS_ACTIVE" && err.existing) {
-        // USAR MODAL EN LUGAR DE message.error()
         setWarning({
           open: true,
           message: `Ya existe una electiva activa con el código "${err.existing.codigo}" o nombre "${err.existing.nombre}"`,
@@ -160,8 +147,6 @@ const AddElective: React.FC = () => {
     }
   };
 
-  // ========== MANEJADORES DE MODALES ==========
-
   const handleReactivate = async () => {
     try {
       await reactivateElective(confirm.codigo);
@@ -169,8 +154,6 @@ const AddElective: React.FC = () => {
         open: true,
         message: `Electiva "${confirm.nombre}" reactivada correctamente`,
       });
-
-      // Cerrar solo el modal de confirmación, mantener el de éxito abierto
       setConfirm({ open: false, codigo: "", nombre: "" });
       setWarning({ open: false, message: "" });
     } catch (error) {
@@ -183,7 +166,9 @@ const AddElective: React.FC = () => {
 
   const handleSuccessClose = () => {
     setSuccess({ open: false, message: "" });
-    navigate("/electives"); // Redirigir solo cuando el usuario cierre el modal
+    form.resetFields();
+    setTouchedFields({ codigo: false, nombre: false, programa: false });
+    navigate("/electives");
   };
 
   const handleWarningClose = () => {
@@ -195,11 +180,6 @@ const AddElective: React.FC = () => {
     setWarning({ open: false, message: "" });
   };
 
-  const handleCancelForm = () => {
-    navigate("/electives");
-  };
-
-  // ========== RENDERIZADO ==========
   return (
     <div className="form-page-container">
       <Header />
@@ -216,18 +196,19 @@ const AddElective: React.FC = () => {
             layout="vertical"
             autoComplete="off"
           >
-            {/* Campo código */}
             <Form.Item
               name="codigo"
               label="Código"
               rules={[{ validator: validateCodigo }]}
-              hasFeedback
+              hasFeedback={touchedFields.codigo}
+              validateStatus={touchedFields.codigo ? undefined : ""}
             >
               <Input
                 placeholder="Ejemplo: ES104"
                 size="large"
                 maxLength={10}
                 showCount
+                onBlur={() => handleFieldTouch("codigo")}
                 onInput={(e: React.FormEvent<HTMLInputElement>) => {
                   const input = e.target as HTMLInputElement;
                   input.value = input.value.toUpperCase();
@@ -235,29 +216,30 @@ const AddElective: React.FC = () => {
               />
             </Form.Item>
 
-            {/* Campo nombre - TEXTO ORIGINAL DEL USUARIO */}
             <Form.Item
               name="nombre"
               label="Nombre de la Electiva"
               rules={[{ validator: validateNombre }]}
-              hasFeedback
+              hasFeedback={touchedFields.nombre}
+              validateStatus={touchedFields.nombre ? undefined : ""}
             >
               <Input
                 placeholder="Ejemplo: Desarrollo Web Avanzado"
                 size="large"
                 maxLength={100}
                 showCount
+                onBlur={() => handleFieldTouch("nombre")}
               />
             </Form.Item>
 
-            {/* Dropdown de programas */}
             <Form.Item
               name="programa"
               label="Programa Académico"
               rules={[
                 { required: true, message: "Por favor selecciona el programa" },
               ]}
-              hasFeedback
+              hasFeedback={touchedFields.programa}
+              validateStatus={touchedFields.programa ? undefined : ""}
             >
               <Select
                 placeholder="Selecciona un programa"
@@ -271,6 +253,8 @@ const AddElective: React.FC = () => {
                     .includes(input.toLowerCase()) ?? false
                 }
                 notFoundContent="No se encontraron programas"
+                onBlur={() => handleFieldTouch("programa")}
+                onSelect={() => handleFieldTouch("programa")}
               >
                 {programs.map((program) => (
                   <Option key={program.codigo} value={program.nombre}>
@@ -280,16 +264,24 @@ const AddElective: React.FC = () => {
               </Select>
             </Form.Item>
 
-            {/* Botones de acción */}
             <Form.Item>
-              <Button type="submit" variant="primary" size="medium">
-                Guardar Electiva
+              <Button
+                type="submit"
+                variant="primary"
+                size="medium"
+                disabled={!isFormValid}
+              >
+                Guardar
               </Button>
             </Form.Item>
 
             <Form.Item>
-              <Button variant="ghost" onClick={handleCancelForm} size="medium">
-                ← Volver a lista de electivas
+              <Button
+                variant="ghost"
+                onClick={() => navigate("/electives")}
+                size="medium"
+              >
+                Volver
               </Button>
             </Form.Item>
           </Form>
@@ -298,21 +290,16 @@ const AddElective: React.FC = () => {
 
       <Footer />
 
-      {/* Modal de advertencia */}
       <WarningModal
         open={warning.open}
         message={warning.message}
         onClose={handleWarningClose}
       />
-
-      {/* Modal de éxito */}
       <SuccessModal
         open={success.open}
         message={success.message}
-        onClose={handleSuccessClose} // Solo se cierra cuando el usuario hace clic
+        onClose={handleSuccessClose}
       />
-
-      {/* Modal de confirmación (reactivación) */}
       <ConfirmModal
         open={confirm.open}
         message={`¿Deseas reactivar la electiva "${confirm.nombre}"?`}

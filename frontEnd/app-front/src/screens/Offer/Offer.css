@@ -1,0 +1,246 @@
+/* Contenedor principal de Offer */
+.offer-container {
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  background: transparent;
+  font-family: var(--font-family);
+}
+
+.offer-content {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 2rem;
+}
+
+.offer-card {
+  max-width: 1000px;
+  width: 100%;
+}
+
+.offer-title {
+  margin-bottom: 1.5rem;
+  font-weight: 600;
+  color: #222;
+  text-align: center;
+}
+
+/* Panel de configuración */
+.offer-config-panel {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xl);
+  margin-bottom: var(--space-xl);
+  padding: var(--space-md);
+  background: #f8f9fa;
+  border-radius: 8px;
+  flex-wrap: wrap;
+}
+
+.offer-config-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.offer-config-label {
+  font-weight: 600;
+  color: #495057;
+}
+
+/* Facultades desplegables */
+.offer-facultad-container {
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: var(--space-md);
+}
+
+.offer-facultad-header {
+  background: #e9ecef;
+  padding: var(--space-md) var(--space-lg);
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: background-color 0.2s ease;
+}
+
+.offer-facultad-header:hover {
+  background: #dee2e6;
+}
+
+.offer-facultad-title {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #495057;
+}
+
+.offer-facultad-count {
+  font-size: 0.9rem;
+  color: #6c757d;
+  margin-left: var(--space-sm);
+  font-weight: normal;
+}
+
+.offer-facultad-arrow {
+  font-size: 1.2rem;
+  color: #6c757d;
+  transition: transform 0.2s ease;
+}
+
+.offer-facultad-arrow.expanded {
+  transform: rotate(180deg);
+}
+
+.offer-facultad-content {
+  background: white;
+  padding: var(--space-lg);
+}
+
+/* Mensajes de vacío */
+.offer-empty-message {
+  text-align: center;
+  padding: var(--space-xl);
+  color: #6c757d;
+  font-style: italic;
+}
+
+.offer-empty-program {
+  color: #6c757d;
+  font-style: italic;
+  text-align: center;
+  padding: var(--space-sm);
+}
+
+/* Grid de programas */
+.offer-programas-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: var(--space-lg);
+}
+
+/* Tarjeta de programa */
+.offer-programa-card {
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  padding: var(--space-md);
+}
+
+.offer-programa-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: var(--space-md);
+  padding-bottom: var(--space-sm);
+  border-bottom: 2px solid #dee2e6;
+}
+
+.offer-programa-info {
+  flex: 1;
+}
+
+.offer-programa-name {
+  margin: 0 0 var(--space-xs) 0;
+  font-size: 1rem;
+  color: #495057;
+}
+
+.offer-programa-code {
+  color: #6c757d;
+  font-size: 0.8rem;
+  font-style: italic;
+}
+
+.offer-programa-count {
+  color: #1e40af;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-align: right;
+}
+
+/* Lista de electivas */
+.offer-electivas-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  min-height: 50px;
+}
+
+/* Item de electiva */
+.offer-electiva-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm);
+  border-radius: 4px;
+  cursor: pointer;
+  background: white;
+  border: 1px solid #dee2e6;
+  transition: all 0.2s ease;
+}
+
+.offer-electiva-item.selected {
+  background: #e3f2fd;
+  border: 1px solid #90caf9;
+}
+
+.offer-electiva-item:hover {
+  background: #f8f9fa;
+}
+
+.offer-electiva-checkbox {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--primary-blue);
+}
+
+.offer-electiva-name {
+  flex: 1;
+  font-size: 0.9rem;
+  color: #495057;
+}
+
+.offer-electiva-code {
+  color: #6c757d;
+  font-size: 0.8rem;
+  font-weight: 600;
+  background: #e9ecef;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+/* Botón guardar */
+.offer-save-button {
+  text-align: center;
+  margin-top: var(--space-xl);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .offer-content {
+    padding: 1rem;
+  }
+
+  .offer-config-panel {
+    gap: var(--space-md);
+    justify-content: center;
+  }
+
+  .offer-programas-grid {
+    grid-template-columns: 1fr;
+    gap: var(--space-md);
+  }
+
+  .offer-facultad-header {
+    padding: var(--space-md);
+  }
+
+  .offer-facultad-content {
+    padding: var(--space-md);
+  }
+}

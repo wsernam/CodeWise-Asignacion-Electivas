@@ -253,7 +253,6 @@ const ElectiveSelection: React.FC = () => {
                 variant="primary"
                 onClick={handleSubmit}
                 disabled={
-                  loading ||
                   selectedElectives.some((e) => e === "") ||
                   hasDuplicateElectives()
                 }

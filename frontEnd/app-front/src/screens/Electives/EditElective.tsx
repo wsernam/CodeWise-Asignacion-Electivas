@@ -8,32 +8,23 @@ import Button from "../../components/ui/Button/Button";
 import { useNavigate, useParams } from "react-router";
 import WarningModal from "../../components/shared/WarningModal/WarningModal";
 import SuccessModal from "../../components/shared/SuccessModal/SuccessModal";
-
-// Stores globales
 import { useElectiveStore } from "../../store/electiveStore";
 import { useProgramStore } from "../../store/programStore";
-
-// Tipos
 import type { IElective } from "../../models/elective";
 
 const { Option } = Select;
 
 const EditElective: React.FC = () => {
-  // ========== HOOKS Y ESTADO ==========
   const [form] = Form.useForm();
   const navigate = useNavigate();
-
-  // Obtener código de la URL
   const { codigo } = useParams<{ codigo: string }>();
+  const formValues = Form.useWatch([], form);
 
-  // Stores
-  const electives = useElectiveStore((state) => state.electives);
-  const updateElective = useElectiveStore((state) => state.updateElective);
-  const fetchElectives = useElectiveStore((state) => state.fetchElectives);
-
-  const programs = useProgramStore((state) => state.programs);
-  const fetchPrograms = useProgramStore((state) => state.fetchPrograms);
-
+  const [touchedFields, setTouchedFields] = useState({
+    nombre: false,
+    programa: false,
+  });
+  const [isFormValid, setIsFormValid] = useState(false);
   const [electiveFound, setElectiveFound] = useState(false);
   const [warning, setWarning] = useState<{ open: boolean; message: string }>({
     open: false,
@@ -44,33 +35,22 @@ const EditElective: React.FC = () => {
     message: "",
   });
 
-  // ========== EFFECTS ==========
+  const electives = useElectiveStore((state) => state.electives);
+  const updateElective = useElectiveStore((state) => state.updateElective);
+  const fetchElectives = useElectiveStore((state) => state.fetchElectives);
+  const programs = useProgramStore((state) => state.programs);
+  const fetchPrograms = useProgramStore((state) => state.fetchPrograms);
 
-  /**
-   * useEffect 1: Cargar datos iniciales
-   * Se ejecuta al montar el componente
-   */
   useEffect(() => {
-    // Cargar datos si no están disponibles
-    if (electives.length === 0) {
-      fetchElectives();
-    }
-    if (programs.length === 0) {
-      fetchPrograms();
-    }
+    if (electives.length === 0) fetchElectives();
+    if (programs.length === 0) fetchPrograms();
   }, [fetchElectives, fetchPrograms, electives.length, programs.length]);
 
-  /**
-   * useEffect 2: Cargar datos de la electiva a editar
-   * Se ejecuta cuando tenemos el código y los datos cargados
-   */
   useEffect(() => {
     if (codigo && electives.length > 0) {
-      // Buscar la electiva por código y que esté activa
       const elective = electives.find((e) => e.codigo === codigo && e.active);
 
       if (elective) {
-        // Llenar el formulario con los datos actuales
         form.setFieldsValue({
           codigo: elective.codigo,
           nombre: elective.nombre,
@@ -86,75 +66,71 @@ const EditElective: React.FC = () => {
     }
   }, [codigo, electives, form]);
 
-  // ========== VALIDACIONES ==========
-
   const validateNombre = (_: any, value: string) => {
-    if (!value) {
-      return Promise.reject("Por favor ingresa el nombre");
-    }
-    if (value.length < 3) {
+    if (!value) return Promise.reject("Por favor ingresa el nombre");
+    if (value.length < 3)
       return Promise.reject("El nombre debe tener al menos 3 caracteres");
-    }
-    if (value.length > 100) {
+    if (value.length > 100)
       return Promise.reject("El nombre no puede exceder 100 caracteres");
-    }
-    if (/^\s+|\s+$/.test(value)) {
+    if (/^\s+|\s+$/.test(value))
       return Promise.reject(
         "El nombre no puede empezar o terminar con espacios"
       );
-    }
-    if (/\d/.test(value)) {
+    if (/\d/.test(value))
       return Promise.reject("El nombre no puede contener números");
-    }
-    if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]+$/.test(value)) {
+    if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]+$/.test(value))
       return Promise.reject("El nombre solo puede contener letras y espacios");
-    }
 
-    // Validación especial: no permitir nombres duplicados
     const existingElective = electives.find(
       (e) =>
         e.nombre.toLowerCase() === value.toLowerCase() &&
-        e.codigo !== codigo && // Excluir la electiva actual
+        e.codigo !== codigo &&
         e.active
     );
-
-    if (existingElective) {
+    if (existingElective)
       return Promise.reject(
         `Ya existe una electiva activa con el nombre "${value}"`
       );
-    }
 
     return Promise.resolve();
   };
 
-  // ========== MANEJADORES ==========
-
-  const handleCancel = () => {
-    navigate("/electives");
+  const handleFieldTouch = (fieldName: keyof typeof touchedFields) => {
+    setTouchedFields((prev) => ({ ...prev, [fieldName]: true }));
   };
 
+  React.useEffect(() => {
+    const checkValidity = async () => {
+      try {
+        await form.validateFields();
+        setIsFormValid(true);
+      } catch {
+        setIsFormValid(false);
+      }
+    };
+
+    if (touchedFields.nombre || touchedFields.programa) {
+      checkValidity();
+    }
+  }, [form, formValues, touchedFields]);
+
   const onFinish = async (values: IElective) => {
-    if (!codigo) return; // Seguridad: si no hay código, no hacer nada
+    if (!codigo) return;
 
     try {
-      // Preparar datos para actualizar
       const cleanedValues = {
         ...values,
-        codigo: codigo, // Mantener el código original
+        codigo: codigo,
         nombre: values.nombre.trim().replace(/\s+/g, " "),
         active: true,
       };
 
-      // Actualizar en el store
       await updateElective(codigo, cleanedValues);
-
-      // Éxito: usar modal de éxito
       setSuccess({
         open: true,
         message: "Electiva actualizada correctamente",
       });
     } catch (error: any) {
-      console.error("Error al actualizar electiva:", error);
       setWarning({
         open: true,
         message: "Error al actualizar la electiva",
@@ -164,19 +140,16 @@ const EditElective: React.FC = () => {
 
   const handleSuccessClose = () => {
     setSuccess({ open: false, message: "" });
-    navigate("/electives"); // Redirigir solo cuando el usuario cierre el modal
+    navigate("/electives");
   };
 
   const handleWarningClose = () => {
     setWarning({ open: false, message: "" });
     if (warning.message.includes("no encontrada")) {
-      navigate("/electives"); // Redirigir solo si es error de "no encontrada"
+      navigate("/electives");
     }
   };
 
-  // ========== RENDERIZADO CONDICIONAL ==========
-
-  // Si no encontramos la electiva (pero ya cargamos los datos)
   if (!electiveFound && electives.length > 0) {
     return (
       <div className="form-page-container">
@@ -196,7 +169,6 @@ const EditElective: React.FC = () => {
     );
   }
 
-  // ========== RENDERIZADO PRINCIPAL ==========
   return (
     <div className="form-page-container">
       <Header />
@@ -213,7 +185,6 @@ const EditElective: React.FC = () => {
             layout="vertical"
             autoComplete="off"
           >
-            {/* Código (solo lectura) */}
             <Form.Item name="codigo" label="Código">
               <Input
                 disabled
@@ -222,29 +193,30 @@ const EditElective: React.FC = () => {
               />
             </Form.Item>
 
-            {/* Nombre (editable) */}
             <Form.Item
               name="nombre"
               label="Nombre de la Electiva"
               rules={[{ validator: validateNombre }]}
-              hasFeedback
+              hasFeedback={touchedFields.nombre}
+              validateStatus={touchedFields.nombre ? undefined : ""}
             >
               <Input
                 placeholder="Ejemplo: Desarrollo Web Avanzado"
                 size="large"
                 maxLength={100}
                 showCount
+                onBlur={() => handleFieldTouch("nombre")}
               />
             </Form.Item>
 
-            {/* Programa (editable) */}
             <Form.Item
               name="programa"
               label="Programa Académico"
               rules={[
                 { required: true, message: "Por favor selecciona el programa" },
               ]}
-              hasFeedback
+              hasFeedback={touchedFields.programa}
+              validateStatus={touchedFields.programa ? undefined : ""}
             >
               <Select
                 placeholder="Selecciona un programa"
@@ -258,6 +230,8 @@ const EditElective: React.FC = () => {
                     .includes(input.toLowerCase()) ?? false
                 }
                 notFoundContent="No se encontraron programas"
+                onBlur={() => handleFieldTouch("programa")}
+                onSelect={() => handleFieldTouch("programa")}
               >
                 {programs.map((program) => (
                   <Option key={program.codigo} value={program.nombre}>
@@ -267,16 +241,24 @@ const EditElective: React.FC = () => {
               </Select>
             </Form.Item>
 
-            {/* Botones de acción */}
             <Form.Item>
-              <Button type="submit" variant="primary" size="medium">
-                Guardar cambios
+              <Button
+                type="submit"
+                variant="primary"
+                size="medium"
+                disabled={!isFormValid}
+              >
+                Guardar
               </Button>
             </Form.Item>
 
             <Form.Item>
-              <Button variant="ghost" onClick={handleCancel} size="medium">
-                ← Volver a lista de electivas
+              <Button
+                variant="ghost"
+                onClick={() => navigate("/electives")}
+                size="medium"
+              >
+                Volver
               </Button>
             </Form.Item>
           </Form>
@@ -285,14 +267,11 @@ const EditElective: React.FC = () => {
 
       <Footer />
 
-      {/* Modal de advertencia/error */}
       <WarningModal
         open={warning.open}
         message={warning.message}
         onClose={handleWarningClose}
       />
-
-      {/* Modal de éxito */}
       <SuccessModal
         open={success.open}
         message={success.message}

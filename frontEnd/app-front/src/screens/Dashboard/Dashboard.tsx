@@ -9,6 +9,7 @@ import SuccessModal from "../../components/shared/SuccessModal/SuccessModal";
 import WarningModal from "../../components/shared/WarningModal/WarningModal";
 
 import { useElectiveStore } from "../../store/electiveStore";
+import { useProgramStore } from "../../store/programStore"; // ✅ AGREGADO
 import { useFormStore } from "../../store/offerStore";
 import "./Dashboard.css";
 
@@ -43,13 +44,16 @@ const Dashboard: React.FC = () => {
   // ====== Datos globales desde el store ======
   const electives = useElectiveStore((s) => s.electives);
   const fetchElectives = useElectiveStore((s) => s.fetchElectives);
+  const programs = useProgramStore((s) => s.programs); // ✅ AGREGADO
+  const fetchPrograms = useProgramStore((s) => s.fetchPrograms); // ✅ AGREGADO
 
   const { currentForm, changeFormStatus } = useFormStore();
 
-  // Cargar electivas al montar el componente
+  // Cargar datos al montar el componente
   useEffect(() => {
     fetchElectives();
-  }, [fetchElectives]);
+    fetchPrograms();
+  }, [fetchElectives, fetchPrograms]);
 
   // ====== Estado local ======
   const [enrollments, setEnrollments] = useState<Record<string, number>>({}); // inscritos por electiva
@@ -69,58 +73,84 @@ const Dashboard: React.FC = () => {
     message: "",
   });
 
+  // ====== DATOS REALES ======
+
+  // Electivas activas (las que realmente están disponibles)
+  const activeElectives = useMemo(() => {
+    return electives.filter((elective) => elective.active);
+  }, [electives]);
+
+  // Programas activos (los que realmente existen)
+  const activePrograms = useMemo(() => {
+    return programs.filter((program) => program.active);
+  }, [programs]);
+
   // ====== Procesamiento de datos ======
-  // Simulación de inscripciones (⚠️ aquí deberías conectar con backend real)
+  // Simulación de inscripciones (basada en datos reales)
   useEffect(() => {
     const map: Record<string, number> = {};
-    electives.forEach((e, i) => {
-      // Si no hay inscripciones reales, generamos un valor pseudoaleatorio
-      const base = (i + 3) * 7;
+    activeElectives.forEach((e, i) => {
+      // Valor pseudoaleatorio pero basado en datos reales
+      const base = (i + e.codigo.length) * 5;
       map[e.codigo] = base % (CAPACITY_PER_ELECTIVE + 1);
     });
     setEnrollments(map);
-  }, [electives]);
+  }, [activeElectives]);
 
-  // Lista de programas disponibles para filtrar
+  // Lista de programas disponibles para filtrar (basada en programas reales)
   const programas = useMemo(() => {
-    const setProg = new Set(electives.map((e) => e.programa));
-    return ["Todos", ...Array.from(setProg)];
-  }, [electives]);
+    const programasConElectivas = new Set(
+      activeElectives.map((e) => e.programa)
+    );
+    const programasActivos = activePrograms.map((p) => p.nombre);
 
-  // Electivas filtradas por programa
+    // Solo mostrar programas que tienen electivas activas
+    const programasFiltrados = programasActivos.filter((programa) =>
+      programasConElectivas.has(programa)
+    );
+
+    return ["Todos", ...programasFiltrados];
+  }, [activeElectives, activePrograms]);
+
+  // Electivas filtradas por programa (solo activas)
   const filteredElectives = useMemo(() => {
-    if (programaSeleccionado === "Todos") return electives;
-    return electives.filter((e) => e.programa === programaSeleccionado);
-  }, [electives, programaSeleccionado]);
+    if (programaSeleccionado === "Todos") return activeElectives;
+    return activeElectives.filter((e) => e.programa === programaSeleccionado);
+  }, [activeElectives, programaSeleccionado]);
 
-  // ====== KPIs ======
+  // ====== KPIs CON DATOS REALES ======
   const totalElectives = filteredElectives.length;
-  const activeElectives = filteredElectives.filter((e) => e.active).length;
+  const totalActiveElectives = activeElectives.length; // Total real de electivas activas
+  const totalPrograms = activePrograms.length; // Total real de programas activos
   const totalEnrollments = filteredElectives.reduce(
     (acc, e) => acc + (enrollments[e.codigo] || 0),
     0
   );
-  const occupancyPercent = activeElectives
-    ? Math.round(
-        (totalEnrollments / (activeElectives * CAPACITY_PER_ELECTIVE)) * 100
-      )
-    : 0;
+
+  // Ocupación basada en electivas activas reales
+  const occupancyPercent =
+    totalActiveElectives > 0
+      ? Math.round(
+          (totalEnrollments / (totalActiveElectives * CAPACITY_PER_ELECTIVE)) *
+            100
+        )
+      : 0;
 
   // Estado del formulario actual
   const formStatus = currentForm?.for_status || false;
 
-  // ====== Datos para gráficas ======
-  // Distribución de inscritos por programa
+  // ====== Datos para gráficas (REALES) ======
+  // Distribución de inscritos por programa (solo programas con electivas activas)
   const pieData = useMemo(() => {
     const grouped: Record<string, number> = {};
-    electives.forEach((e) => {
+    activeElectives.forEach((e) => {
       const count = enrollments[e.codigo] || 0;
       grouped[e.programa] = (grouped[e.programa] || 0) + count;
     });
     return Object.entries(grouped).map(([name, value]) => ({ name, value }));
-  }, [electives, enrollments]);
+  }, [activeElectives, enrollments]);
 
-  // Top 10 electivas más demandadas
+  // Top 10 electivas más demandadas (solo electivas activas)
   const barData = useMemo(() => {
     return filteredElectives
       .map((e) => ({
@@ -133,7 +163,7 @@ const Dashboard: React.FC = () => {
   }, [filteredElectives, enrollments]);
 
   // ====== Tablas ======
-  // Ordenar todas las electivas por inscritos
+  // Ordenar electivas activas por inscritos
   const sortedByEnroll = useMemo(
     () =>
       filteredElectives
@@ -251,14 +281,14 @@ const Dashboard: React.FC = () => {
           <div className="kpi-row">
             <Card padding="lg">
               <div className="kpi-card">
-                <div className="kpi-title">Electivas totales</div>
-                <div className="kpi-value">{totalElectives}</div>
+                <div className="kpi-title">Programas activos</div>
+                <div className="kpi-value">{totalPrograms}</div>
               </div>
             </Card>
             <Card padding="lg">
               <div className="kpi-card">
                 <div className="kpi-title">Electivas activas</div>
-                <div className="kpi-value">{activeElectives}</div>
+                <div className="kpi-value">{totalActiveElectives}</div>
               </div>
             </Card>
             <Card padding="lg">

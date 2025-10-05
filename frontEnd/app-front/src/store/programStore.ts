@@ -1,7 +1,5 @@
-// programStore.ts - Store completo siguiendo el modelo de electivas
 import { create } from "zustand";
 import type { IProgram as Program } from "../models/program";
-
 import {
   getPrograms,
   createProgram,
@@ -11,79 +9,48 @@ import {
   getProgramStats,
 } from "../services/programService";
 
-/**
- * Interfaz que define el estado y las funciones del store de programas
- */
 interface ProgramState {
-  programs: Program[]; // Lista de programas en el estado
-  loading: boolean; // Estado de carga
-  error: string | null; // Mensaje de error si existe
-
-  // Funciones principales
-  fetchPrograms: () => Promise<void>; // Cargar todos los programas
-  addProgram: (program: Program) => Promise<void>; // Agregar nuevo programa
-  updateProgram: (codigo: string, updated: Program) => Promise<void>; // Actualizar programa
-  getProgramByCode: (codigo: string) => Promise<Program | null>; // Obtener programa específico
-  searchPrograms: (searchTerm: string) => Promise<Program[]>; // Buscar programas
+  programs: Program[];
+  loading: boolean;
+  error: string | null;
+  fetchPrograms: () => Promise<void>;
+  addProgram: (program: Program) => Promise<void>;
+  updateProgram: (codigo: string, updated: Program) => Promise<void>;
+  getProgramByCode: (codigo: string) => Promise<Program | null>;
+  searchPrograms: (searchTerm: string) => Promise<Program[]>;
   getProgramStats: () => Promise<{
     total: number;
     active: number;
     byFaculty: Record<string, number>;
-  }>; // Estadísticas
-
-  // Funciones de utilidad
-  clearError: () => void; // Limpiar errores
-  setLoading: (loading: boolean) => void; // Establecer estado de carga
+  }>;
+  clearError: () => void;
 }
 
-/**
- * useProgramStore: store global para manejar programas
- * Sigue el mismo patrón que electiveStore pero adaptado para programas
- */
 export const useProgramStore = create<ProgramState>((set, get) => ({
-  programs: [], // Estado inicial vacío
+  programs: [],
   loading: false,
   error: null,
 
-  /**
-   * clearError: limpia el estado de error
-   */
   clearError: () => set({ error: null }),
 
-  /**
-   * setLoading: establece el estado de carga
-   */
-  setLoading: (loading: boolean) => set({ loading }),
-
-  /**
-   * fetchPrograms: obtiene todos los programas y actualiza el store
-   */
   fetchPrograms: async () => {
+    console.log("[ProgramStore] Cargando programas...");
     set({ loading: true, error: null });
     try {
       const data = await getPrograms();
-      console.log("[Store] FetchPrograms:", data);
+      console.log(`[ProgramStore] ${data.length} programas cargados`);
       set({ programs: [...data], loading: false });
     } catch (err: any) {
-      console.error("[Store] Error fetching programs:", err);
-      set({
-        programs: [], // En caso de error completo, lista vacía
-        loading: false,
-        error: "Error al cargar los programas",
-      });
+      console.error("[ProgramStore] Error cargando programas:", err);
+      set({ programs: [], loading: false, error: "Error al cargar programas" });
     }
   },
 
-  /**
-   * addProgram: agrega un nuevo programa
-   * Maneja errores si el programa ya existe activo o inactivo
-   */
   addProgram: async (program: Program) => {
+    console.log("[ProgramStore] Agregando programa:", program);
     try {
       const newProgram = await createProgram(program);
-      console.log("[Store] Programa agregado:", newProgram);
-
-      // Actualizamos el estado: reemplazar si existe o agregar si es nuevo
+      console.log("[ProgramStore] Programa agregado OK");
       set((state) => ({
         programs: [
           ...state.programs.filter((p) => p.codigo !== newProgram.codigo),
@@ -92,33 +59,16 @@ export const useProgramStore = create<ProgramState>((set, get) => ({
         error: null,
       }));
     } catch (err: any) {
-      console.error("[Store] Error al agregar programa:", err);
-
-      // Caso: programa existe pero está inactivo
-      if (err.message === "EXISTS_INACTIVE" && err.existing) {
-        throw { message: "EXISTS_INACTIVE", existing: err.existing };
-      }
-
-      // Caso: programa ya existe activo
-      if (err.message === "EXISTS_ACTIVE" && err.existing) {
-        throw { message: "EXISTS_ACTIVE", existing: err.existing };
-      }
-
-      // Otros errores
-      set({ error: "Error al crear el programa" });
+      console.log("[ProgramStore] Error agregando programa:", err.message);
       throw err;
     }
   },
 
-  /**
-   * updateProgram: actualiza los datos de un programa existente
-   * Reemplaza el programa en el estado con la versión actualizada
-   */
   updateProgram: async (codigo: string, updated: Program) => {
+    console.log(`[ProgramStore] Actualizando programa ${codigo}`);
     try {
       const updatedProgram = await updateProgram(updated);
-      console.log("[Store] Programa actualizado:", updatedProgram);
-
+      console.log("[ProgramStore] Programa actualizado OK");
       set((state) => ({
         programs: state.programs.map((p) =>
           p.codigo === codigo ? updatedProgram : p
@@ -126,54 +76,23 @@ export const useProgramStore = create<ProgramState>((set, get) => ({
         error: null,
       }));
     } catch (err: any) {
-      console.error("[Store] Error al actualizar programa:", err);
-
-      if (err.message === "NAME_EXISTS" && err.existing) {
-        throw { message: "NAME_EXISTS", existing: err.existing };
-      }
-
-      if (err.message === "NOT_FOUND") {
-        throw { message: "NOT_FOUND" };
-      }
-
-      set({ error: "Error al actualizar el programa" });
+      console.log("[ProgramStore] Error actualizando programa:", err.message);
       throw err;
     }
   },
 
-  /**
-   * getProgramByCode: obtiene un programa específico por código
-   */
   getProgramByCode: async (codigo: string) => {
-    try {
-      return await getProgramByCode(codigo);
-    } catch (err: any) {
-      console.error("[Store] Error al obtener programa:", err);
-      return null;
-    }
+    console.log(`[ProgramStore] Buscando programa: ${codigo}`);
+    return await getProgramByCode(codigo);
   },
 
-  /**
-   * searchPrograms: busca programas por término de búsqueda
-   */
   searchPrograms: async (searchTerm: string) => {
-    try {
-      return await searchPrograms(searchTerm);
-    } catch (err: any) {
-      console.error("[Store] Error al buscar programas:", err);
-      return [];
-    }
+    console.log(`[ProgramStore] Buscando: "${searchTerm}"`);
+    return await searchPrograms(searchTerm);
   },
 
-  /**
-   * getProgramStats: obtiene estadísticas de programas
-   */
   getProgramStats: async () => {
-    try {
-      return await getProgramStats();
-    } catch (err: any) {
-      console.error("[Store] Error al obtener estadísticas:", err);
-      return { total: 0, active: 0, byFaculty: {} };
-    }
+    console.log("[ProgramStore] Obteniendo estadísticas");
+    return await getProgramStats();
   },
 }));
