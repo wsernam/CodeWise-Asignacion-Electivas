@@ -1,45 +1,82 @@
 import os
-import base64
-from django.core.mail import EmailMultiAlternatives, get_connection
+from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
-from email.mime.image import MIMEImage
-from pathlib import Path
 from django.conf import settings
+import smtplib
+from email.mime.image import MIMEImage
 
-BASE_DIR = Path(__file__).resolve().parent.parent
 
-def send_html_email_with_logo(subject: str, to: list, context: dict, logo_path: str = None):
+def send_html_email_with_logo(data):
     """
-    Envía un email HTML usando una plantilla. Inserta logo como imagen inline (CID).
-    - subject: asunto
-    - to: lista de destinatarios
-    - context: contexto para la plantilla (por ejemplo: {"table_rows": [...], "user": "Vanessa"})
-    - logo_path: ruta absoluta o relativa al archivo logo.png
+    Envía un correo HTML con logo embebido y CSS externo incrustado (inline).
+    
+    Espera un diccionario con:
+        {
+            "est_codigo": 1,
+            "sel_anio": 2026,
+            "sel_num_semestre": 1,
+            "est_correo": "ashleecampaz",
+            "fecha": "2024-10-01 10:00:00",
+            "electivas": 
+            [
+                { "ele_codigo": 2, "sel_prioridad": 1 , "ele_nombre": "Redes Avanzadas"},
+                { "ele_codigo": 3, "sel_prioridad": 2 , "ele_nombre": "Inteligencia Artificial"},
+                { "ele_codigo": 5, "sel_prioridad": 3 , "ele_nombre": "Sistemas Embebidos"}
+            ]
+        }
     """
+    try:
+        # Obtiene el destinatario desde el diccionario
+        #destinatario = f"{data.get('est_correo')}@unicauca.edu.co"
+        destinatario = "ashleecampaz@unicauca.edu.co"  # --- PARA PRUEBAS ---
+        asunto = f"Selección de Electivas - Período {data.get('sel_anio')}-{data.get('sel_num_semestre')}"
+        cuerpo = data
 
-    # Renderiza HTML
-    html_content = render_to_string("mailer/email_template.html", context)
+        # --- Rutas de plantilla y CSS ---
+        logo_path = os.path.join(settings.BASE_DIR, "static", "escudo_unicauca.png")
 
-    from_email = settings.DEFAULT_FROM_EMAIL
-    msg = EmailMultiAlternatives(subject=subject, body="Tu cliente de correo no soporta HTML.", from_email=from_email, to=to)
-    msg.attach_alternative(html_content, "text/html")
+        # --- Renderiza HTML con contexto ---
+        html_content = render_to_string("template_email.html", cuerpo)
 
-    # Adjunta logo como imagen inline si existe
-    if logo_path:
-        # Resuelve path relativo
-        logo_file = Path(logo_path)
-        if not logo_file.is_absolute():
-            logo_file = Path(settings.BASE_DIR) / logo_file
+        # --- Versión de texto alternativo (para clientes sin HTML) ---
+        text_content = "Este correo requiere un cliente compatible con HTML."
 
-        if logo_file.exists():
-            with open(logo_file, 'rb') as f:
+        # --- Crea el correo ---
+        msg = EmailMultiAlternatives(
+            subject=asunto,
+            body=text_content,
+            from_email=settings.EMAIL_HOST_USER,
+            to=[destinatario],
+            alternatives=[(html_content, "text/html; charset=utf-8")]
+        )
+
+        msg.encoding = 'utf-8'
+
+        # --- Adjunta logo usando Content-ID ---
+        logo_path = os.path.join(settings.BASE_DIR, "static", "escudo_unicauca.png")
+        if os.path.exists(logo_path):
+            with open(logo_path, "rb") as f:
                 img = MIMEImage(f.read())
-                img.add_header('Content-ID', '<logo_cid>')
-                img.add_header('Content-Disposition', 'inline', filename=logo_file.name)
+                img.add_header("Content-ID", "<escudo_unicauca>")
+                img.add_header("Content-Disposition", "inline", filename="escudo_unicauca.png")
                 msg.attach(img)
         else:
-            # Si no existe el logo, opcionalmente podrías subirlo a un host y usar una URL
-            pass
+            print(f"⚠️ No se encontró el archivo de logo en: {logo_path}")
 
-    # Envía
-    msg.send(fail_silently=False)
+        # --- Envío usando las variables de entorno configuradas en settings ---
+        if getattr(settings, "EMAIL_USE_SSL", False):
+            connection = smtplib.SMTP_SSL(settings.EMAIL_HOST, settings.EMAIL_PORT)
+        else:
+            connection = smtplib.SMTP(settings.EMAIL_HOST, settings.EMAIL_PORT)
+            if getattr(settings, "EMAIL_USE_TLS", False):
+                connection.starttls()
+
+        # Autenticación
+        connection.login(settings.EMAIL_HOST_USER, settings.EMAIL_HOST_PASSWORD)
+        connection.sendmail(settings.EMAIL_HOST_USER, [destinatario], msg.message().as_string())
+        connection.quit()
+
+        print(f"✅ Correo enviado correctamente a {destinatario}")
+
+    except Exception as e:
+        print(f"❌ Error al enviar correo: {e}")

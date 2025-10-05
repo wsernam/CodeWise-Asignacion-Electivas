@@ -18,24 +18,15 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# 5. Copiar el script de inicialización
-# Esto debe hacerse antes de copiar todo el proyecto para que el script
-# esté listo para su uso.
-COPY datosBase.sh /usr/local/bin/datosBase.sh
-RUN chmod +x /usr/local/bin/datosBase.sh
-
-# Corregir finales de línea para compatibilidad con Unix (importante en Windows)
-RUN sed -i 's/\r$//' /usr/local/bin/datosBase.sh
-
-# 6. Copiar el código del proyecto
+# 5. Copiar el código del proyecto
 # Ahora copiamos el resto de tu aplicación.
 COPY . .
 
-# 7. Exponer el puerto
+# 6. Exponer el puerto
 EXPOSE 8002
 
 
-# 8. Comando por defecto (CMD)
+# 7. Comando por defecto (CMD)
 # El CMD especifica los argumentos por defecto que se le pasarán al ENTRYPOINT.
 # En este caso, le decimos a nuestro script que ejecute el servidor de Django.
-CMD ["/usr/local/bin/datosBase.sh","python", "manage.py", "runserver", "0.0.0.0:8000"]
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8002"]

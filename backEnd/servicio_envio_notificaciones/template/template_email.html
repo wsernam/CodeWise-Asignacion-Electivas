@@ -3,8 +3,62 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>{{ subject }}</title>
-  <link rel="stylesheet" href="{% static 'styles.css' %}">
+  <title>Notificacion seleccion de electivas</title>
+  <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f6f9fc;
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
+        .container {
+            width: 80%;
+            margin: 30px auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            padding: 20px;
+        }
+        .intro {
+            font-size: 16px;
+            margin-bottom: 15px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: center;
+        }
+        th {
+            background-color: #0044cc;
+            color: white;
+        }
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            background-color: #0044cc;
+            color: white;
+        }
+        .footer {
+            margin-top: 25px;
+            font-size: 14px;
+            text-align: center;
+            color: #555;
+        }
+        img.logo {
+            display: block;
+            margin: 0 auto 15px;
+            width: 150px;
+        }
+    </style>
 </head>
 <body>
   <div class="container">
@@ -13,41 +67,36 @@
       <div>
         <img src="cid:escudo_unicauca" alt="Logo" style="height:48px; width:auto;"/>
       </div>
-      <div class="brand-title">{{ organization_name|default:"Universidad del Cauca" }}</div>
+      <div class="brand-title">Universidad del Cauca</div>
     </div>
 
     <div class="card">
       <div class="intro">
-        Hola {{ recipient_name|default:"Usuario" }},<br>
-        {{ intro_text|default:"Esta es su seleccion de electivas:" }}
+        El estudiante identificado con codigo academico
+        {{est_codigo}} realizo la siguiente seleccion de electivas para el periodo {{sel_anio}}-{{sel_num_semestre}}.
       </div>
 
-      <!-- Tabla dinámica -->
+      <!-- Tabla dinamica -->
       <table>
-        <thead>
-          <tr>
-            {% for header in table_headers %}
-              <th>{{ header }}</th>
-            {% endfor %}
-          </tr>
-        </thead>
+        <tr>
+            <th> id electiva</th>
+            <th> Nombre electiva</th>
+            <th> Prioridad</th>
+        </tr>
         <tbody>
-          {% for row in table_rows %}
+          {% for electiva in electivas %}
             <tr>
-              {% for key in table_keys %}
-                <td>{{ row|get_item:key }}</td>
-              {% endfor %}
+                <td>{{ electiva.ele_codigo }}</td>
+                <td>{{ electiva.ele_nombre }}</td>
+                <td>{{ electiva.sel_prioridad }}</td>
             </tr>
           {% empty %}
-            <tr><td colspan="{{ table_headers|length }}">No hay datos</td></tr>
+            <tr><td colspan="{{ electivas|length }}">No hay datos</td></tr>
           {% endfor %}
         </tbody>
       </table>
-
-      <a class="cta" href="{{ action_url|default:'#' }}">Ver en panel</a>
-
       <div class="footer">
-        Este es un correo automático, por favor no responda a este mensaje.<br>
+        Este es un correo automatico, por favor no responda a este mensaje.<br>
       </div>
     </div>
   </div>

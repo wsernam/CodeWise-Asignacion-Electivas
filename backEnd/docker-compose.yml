@@ -111,7 +111,27 @@ services:
     networks:
       - app-net
     restart: unless-stopped
+  servicio_envio_notificaciones:       # 👈 tu micro Django
+    build:
+      context: ./servicio_envio_notificaciones    # 👈 carpeta donde está el Dockerfile de Django
+      dockerfile: Dockerfile
+    container_name: servicio_notificaciones
+    depends_on:
+      - rabbitmq
+    command: >
+      sh -c "
+      python -u ./notificacion/config_rabbit.py & 
+      python -u manage.py migrate &&
+      python -u manage.py runserver 0.0.0.0:8002
+      "
+    ports:
+      - "8002:8002"
+    networks:
+      - app-net
+    restart: unless-stopped
 
+    env_file:
+      - .env
 volumes:
   mysql_data:
   volumen_db_usuarios:
