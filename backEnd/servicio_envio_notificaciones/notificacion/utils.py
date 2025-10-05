@@ -27,8 +27,7 @@ def send_html_email_with_logo(data):
     """
     try:
         # Obtiene el destinatario desde el diccionario
-        #destinatario = f"{data.get('est_correo')}@unicauca.edu.co"
-        destinatario = "ashleecampaz@unicauca.edu.co"  # --- PARA PRUEBAS ---
+        destinatario = f"{data.get('est_correo')}@unicauca.edu.co"
         asunto = f"Selección de Electivas - Período {data.get('sel_anio')}-{data.get('sel_num_semestre')}"
         cuerpo = data
 
