@@ -14,16 +14,16 @@ const Navbar: React.FC = () => {
         Inicio
       </Link>
       <Link
+        to="/offer"
+        className={location.pathname.startsWith("/offer") ? "active" : ""}
+      >
+        Oferta
+      </Link>
+      <Link
         to="/electives"
         className={location.pathname.startsWith("/electives") ? "active" : ""}
       >
         Electivas
-      </Link>
-      <Link
-        to="/formulario"
-        className={location.pathname.startsWith("/formulario") ? "active" : ""}
-      >
-        Formulario
       </Link>
       <Link
         to="/programs"

@@ -6,14 +6,30 @@
   gap: 1.5rem;
 }
 
-/* Filter card */
-.filter-card {
-  margin-bottom: 1rem;
+/* Nueva fila para filtro y estado del formulario */
+.filter-status-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr; /* Ambos ocupan la mitad */
+  gap: 1.5rem;
+  align-items: center;
+  justify-content: center; /* Centra las columnas */
+  max-width: 600px; /* Más compacto */
+  margin: 0 auto; /* Centra toda la fila */
 }
 
-.dashboard-filter {
+/* Filter card */
+.filter-card {
+  margin-bottom: 0;
+  justify-content: center;
+}
+
+.dashboard-filter,
+.form-status-content {
   display: flex;
+  flex-direction: column;
   align-items: center;
+  text-align: center;
+  width: 100%;
   gap: 1rem;
 }
 
@@ -28,6 +44,25 @@
   border: 1px solid #d1d5db;
   background: white;
   color: #111827;
+}
+
+/* Estado del formulario */
+.form-status-card {
+  min-width: 250px;
+}
+
+.form-status-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.5rem;
+}
+
+.form-status-title {
+  font-size: 0.9rem;
+  color: #6b7280;
+  font-weight: 600;
 }
 
 /* KPI row */
@@ -127,6 +162,15 @@
 }
 
 @media (max-width: 768px) {
+  .filter-status-row {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .form-status-card {
+    min-width: auto;
+  }
+
   .kpi-row {
     grid-template-columns: 1fr;
   }

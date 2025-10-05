@@ -1,0 +1,30 @@
+/* Fondo y bordes del modal */
+.success-modal .ant-modal-content {
+  border: 2px solid #40891b; /* verde éxito */
+  border-radius: 12px;
+}
+
+/* Estilo del título */
+.success-title {
+  color: #40891b; /* verde éxito */
+  font-weight: bold;
+  font-size: 18px;
+}
+
+/* Mensaje principal */
+.success-message {
+  font-size: 16px;
+  color: #1f1f1f;
+  margin-top: 10px;
+}
+
+/* Botón de aceptar */
+.success-modal .ant-btn-primary {
+  background-color: #40891b;
+  border-color: #40891b;
+}
+
+.success-modal .ant-btn-primary:hover {
+  background-color: #40891b;
+  border-color: #40891b;
+}

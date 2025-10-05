@@ -54,9 +54,9 @@ const CreateProgram: React.FC = () => {
    * Esto vendría de una API o base de datos
    */
   const facultades = [
-    1,
-    2,
-    3,
+    "Facultad de Ingeniería Electrónica y de Telecomunicaciones",
+    "Facultad de Ingeniería Civil",
+    "Facultad de Ciencias Naturales y Exactas",
   ];
 
   // ========== FUNCIONES DE VALIDACIÓN ==========
