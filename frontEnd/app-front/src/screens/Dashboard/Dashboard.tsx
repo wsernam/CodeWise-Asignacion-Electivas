@@ -1,14 +1,18 @@
 import React, { useEffect, useMemo, useState } from "react";
-
 import Header from "../../components/layout/Header/Header";
 import Footer from "../../components/layout/Footer/Footer";
 import Navbar from "../../components/layout/Navbar/Navbar";
 import Card from "../../components/ui/Card/Card";
+import Button from "../../components/ui/Button/Button";
+import ConfirmModal from "../../components/shared/ConfirmModal/ConfirmModal";
+import SuccessModal from "../../components/shared/SuccessModal/SuccessModal";
+import WarningModal from "../../components/shared/WarningModal/WarningModal";
 
 import { useElectiveStore } from "../../store/electiveStore";
+import { useFormStore } from "../../store/offerStore";
 import "./Dashboard.css";
 
-//  Librería de gráficas
+// Librería de gráficas
 import {
   ResponsiveContainer,
   BarChart,
@@ -40,6 +44,8 @@ const Dashboard: React.FC = () => {
   const electives = useElectiveStore((s) => s.electives);
   const fetchElectives = useElectiveStore((s) => s.fetchElectives);
 
+  const { currentForm, changeFormStatus } = useFormStore();
+
   // Cargar electivas al montar el componente
   useEffect(() => {
     fetchElectives();
@@ -48,6 +54,20 @@ const Dashboard: React.FC = () => {
   // ====== Estado local ======
   const [enrollments, setEnrollments] = useState<Record<string, number>>({}); // inscritos por electiva
   const [programaSeleccionado, setProgramaSeleccionado] = useState("Todos"); // filtro
+  const [confirm, setConfirm] = useState<{ open: boolean; newStatus: boolean }>(
+    {
+      open: false,
+      newStatus: false,
+    }
+  );
+  const [success, setSuccess] = useState<{ open: boolean; message: string }>({
+    open: false,
+    message: "",
+  });
+  const [warning, setWarning] = useState<{ open: boolean; message: string }>({
+    open: false,
+    message: "",
+  });
 
   // ====== Procesamiento de datos ======
   // Simulación de inscripciones (⚠️ aquí deberías conectar con backend real)
@@ -85,6 +105,9 @@ const Dashboard: React.FC = () => {
         (totalEnrollments / (activeElectives * CAPACITY_PER_ELECTIVE)) * 100
       )
     : 0;
+
+  // Estado del formulario actual
+  const formStatus = currentForm?.for_status || false;
 
   // ====== Datos para gráficas ======
   // Distribución de inscritos por programa
@@ -135,6 +158,50 @@ const Dashboard: React.FC = () => {
     return "#10B981"; // Verde: saludable
   };
 
+  // ====== Manejo del estado del formulario ======
+  const handleToggleFormStatus = (newStatus: boolean) => {
+    setConfirm({
+      open: true,
+      newStatus: newStatus,
+    });
+  };
+
+  const handleConfirmStatusChange = async () => {
+    try {
+      if (currentForm) {
+        await changeFormStatus({
+          ...currentForm,
+          for_status: confirm.newStatus,
+        });
+        setSuccess({
+          open: true,
+          message: `Formulario ${
+            confirm.newStatus ? "activado" : "desactivado"
+          } correctamente`,
+        });
+      }
+    } catch (error) {
+      setWarning({
+        open: true,
+        message: "Error al cambiar el estado del formulario",
+      });
+    } finally {
+      setConfirm({ open: false, newStatus: false });
+    }
+  };
+
+  const handleSuccessClose = () => {
+    setSuccess({ open: false, message: "" });
+  };
+
+  const handleWarningClose = () => {
+    setWarning({ open: false, message: "" });
+  };
+
+  const handleConfirmCancel = () => {
+    setConfirm({ open: false, newStatus: false });
+  };
+
   // ====== 🖼️ Render ======
   return (
     <div className="auth-page">
@@ -143,23 +210,42 @@ const Dashboard: React.FC = () => {
 
       <div className="auth-page-content">
         <div className="dashboard-main">
-          {/* 🔎 Filtro */}
-          <Card padding="lg" className="filter-card">
-            <div className="dashboard-filter">
-              <label htmlFor="programa">Filtrar por programa:</label>
-              <select
-                id="programa"
-                value={programaSeleccionado}
-                onChange={(e) => setProgramaSeleccionado(e.target.value)}
-              >
-                {programas.map((p) => (
-                  <option key={p} value={p}>
-                    {p}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </Card>
+          {/* 🔎 Filtro y Estado del Formulario en la misma fila */}
+          <div className="filter-status-row">
+            {/* Filtro */}
+            <Card padding="lg" className="filter-card">
+              <div className="dashboard-filter">
+                <label htmlFor="programa">Filtrar por programa:</label>
+                <select
+                  id="programa"
+                  value={programaSeleccionado}
+                  onChange={(e) => setProgramaSeleccionado(e.target.value)}
+                >
+                  {programas.map((p) => (
+                    <option key={p} value={p}>
+                      {p}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </Card>
+
+            {/* Estado del Formulario */}
+            <Card padding="lg" className="form-status-card">
+              <div className="form-status-content">
+                <div className="form-status-title">
+                  Estado del Formulario: {formStatus ? "Activo" : "Inactivo"}
+                </div>
+                <Button
+                  variant={formStatus ? "secondary" : "primary"}
+                  size="small"
+                  onClick={() => handleToggleFormStatus(!formStatus)}
+                >
+                  {formStatus ? "Desactivar" : "Activar"} Formulario
+                </Button>
+              </div>
+            </Card>
+          </div>
 
           {/* 📌 KPIs */}
           <div className="kpi-row">
@@ -306,6 +392,28 @@ const Dashboard: React.FC = () => {
       </div>
 
       <Footer />
+
+      {/* Modales */}
+      <ConfirmModal
+        open={confirm.open}
+        message={`¿Estás seguro de que deseas ${
+          confirm.newStatus ? "activar" : "desactivar"
+        } el formulario de asignación?`}
+        onConfirm={handleConfirmStatusChange}
+        onCancel={handleConfirmCancel}
+      />
+
+      <SuccessModal
+        open={success.open}
+        message={success.message}
+        onClose={handleSuccessClose}
+      />
+
+      <WarningModal
+        open={warning.open}
+        message={warning.message}
+        onClose={handleWarningClose}
+      />
     </div>
   );
 };

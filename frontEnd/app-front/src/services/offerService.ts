@@ -1,14 +1,14 @@
 import axios from "../api/axiosInstance";
-import type { FormAdmin } from "../models/formAdmin";
+import type { IOffer as Offer } from "../models/offer";
 import { FORM_URL } from "./config/config";
 
-export const offerElectives = async (formData: FormAdmin): Promise<void> => {
+export const offerElectives = async (formData: Offer): Promise<void> => {
   console.log("Guardando configuración:", formData);
   // Espera de implementación
   // await axios.post(`${FORM_URL}/offer`, formData);
 };
 
-export const changeFormStatus = async (formData: FormAdmin): Promise<void> => {
+export const changeFormStatus = async (formData: Offer): Promise<void> => {
   console.log("Cambiando estado del formulario:", formData);
   // Espera de implementación
   // await axios.put(`${FORM_URL}/status`, formData);

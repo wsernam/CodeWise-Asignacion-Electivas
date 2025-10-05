@@ -12,12 +12,12 @@ import ConfirmModal from "../../components/shared/ConfirmModal/ConfirmModal";
 import SuccessModal from "../../components/shared/SuccessModal/SuccessModal";
 // Stores
 import { useElectiveStore } from "../../store/electiveStore";
-import { useFormStore } from "../../store/formAdminStore";
-import type { FormAdmin as FormAdminType } from "../../models/formAdmin";
+import { useFormStore } from "../../store/offerStore";
+import type { IOffer as Offer } from "../../models/offer";
 
 const { Option } = Select;
 
-const FormAdmin: React.FC = () => {
+const Oferta: React.FC = () => {
   // ========== STORES ==========
   const { electives, fetchElectives } = useElectiveStore();
   const { offerElectives, currentForm } = useFormStore();
@@ -119,14 +119,10 @@ const FormAdmin: React.FC = () => {
   const handleConfirmSave = async () => {
     setShowConfirm(false);
 
-    const formConfig: FormAdminType = {
+    const formConfig: Offer = {
       for_year: year,
       for_semester: semester,
       for_status: status,
-      for_start_date: new Date().toISOString().split("T")[0], // Fecha actual
-      for_end_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
-        .toISOString()
-        .split("T")[0], // 30 días después
       electivesByProgram: selectedElectives,
     };
 
@@ -353,4 +349,4 @@ const FormAdmin: React.FC = () => {
   );
 };
 
-export default FormAdmin;
+export default Oferta;

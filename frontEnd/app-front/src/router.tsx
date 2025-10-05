@@ -10,9 +10,7 @@ import EditElective from "./screens/Electives/EditElective.tsx";
 import CreateProgram from "./screens/Program/CreateProgram.tsx";
 import ListProgram from "./screens/Program/ListProgram.tsx";
 import EditProgram from "./screens/Program/EditProgram.tsx";
-
-import FormAdmin from "./screens/FormAdmin/FormAdmin.tsx";
-
+import Offer from "./screens/Offer/Offer.tsx";
 // ---------------------- IMPORTS DE ROUTER ----------------------
 import { createBrowserRouter } from "react-router";
 
@@ -59,8 +57,8 @@ const router = createBrowserRouter([
     element: <Dashboard />,
   },
   {
-    path: "/form-admin",
-    element: <FormAdmin />,
+    path: "/offer",
+    element: <Offer />,
   },
 ]);
 

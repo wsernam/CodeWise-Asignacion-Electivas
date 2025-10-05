@@ -1,4 +1,4 @@
-import type { Program } from "../models/program";
+import type { IProgram as Program } from "../models/program";
 
 // ========== CONFIGURACIÓN ==========
 /*

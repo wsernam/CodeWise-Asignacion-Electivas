@@ -14,8 +14,8 @@ const Navbar: React.FC = () => {
         Inicio
       </Link>
       <Link
-        to="/form-admin"
-        className={location.pathname.startsWith("/form-admin") ? "active" : ""}
+        to="/offer"
+        className={location.pathname.startsWith("/offer") ? "active" : ""}
       >
         Oferta
       </Link>
