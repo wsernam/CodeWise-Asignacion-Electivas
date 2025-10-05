@@ -1,5 +1,4 @@
 import type { IProgram as Program } from "../models/program";
-
 // ========== CONFIGURACIÓN ==========
 /*
  * SWITCH ENTRE MOCK Y BACKEND REAL
@@ -14,7 +13,7 @@ const API_BASE_URL = "http://localhost:3001/api";
 let programs: Program[] = [
   {
     codigo: "01",
-    nombre: "Ingeniería de Sistemas",
+    nombre: "Ingeniería",
     facultad: "Facultad de Ingeniería Electrónica y de Telecomunicaciones",
     active: true, // true = activo, false = eliminado
   },

@@ -314,8 +314,13 @@ const Oferta: React.FC = () => {
 
             {/* Botón Guardar */}
             <div style={{ textAlign: "center" }}>
-              <Button variant="primary" size="large" onClick={handleSave}>
-                Guardar Configuración {year}-{semester}
+              <Button
+                variant="primary"
+                size="medium"
+                onClick={handleSave}
+                disabled={!hasSelectedElectives}
+              >
+                Guardar
               </Button>
             </div>
           </Card>
