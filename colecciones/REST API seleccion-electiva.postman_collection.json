@@ -67,7 +67,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n  \"est_codigo\": 1,\n  \"sel_anio\": 2025,\n  \"sel_num_semestre\": 1,\n  \"electivas\": [\n    { \"ele_codigo\": 1, \"sel_prioridad\": 1 },\n    { \"ele_codigo\": 2, \"sel_prioridad\": 2 }\n  ]\n}",
+					"raw": "{\n  \"est_codigo\": 1,\n  \"sel_anio\": 2035,\n  \"sel_num_semestre\": 2,\n  \"est_correo\": \"ashleecampaz\",\n  \"electivas\": [\n    { \"ele_codigo\": 2, \"sel_prioridad\": 1 , \"ele_nombre\": \"Redes Avanzadas\"},\n    { \"ele_codigo\": 3, \"sel_prioridad\": 2 , \"ele_nombre\": \"Inteligencia Artificial\"},\n    { \"ele_codigo\": 5, \"sel_prioridad\": 3 , \"ele_nombre\": \"Sistemas Embebidos\"}\n  ]\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -75,13 +75,12 @@
 					}
 				},
 				"url": {
-					"raw": "{{base_url}}/seleccion-electivas/create_seleccion/",
+					"raw": "{{base_url}}/seleccion-electivas/",
 					"host": [
 						"{{base_url}}"
 					],
 					"path": [
 						"seleccion-electivas",
-						"create_seleccion",
 						""
 					]
 				},
@@ -185,6 +184,7 @@
 			"listen": "prerequest",
 			"script": {
 				"type": "text/javascript",
+				"requests": {},
 				"exec": [
 					""
 				]
@@ -194,6 +194,7 @@
 			"listen": "test",
 			"script": {
 				"type": "text/javascript",
+				"requests": {},
 				"exec": [
 					""
 				]
