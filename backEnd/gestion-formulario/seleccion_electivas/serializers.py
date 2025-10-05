@@ -16,6 +16,7 @@ class ConsultaElectivaEstudianteDTO(serializers.Serializer):
     sel_prioridad = serializers.IntegerField()
 class CrearSeleccionElectivaDTO(serializers.Serializer):
     est_codigo = serializers.IntegerField()
+    est_correo = serializers.CharField(max_length=100)
     sel_anio = serializers.IntegerField()
     sel_num_semestre = serializers.ChoiceField(choices=[1, 2])
     electivas = ElectivaPrioridadDTO(many=True)

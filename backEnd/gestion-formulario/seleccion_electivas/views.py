@@ -22,6 +22,7 @@ class SeleccionElectivaViewSet(mixins.CreateModelMixin,
             "est_codigo": 123,
             "sel_anio": 2025,
             "sel_num_semestre": 1,
+            "est_correo": ashleecampaz"
             "electivas": [
                 {"ele_codigo": 101, "sel_prioridad": 1, "ele_nombre": "Matemáticas"},
                 {"ele_codigo": 102, "sel_prioridad": 2, "ele_nombre": "Física"},
