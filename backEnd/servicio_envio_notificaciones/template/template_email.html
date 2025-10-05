@@ -1,0 +1,55 @@
+{% load static %}
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>{{ subject }}</title>
+  <link rel="stylesheet" href="{% static 'styles.css' %}">
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <!-- Logo embebido como CID -->
+      <div>
+        <img src="cid:escudo_unicauca" alt="Logo" style="height:48px; width:auto;"/>
+      </div>
+      <div class="brand-title">{{ organization_name|default:"Universidad del Cauca" }}</div>
+    </div>
+
+    <div class="card">
+      <div class="intro">
+        Hola {{ recipient_name|default:"Usuario" }},<br>
+        {{ intro_text|default:"Esta es su seleccion de electivas:" }}
+      </div>
+
+      <!-- Tabla dinámica -->
+      <table>
+        <thead>
+          <tr>
+            {% for header in table_headers %}
+              <th>{{ header }}</th>
+            {% endfor %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in table_rows %}
+            <tr>
+              {% for key in table_keys %}
+                <td>{{ row|get_item:key }}</td>
+              {% endfor %}
+            </tr>
+          {% empty %}
+            <tr><td colspan="{{ table_headers|length }}">No hay datos</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+      <a class="cta" href="{{ action_url|default:'#' }}">Ver en panel</a>
+
+      <div class="footer">
+        Este es un correo automático, por favor no responda a este mensaje.<br>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
