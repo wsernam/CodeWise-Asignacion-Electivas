@@ -1,0 +1,58 @@
+{
+	"info": {
+		"_postman_id": "0646a383-4218-4aaa-8f5a-a21b7b46de19",
+		"name": "ESTADO DEL FORMULARIO",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "39878300"
+	},
+	"item": [
+		{
+			"name": "Cambiar Estado",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "http://127.0.0.1:8001/estado/toggle-formulario/",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8001",
+					"path": [
+						"estado",
+						"toggle-formulario",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Ver estado",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://127.0.0.1:8001/estado/estado-formulario/",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8001",
+					"path": [
+						"estado",
+						"estado-formulario",
+						""
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
