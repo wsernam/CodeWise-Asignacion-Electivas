@@ -27,13 +27,19 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "{{base_url}}/electivas/2",
+					"raw": "{{base_url}}/electivas/?status=active",
 					"host": [
 						"{{base_url}}"
 					],
 					"path": [
 						"electivas",
-						"2"
+						""
+					],
+					"query": [
+						{
+							"key": "status",
+							"value": "active"
+						}
 					]
 				},
 				"description": "This is a GET request and it is used to \"get\" data from an endpoint. There is no request body for a GET request, but you can use query parameters to help specify the resource you want data on (e.g., in this request, we have `id=1`).\n\nA successful GET response will have a `200 OK` status, and should include some kind of response body - for example, HTML web content or JSON data."
@@ -101,7 +107,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"ele_nombre\": \"Bioinformática\",\n    \"pro_codigo\": 3,\n    \"ele_estado\": true\n  }",
+					"raw": "{\n    \"ele_nombre\": \"Arquitectura de Computadores Avanzada\",\n    \"pro_codigo\": 2,\n    \"ele_estado\": true\n  }",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -135,7 +141,8 @@
 							""
 						],
 						"type": "text/javascript",
-						"packages": {}
+						"packages": {},
+						"requests": {}
 					}
 				}
 			],
@@ -144,7 +151,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"ele_nombre\": \"Redes Avanzadas y ciberseguridad\",\n    \"pro_codigo\": 1,\n    \"ele_estado\": true\n  }",
+					"raw": "{\n    \"ele_nombre\": \"Inteligencia Artificial\",\n    \"ele_estado\": true,\n    \"pro_codigo\": 2\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -152,13 +159,13 @@
 					}
 				},
 				"url": {
-					"raw": "{{base_url}}/electivas/1/",
+					"raw": "{{base_url}}/electivas/2/",
 					"host": [
 						"{{base_url}}"
 					],
 					"path": [
 						"electivas",
-						"1",
+						"2",
 						""
 					]
 				},
@@ -179,22 +186,14 @@
 							""
 						],
 						"type": "text/javascript",
-						"packages": {}
+						"packages": {},
+						"requests": {}
 					}
 				}
 			],
 			"request": {
 				"method": "DELETE",
 				"header": [],
-				"body": {
-					"mode": "raw",
-					"raw": "{\n    \"ele_nombre\": \"Redes Avanzadas y ciberseguridad\",\n    \"pro_codigo\": 1,\n    \"ele_estado\": true\n  }",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
-				},
 				"url": {
 					"raw": "{{base_url}}/electivas/1/",
 					"host": [
@@ -223,7 +222,8 @@
 							""
 						],
 						"type": "text/javascript",
-						"packages": {}
+						"packages": {},
+						"requests": {}
 					}
 				}
 			],
@@ -240,12 +240,13 @@
 					}
 				},
 				"url": {
-					"raw": "{{base_url}}/1/toggle_estado/",
+					"raw": "{{base_url}}/electivas/2/toggle_estado/",
 					"host": [
 						"{{base_url}}"
 					],
 					"path": [
-						"1",
+						"electivas",
+						"2",
 						"toggle_estado",
 						""
 					]
@@ -282,7 +283,7 @@
 		},
 		{
 			"key": "base_url",
-			"value": "https://template.postman-echo.com"
+			"value": "http://localhost:8000/api"
 		}
 	]
 }
