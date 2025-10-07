@@ -2,7 +2,7 @@ from rest_framework import generics
 from .models import Oferta_electiva
 from .serializers import OfertaElectivaSerializer
 from rest_framework.response import Response
-from rest_framework import status
+from .serializers import OfertaElectivaBulkCreateSerializer
 from gestion_electivas.models import Electiva
 from .serializers import ElectivaSerializer
 
@@ -13,6 +13,16 @@ from .serializers import ElectivaSerializer
 class OfertaElectivaCreateView(generics.CreateAPIView):
     queryset = Oferta_electiva.objects.all()
     serializer_class = OfertaElectivaSerializer
+
+# Endpoint para crear múltiples ofertas de electivas a la vez
+class OfertaElectivaBulkCreateView(generics.CreateAPIView):
+    serializer_class = OfertaElectivaBulkCreateSerializer
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        result = serializer.save()
+        return Response(result)
 
 # Endpoint para editar y eliminar
 # Este maneja 'Editar oferta_electiva'
