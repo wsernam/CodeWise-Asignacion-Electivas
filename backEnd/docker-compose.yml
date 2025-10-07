@@ -90,6 +90,7 @@ services:
       RABBITMQ_USER: ${RABBITMQ_USER:-guest}
       RABBITMQ_PASS: ${RABBITMQ_PASS:-guest}
       RABBITMQ_EXCHANGE: asignacion.electivas
+      RABBITMQ_DLX: asignacion.electivas.dlx
     depends_on:
       db_formulario:
         condition: service_healthy
@@ -102,6 +103,40 @@ services:
       "
     ports:
       - "8000:8000"
+    networks:
+      - app-net
+    restart: unless-stopped
+
+  gestion_asignacion:
+    build:
+      context: ./gestion-asignacion   # 👈 carpeta donde está el Dockerfile de este microservicio
+      dockerfile: Dockerfile
+    container_name: gestion_asignacion_app
+    env_file:
+      - .env
+    environment:
+      DJANGO_DB_ENGINE: sqlite3
+      DB_NAME: /app/data/asignacion.sqlite3
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USER: ${RABBITMQ_USER:-guest}
+      RABBITMQ_PASS: ${RABBITMQ_PASS:-guest}
+      RABBITMQ_EXCHANGE: asignacion.electivas
+      RABBITMQ_DLX: asignacion.electivas.dlx
+      Q_EST: ${Q_EST}
+      Q_PROG: ${Q_PROG}
+      Q_ELEC: ${Q_ELEC}
+      Q_OFER: ${Q_OFER}
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    command: >
+      sh -c "
+      python manage.py migrate &&
+      python manage.py runserver 0.0.0.0:8000
+      "
+    ports:
+      - "8002:8000"
     networks:
       - app-net
     restart: unless-stopped
