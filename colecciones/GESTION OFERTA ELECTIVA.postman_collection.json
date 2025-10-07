@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "2ffbb303-86fe-4e6a-988f-19424ae14617",
+		"_postman_id": "f885ebd7-38df-4116-a270-556dfb1db23a",
 		"name": "GESTION OFERTA ELECTIVA",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "39878300"
@@ -130,6 +130,40 @@
 						"2025",
 						"1",
 						"1",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Crear oferta con lista electivas",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"ofe_anio\": 2025,\r\n    \"ofe_num_semestre\": 1,\r\n    \"ofertas\": [\r\n        { \"ele_codigo\": 4, \"pro_codigo\": 5 },\r\n        { \"ele_codigo\": 5, \"pro_codigo\": 5 },\r\n        { \"ele_codigo\": 6, \"pro_codigo\": 4 }\r\n    ]\r\n}\r\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://127.0.0.1:8001/ofertaElectiva/ofertas/bulk-create/",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8001",
+					"path": [
+						"ofertaElectiva",
+						"ofertas",
+						"bulk-create",
 						""
 					]
 				}
