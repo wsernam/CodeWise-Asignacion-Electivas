@@ -1,8 +1,8 @@
-from rest_framework import generics, status
-from .models import Oferta_electiva 
+from rest_framework import generics
+from .models import Oferta_electiva
 from .serializers import OfertaElectivaSerializer
 from rest_framework.response import Response
-from .serializers import OfertaElectivaBulkCreateSerializer
+from rest_framework import status
 from gestion_electivas.models import Electiva
 from .serializers import ElectivaSerializer
 from events.oferta_publisher import publish_oferta_creada, publish_oferta_actualizada, publish_oferta_eliminada
@@ -19,20 +19,6 @@ class OfertaElectivaCreateView(generics.CreateAPIView):
         payload = _serialize_oferta(instance)
         # Publica SOLO si la transacción se confirma
         transaction.on_commit(lambda: publish_oferta_creada(payload))
-
-# Endpoint para crear múltiples ofertas de electivas a la vez
-class OfertaElectivaBulkCreateView(generics.CreateAPIView):
-    serializer_class = OfertaElectivaBulkCreateSerializer
-
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        result = serializer.save()
-
-        # Si se creó al menos una oferta, devolvemos 201.
-        # Si todas ya existían, devolvemos 200.
-        response_status = status.HTTP_201_CREATED if result['creadas'] else status.HTTP_200_OK
-        return Response(result, status=response_status)
 
 # Endpoint para editar y eliminar
 # Este maneja 'Editar oferta_electiva'
