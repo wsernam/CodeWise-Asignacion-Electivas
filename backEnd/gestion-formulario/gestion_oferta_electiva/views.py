@@ -1,5 +1,5 @@
-from rest_framework import generics
-from .models import Oferta_electiva
+from rest_framework import generics, status
+from .models import Oferta_electiva 
 from .serializers import OfertaElectivaSerializer
 from rest_framework.response import Response
 from .serializers import OfertaElectivaBulkCreateSerializer
@@ -22,7 +22,11 @@ class OfertaElectivaBulkCreateView(generics.CreateAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         result = serializer.save()
-        return Response(result)
+
+        # Si se creó al menos una oferta, devolvemos 201.
+        # Si todas ya existían, devolvemos 200.
+        response_status = status.HTTP_201_CREATED if result['creadas'] else status.HTTP_200_OK
+        return Response(result, status=response_status)
 
 # Endpoint para editar y eliminar
 # Este maneja 'Editar oferta_electiva'
