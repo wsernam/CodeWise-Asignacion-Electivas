@@ -1,8 +1,8 @@
-version: "3.9"
-
-name: plataforma-formulario
 
 services:
+  # -------------------------------
+  # Servicio base de Datos de USUARIOS (MySQL)
+  # -------------------------------
   db_usuarios:
     image: mysql:8.0               # Imagen oficial de MySQL versión 8.0
     container_name: db_usuarios    # Nombre del contenedor (visible en Docker)
@@ -16,8 +16,6 @@ services:
       MYSQL_ROOT_PASSWORD: ${AUTH_DB_PASSWORD}  # Contraseña del root (requerida por MySQL)
     volumes:
       - volumen_db_usuarios:/var/lib/mysql # Monta un volumen persistente en /var/lib/mysql TODOS USAR TAMBIEN /var/lib/mysql POR CONVENCIÓN 
-    networks:
-      - app-net
     ports:
       - "3306:3306"  # Expone el puerto 3306 (MySQL) para acceso desde fuera del contenedor
     # IMPORTANTE Healthcheck para asegurarse de que MySQL esté listo antes de que Django intente conectarse
@@ -27,56 +25,94 @@ services:
       timeout: 10s
       retries: 5
       start_period: 20s
+    command: --host_cache_size=0
 
+  # -------------------------------
+  # Servicio para la base de datos FORMULARIO
+  # -------------------------------
   db_formulario:
     image: mysql:8.0
     container_name: db_formulario
-    restart: always
+    restart: always    # Reinicia el contenedor automáticamente si se detiene
     env_file:
-      - .env
+      - .env  # Archivo .env con variables de entorno
     environment:
       MYSQL_DATABASE: ${FORM_DB_NAME}
       MYSQL_USER: ${FORM_DB_USER}
       MYSQL_PASSWORD: ${FORM_DB_PASSWORD}
       MYSQL_ROOT_PASSWORD: ${FORM_DB_ROOT_PASSWORD}
+    volumes:
+      - volumen_db_formulario:/var/lib/mysql
     ports:
       - "3307:3306"
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "db_usuarios", "-u${AUTH_DB_USER}", "-p${AUTH_DB_PASSWORD}"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "db_formulario", "-u${FORM_DB_USER}", "-p${FORM_DB_PASSWORD}"]
       interval: 5s
       timeout: 10s
       retries: 5
       start_period: 20s
-    volumes:
-      - mysql_data:/var/lib/mysql
-    networks:
-      - app-net
+    command: --host_cache_size=0
+  # -------------------------------
+  # Servicio para la base de datos ASIGNACION
+  # -------------------------------
 
-  servicio_seguridad_jwt:              # 👈 tu micro de seguridad
-    build:
-      context: ./servicio_seguridad_jwt   # 👈 carpeta donde está el Dockerfile de este micro
-      dockerfile: Dockerfile
-    container_name: servicio_seguridad_jwt_app
+  db_asignacion:
+    image: mysql:8.0
+    container_name: db_asignacion
+    restart: always
     env_file:
       - .env
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://db_formulario:3306/${AUTH_DB_NAME}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=America/Bogota
-      SPRING_DATASOURCE_USERNAME: ${AUTH_DB_USER}
-      SPRING_DATASOURCE_PASSWORD: ${AUTH_DB_PASSWORD}
-    depends_on:
-       db_usuarios:
-         condition: service_healthy
+      MYSQL_DATABASE: ${ASIGNACION_DB_NAME}
+      MYSQL_USER: ${ASIGNACION_DB_USER}
+      MYSQL_PASSWORD: ${ASIGNACION_DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${ASIGNACION_DB_ROOT_PASSWORD}
+    volumes:
+      - volumen_db_asignacion:/var/lib/mysql
     ports:
-      - "8081:8080"
-    networks:
-      - app-net
-    restart: unless-stopped
+      - "3308:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "db_asignacion", "-u${ASIGNACION_DB_USER}", "-p${ASIGNACION_DB_PASSWORD}"]
+      interval: 5s
+      timeout: 10s
+      retries: 5
+      start_period: 20s
+    command: --host_cache_size=0
 
-  gestion_formulario:                  # 👈 tu micro Django
+
+  # -------------------------------
+  # Microservicio de seguridad (JWT)
+  # -------------------------------
+  seguridad:
     build:
-      context: ./gestion-formulario    # 👈 carpeta donde está el Dockerfile de Django
-      dockerfile: Dockerfile
-    container_name: gestion_formulario_app
+      context: ./servicio_seguridad_jwt  # Ruta donde está el servicio y su Dockerfile
+      dockerfile: Dockerfile             # Nombre del Dockerfile a usar
+    container_name: seguridad_service    # Nombre del contenedor para el microservicio
+    volumes:
+      - ./servicio_seguridad_jwt:/app   # Monta todo el proyecto en /app dentro del contenedor
+                 # IMPORTANTE: usar la misma convención en todos los microservicios
+    ports:
+      - "8000:8000"  # Expone el puerto 8000 para acceder al servicio de seguridad
+    env_file:
+      - ./servicio_seguridad_jwt/.env  # Archivo .env con variables de configuración
+    depends_on:
+      db_usuarios:
+        condition: service_healthy  # IMPORTANTE  Espera a que la base de datos esté saludable
+
+  # -------------------------------
+  # Microservicio GESTION DE FORMULARIO
+  # -------------------------------
+  gestion_formulario:                 
+    build:
+      context: ./gestion-formulario
+      dockerfile: Dockerfile    
+    container_name: gestion_formulario
+    volumes:
+      - ./gestion-formulario:/app   # Monta todo el proyecto en /app dentro del contenedor
+                 # IMPORTANTE: usar la misma convención en todos los microservicios
+    ports:
+      - "8001:8000"  # Expone el puerto 8001 para acceder al servicio
+
     env_file:
       - .env
     environment:
@@ -85,85 +121,107 @@ services:
       DB_PASSWORD: ${FORM_DB_PASSWORD}
       DB_HOST: ${FORM_DB_HOST}
       DB_PORT: ${FORM_DB_PORT}
-      RABBITMQ_HOST: rabbitmq
-      RABBITMQ_PORT: 5672
-      RABBITMQ_USER: ${RABBITMQ_USER:-guest}
-      RABBITMQ_PASS: ${RABBITMQ_PASS:-guest}
-      RABBITMQ_EXCHANGE: asignacion.electivas
-      RABBITMQ_DLX: asignacion.electivas.dlx
+      #__________________________________
+      #RABBITMQ
+      RABBITMQ_HOST: ${RABBITMQ_HOST}
+      RABBITMQ_PORT: ${RABBITMQ_PORT}
+      RABBITMQ_USER: ${RABBITMQ_USER}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
+      RABBITMQ_EXCHANGE: ${RABBITMQ_EXCHANGE}
+      RABBITMQ_DLX: ${RABBITMQ_DLX}
+      #__________________________________
+
+
     depends_on:
       db_formulario:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
+
     command: >
       sh -c "
       python manage.py migrate &&
       python manage.py runserver 0.0.0.0:8000
       "
-    ports:
-      - "8000:8000"
-    networks:
-      - app-net
-    restart: unless-stopped
 
-  gestion_asignacion:
+# -------------------------------
+#MICROSERVICIO GESTION DE ASIGNACION
+# -------------------------------
+  gestion_asignacion:                 
     build:
-      context: ./gestion-asignacion   # 👈 carpeta donde está el Dockerfile de este microservicio
-      dockerfile: Dockerfile
-    container_name: gestion_asignacion_app
+      context: ./gestion-asignacion
+      dockerfile: Dockerfile    
+    container_name: gestion_asignacion
+    volumes:
+      - ./gestion-asignacion:/app   # Monta todo el proyecto en /app dentro del contenedor
+                 # IMPORTANTE: usar la misma convención en todos los microservicios
+    ports:
+      - "8002:8000"  # Expone el puerto 8002 para acceder al servicio
+
     env_file:
       - .env
     environment:
-      DJANGO_DB_ENGINE: sqlite3
-      DB_NAME: /app/data/asignacion.sqlite3
-      RABBITMQ_HOST: rabbitmq
-      RABBITMQ_PORT: 5672
-      RABBITMQ_USER: ${RABBITMQ_USER:-guest}
-      RABBITMQ_PASS: ${RABBITMQ_PASS:-guest}
-      RABBITMQ_EXCHANGE: asignacion.electivas
-      RABBITMQ_DLX: asignacion.electivas.dlx
+      DB_NAME: ${ASIGNACION_DB_NAME}
+      DB_USER: ${ASIGNACION_DB_USER}
+      DB_PASSWORD: ${ASIGNACION_DB_PASSWORD}
+      DB_HOST: ${ASIGNACION_DB_HOST}
+      DB_PORT: ${ASIGNACION_DB_PORT}
+      #__________________________________
+      #RABBITMQ
+      RABBITMQ_HOST: ${RABBITMQ_HOST}
+      RABBITMQ_PORT: ${RABBITMQ_PORT}
+      RABBITMQ_USER: ${RABBITMQ_USER}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
+      RABBITMQ_EXCHANGE: ${RABBITMQ_EXCHANGE}
+      RABBITMQ_DLX: ${RABBITMQ_DLX}
       Q_EST: ${Q_EST}
       Q_PROG: ${Q_PROG}
       Q_ELEC: ${Q_ELEC}
       Q_OFER: ${Q_OFER}
+      #__________________________________
+
     depends_on:
+      db_asignacion:
+        condition: service_healthy
       rabbitmq:
         condition: service_healthy
+
     command: >
       sh -c "
       python manage.py migrate &&
       python manage.py runserver 0.0.0.0:8000
       "
-    ports:
-      - "8002:8000"
-    networks:
-      - app-net
-    restart: unless-stopped
-  
+
+# -------------------------------
+# RABBITMQ
+# -------------------------------
   rabbitmq:
-    image: "rabbitmq:3-management"
-    container_name: rabbitmq
+    image: "rabbitmq:3-management"  # Imagen oficial de RabbitMQ con plugin de gestión
+    container_name: rabbitmq          # Nombre del contenedor
     ports:
       - "5672:5672"   # Puerto para conexiones AMQP
-      - "15672:15672" # Puerto para la interfaz de administración
+      - "15672:15672" # Puerto para la interfaz de gestión web
+    env_file:
+      - .env
     environment:
-      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
-      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS}
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guest}  # Usuario por defecto (definido en .env o 'guest')
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-guest}  # Contraseña por defecto (definida en .env o 'guest')
     healthcheck:
       test: ["CMD-SHELL", "rabbitmq-diagnostics -q ping"]
       interval: 10s
-      timeout: 5s
+      timeout: 10s
       retries: 5
-      start_period: 10s
-    networks:
-      - app-net
-    restart: unless-stopped
+      start_period: 20s
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq  # Volumen persistente para datos de RabbitMQ
 
+
+
+# -------------------------------
+# Definición de volúmenes persistentes
+# -------------------------------
 volumes:
-  mysql_data:
-  volumen_db_usuarios:
-
-networks:
-  app-net:
-    driver: bridge
+  volumen_db_usuarios:  # Volumen nombrado para almacenar datos de MySQL
+  volumen_db_formulario:
+  volumen_db_asignacion:
+  rabbitmq_data:       # Volumen para datos de RabbitMQ

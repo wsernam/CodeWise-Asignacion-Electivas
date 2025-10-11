@@ -6,6 +6,7 @@ from .serializers import OfertaElectivaBulkCreateSerializer
 from gestion_electivas.models import Electiva
 from .serializers import ElectivaSerializer
 from events.oferta_publisher import publish_oferta_creada, publish_oferta_actualizada, publish_oferta_eliminada
+from django.db import transaction # IMPORT
 
 # Endpoint para crear y listar (todos los años/semestres)
 # Utilizaremos este para 'Crear oferta_electiva'

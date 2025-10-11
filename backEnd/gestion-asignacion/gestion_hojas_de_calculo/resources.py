@@ -104,6 +104,7 @@ class PerfilAcademicoResource(resources.ModelResource):
         
         # Incluimos explícitamente todos los campos del modelo (excepto la PK)
         fields = (
+            'estudiante_codigo_excel', # Incluido para que el resource lo reconozca
             'est_codigo', 
             'promedio', 
             'num_electivas_cursadas', 
