@@ -305,10 +305,13 @@ const PersonalInfo: React.FC = () => {
                   size="large"
                 >
                   {programs
-                    .filter((program) => program.active)
+                    .filter((program) => program.pro_activo)
                     .map((program) => (
-                      <Option key={program.codigo} value={program.codigo}>
-                        {program.nombre}
+                      <Option
+                        key={program.pro_codigo}
+                        value={program.pro_codigo}
+                      >
+                        {program.pro_nombre}
                       </Option>
                     ))}
                 </Select>

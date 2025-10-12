@@ -257,8 +257,8 @@ const AddElective: React.FC = () => {
                 onSelect={() => handleFieldTouch("programa")}
               >
                 {programs.map((program) => (
-                  <Option key={program.codigo} value={program.nombre}>
-                    {program.nombre}
+                  <Option key={program.pro_codigo} value={program.fac_nombre}>
+                    {program.fac_nombre}
                   </Option>
                 ))}
               </Select>

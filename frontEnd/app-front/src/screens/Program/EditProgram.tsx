@@ -38,11 +38,10 @@ const EditProgram: React.FC = () => {
   const updateProgram = useProgramStore((state) => state.updateProgram);
   const fetchPrograms = useProgramStore((state) => state.fetchPrograms);
 
-  const facultades = [
-    "Facultad de Ingeniería Electrónica y de Telecomunicaciones",
-    "Facultad de Ingeniería Civil",
-    "Facultad de Ciencias Naturales y Exactas",
-  ];
+  // Obtener facultades únicas de los programas existentes
+  const facultades = Array.from(
+    new Set(programs.map((p) => p.fac_nombre))
+  ).filter(Boolean);
 
   useEffect(() => {
     if (programs.length === 0) {
@@ -53,14 +52,14 @@ const EditProgram: React.FC = () => {
   useEffect(() => {
     if (codigo && programs.length > 0) {
       const program = programs.find(
-        (p) => p.codigo === codigo && p.active !== false
+        (p) => p.pro_codigo.toString() === codigo && p.pro_activo !== false
       );
 
       if (program) {
         form.setFieldsValue({
-          codigo: program.codigo,
-          nombre: program.nombre,
-          facultad: program.facultad,
+          codigo: program.pro_codigo,
+          nombre: program.pro_nombre,
+          facultad: program.fac_nombre,
         });
         setProgramFound(true);
       } else {
@@ -86,11 +85,12 @@ const EditProgram: React.FC = () => {
     if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]+$/.test(value))
       return Promise.reject("El nombre solo puede contener letras y espacios");
 
+    // CORREGIDO: usar pro_nombre en lugar de fac_nombre
     const existingProgram = programs.find(
       (p) =>
-        p.nombre.toLowerCase() === value.toLowerCase() &&
-        p.codigo !== codigo &&
-        p.active !== false
+        p.pro_nombre.toLowerCase() === value.toLowerCase() && // ← CAMBIADO
+        p.pro_codigo.toString() !== codigo &&
+        p.pro_activo !== false
     );
     if (existingProgram)
       return Promise.reject(
@@ -119,18 +119,19 @@ const EditProgram: React.FC = () => {
     }
   }, [form, formValues, touchedFields]);
 
-  const onFinish = async (values: Program) => {
+  const onFinish = async (values: any) => {
     if (!codigo) return;
 
     try {
-      const cleanedValues = {
-        ...values,
-        codigo: codigo,
-        nombre: values.nombre.trim().replace(/\s+/g, " "),
-        active: true,
+      const cleanedValues: Program = {
+        pro_codigo: parseInt(codigo),
+        pro_nombre: values.nombre.trim().replace(/\s+/g, " "),
+        fac_codigo: 2,
+        fac_nombre: values.facultad,
+        pro_activo: true,
       };
 
-      await updateProgram(codigo, cleanedValues);
+      await updateProgram(parseInt(codigo), cleanedValues);
       setSuccess({
         open: true,
         message: "Programa actualizado correctamente",

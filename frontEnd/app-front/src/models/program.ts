@@ -1,6 +1,7 @@
 export interface IProgram {
-  codigo: string;
-  nombre: string;
-  facultad: string;
-  active: boolean;
+  pro_codigo: number;
+  pro_nombre: string;
+  fac_codigo: number;
+  fac_nombre: string;
+  pro_activo: boolean;
 }

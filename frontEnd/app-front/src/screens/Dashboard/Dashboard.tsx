@@ -82,7 +82,7 @@ const Dashboard: React.FC = () => {
 
   // Programas activos (los que realmente existen)
   const activePrograms = useMemo(() => {
-    return programs.filter((program) => program.active);
+    return programs.filter((program) => program.pro_activo);
   }, [programs]);
 
   // ====== Procesamiento de datos ======
@@ -102,7 +102,7 @@ const Dashboard: React.FC = () => {
     const programasConElectivas = new Set(
       activeElectives.map((e) => e.programa)
     );
-    const programasActivos = activePrograms.map((p) => p.nombre);
+    const programasActivos = activePrograms.map((p) => p.pro_nombre);
 
     // Solo mostrar programas que tienen electivas activas
     const programasFiltrados = programasActivos.filter((programa) =>

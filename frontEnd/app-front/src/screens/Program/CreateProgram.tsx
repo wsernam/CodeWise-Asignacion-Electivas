@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Form, Input, Select } from "antd";
 import Header from "../../components/layout/Header/Header";
 import Footer from "../../components/layout/Footer/Footer";
@@ -14,44 +14,113 @@ import Button from "../../components/ui/Button/Button";
 
 const { Option } = Select;
 
+/**
+ * COMPONENTE: CreateProgram
+ *
+ * Pantalla para crear nuevos programas académicos en el sistema.
+ * Incluye validación de datos, manejo de estados y comunicación con el backend.
+ *
+ * Características principales:
+ * - Formulario con validación en tiempo real
+ * - Lista dinámica de facultades desde el backend
+ * - Manejo de errores y estados de carga
+ * - Modales de confirmación y retroalimentación
+ */
 const CreateProgram: React.FC = () => {
+  // ========== HOOKS Y ESTADO ==========
+
+  /**
+   * Hook de formulario de Ant Design para manejar el estado y validación
+   */
   const [form] = Form.useForm();
   const navigate = useNavigate();
+
+  /**
+   * Observador de cambios en los valores del formulario
+   * Se usa para validación en tiempo real
+   */
   const formValues = Form.useWatch([], form);
 
+  /**
+   * Estado para controlar qué campos han sido tocados/interactuados
+   * Esto permite mostrar feedback de validación solo después de la interacción
+   */
   const [touchedFields, setTouchedFields] = useState({
-    codigo: false,
-    nombre: false,
-    facultad: false,
+    pro_codigo: false,
+    pro_nombre: false,
+    fac_nombre: false,
   });
 
+  /**
+   * Estado que indica si el formulario es válido
+   * Controla la habilitación del botón de guardar
+   */
   const [isFormValid, setIsFormValid] = useState(false);
+
+  /**
+   * Estado para mostrar modal de advertencia/error
+   */
   const [warning, setWarning] = useState<{ open: boolean; message: string }>({
     open: false,
     message: "",
   });
+
+  /**
+   * Estado para mostrar modal de confirmación (ej: reactivar programa inactivo)
+   */
   const [confirm, setConfirm] = useState<{
     open: boolean;
-    codigo: string;
-    nombre: string;
+    pro_codigo: string;
+    pro_nombre: string;
   }>({
     open: false,
-    codigo: "",
-    nombre: "",
+    pro_codigo: "",
+    pro_nombre: "",
   });
+
+  /**
+   * Estado para mostrar modal de éxito
+   */
   const [success, setSuccess] = useState<{ open: boolean; message: string }>({
     open: false,
     message: "",
   });
 
+  // ========== STORE Y DATOS ==========
+
+  /**
+   * Funciones y datos del store global de programas
+   */
   const addProgram = useProgramStore((state) => state.addProgram);
+  const faculties = useProgramStore((state) => state.faculties);
+  const fetchFaculties = useProgramStore((state) => state.fetchFaculties);
 
-  const facultades = [
-    "Facultad de Ingeniería Electrónica y de Telecomunicaciones",
-    "Facultad de Ingeniería Civil",
-    "Facultad de Ciencias Naturales y Exactas",
-  ];
+  /**
+   * Efecto para cargar las facultades al montar el componente
+   * Solo hace la llamada si no hay facultades cargadas
+   */
+  useEffect(() => {
+    if (faculties.length === 0) {
+      fetchFaculties();
+    }
+  }, [fetchFaculties, faculties.length]);
 
+  /**
+   * Extrae los nombres únicos de las facultades para el dropdown
+   * Se filtran valores nulos o vacíos
+   */
+  const facultades = Array.from(
+    new Set(faculties.map((f) => f.fac_nombre))
+  ).filter(Boolean);
+
+  // ========== VALIDACIONES ==========
+
+  /**
+   * Valida el campo de código del programa
+   * @param _ - No usado (parámetro de Ant Design)
+   * @param value - Valor del campo a validar
+   * @returns Promise que se resuelve si es válido, o rechaza con mensaje de error
+   */
   const validateCodigo = (_: any, value: string) => {
     if (!value) return Promise.reject("Por favor ingresa el código");
     if (!/^\d+$/.test(value))
@@ -61,6 +130,12 @@ const CreateProgram: React.FC = () => {
     return Promise.resolve();
   };
 
+  /**
+   * Valida el campo de nombre del programa
+   * @param _ - No usado (parámetro de Ant Design)
+   * @param value - Valor del campo a validar
+   * @returns Promise que se resuelve si es válido, o rechaza con mensaje de error
+   */
   const validateNombre = (_: any, value: string) => {
     if (!value)
       return Promise.reject("Por favor ingresa el nombre del programa");
@@ -77,10 +152,20 @@ const CreateProgram: React.FC = () => {
     return Promise.resolve();
   };
 
+  // ========== MANEJADORES DE EVENTOS ==========
+
+  /**
+   * Marca un campo como "tocado" para mostrar feedback de validación
+   * @param fieldName - Nombre del campo que fue interactuado
+   */
   const handleFieldTouch = (fieldName: keyof typeof touchedFields) => {
     setTouchedFields((prev) => ({ ...prev, [fieldName]: true }));
   };
 
+  /**
+   * Efecto para validar el formulario en tiempo real
+   * Se ejecuta cuando cambian los valores del formulario o los campos tocados
+   */
   React.useEffect(() => {
     const checkValidity = async () => {
       try {
@@ -92,43 +177,66 @@ const CreateProgram: React.FC = () => {
     };
 
     if (
-      touchedFields.codigo ||
-      touchedFields.nombre ||
-      touchedFields.facultad
+      touchedFields.pro_codigo ||
+      touchedFields.pro_nombre ||
+      touchedFields.fac_nombre
     ) {
       checkValidity();
     }
   }, [form, formValues, touchedFields]);
 
-  const onFinish = async (values: Program) => {
+  /**
+   * Maneja el envío del formulario cuando todos los datos son válidos
+   * @param values - Objeto con los valores del formulario
+   */
+  const onFinish = async (values: any) => {
     try {
-      const cleanedValues = {
-        ...values,
-        nombre: values.nombre.trim().replace(/\s+/g, " "),
-        active: true,
+      // Buscar la facultad seleccionada para obtener su código
+      const facultadSeleccionada = faculties.find(
+        (f) => f.fac_nombre === values.fac_nombre
+      );
+
+      if (!facultadSeleccionada) {
+        setWarning({
+          open: true,
+          message: "Facultad no válida seleccionada",
+        });
+        return;
+      }
+
+      // Preparar datos para enviar al backend
+      const cleanedValues: Program = {
+        pro_codigo: parseInt(values.pro_codigo),
+        pro_nombre: values.pro_nombre.trim().replace(/\s+/g, " "),
+        fac_codigo: facultadSeleccionada.fac_codigo,
+        fac_nombre: values.fac_nombre,
+        pro_activo: true,
       };
 
+      // Llamar al servicio para crear el programa
       await addProgram(cleanedValues);
 
+      // Mostrar mensaje de éxito
       setSuccess({
         open: true,
         message: "Programa creado correctamente",
       });
     } catch (err: any) {
+      // Manejar diferentes tipos de errores del backend
       if (err.message === "EXISTS_INACTIVE" && err.existing) {
         setWarning({
           open: true,
-          message: `Ya existe un programa "${err.existing.nombre}" con el código "${err.existing.codigo}" pero está inactivo.`,
+          message: `Ya existe un programa "${err.existing.pro_nombre}" con el código "${err.existing.pro_codigo}" pero está inactivo.`,
         });
         setConfirm({
           open: true,
-          codigo: err.existing.codigo,
-          nombre: err.existing.nombre,
+          pro_codigo: err.existing.pro_codigo,
+          pro_nombre: err.existing.pro_nombre,
         });
       } else if (err.message === "EXISTS_ACTIVE" && err.existing) {
         setWarning({
           open: true,
-          message: `Ya existe un programa activo con el código "${err.existing.codigo}" o nombre "${err.existing.nombre}"`,
+          message: `Ya existe un programa activo con el código "${err.existing.pro_codigo}" o nombre "${err.existing.pro_nombre}"`,
         });
       } else {
         setWarning({
@@ -139,22 +247,37 @@ const CreateProgram: React.FC = () => {
     }
   };
 
+  /**
+   * Maneja el cierre del modal de éxito
+   * Limpia el formulario y redirige a la lista de programas
+   */
   const handleSuccessClose = () => {
     setSuccess({ open: false, message: "" });
     form.resetFields();
-    setTouchedFields({ codigo: false, nombre: false, facultad: false });
+    setTouchedFields({
+      pro_codigo: false,
+      pro_nombre: false,
+      fac_nombre: false,
+    });
     navigate("/programs");
   };
 
+  /**
+   * Maneja el cierre del modal de advertencia
+   */
   const handleWarningClose = () => {
     setWarning({ open: false, message: "" });
   };
 
+  /**
+   * Maneja la cancelación del modal de confirmación
+   */
   const handleConfirmCancel = () => {
-    setConfirm({ open: false, codigo: "", nombre: "" });
+    setConfirm({ open: false, pro_codigo: "", pro_nombre: "" });
     setWarning({ open: false, message: "" });
   };
 
+  // ========== RENDERIZADO ==========
   return (
     <div className="form-page-container">
       <Header />
@@ -164,6 +287,7 @@ const CreateProgram: React.FC = () => {
         <Card className="form-card" padding="xl">
           <h2 className="form-title">Agregar Nuevo Programa</h2>
 
+          {/* Formulario principal para crear programas */}
           <Form
             form={form}
             name="create-program-form"
@@ -171,46 +295,49 @@ const CreateProgram: React.FC = () => {
             layout="vertical"
             autoComplete="off"
           >
+            {/* Campo: Código del Programa */}
             <Form.Item
-              name="codigo"
+              name="pro_codigo"
               label="Código"
               rules={[{ validator: validateCodigo }]}
-              hasFeedback={touchedFields.codigo}
-              validateStatus={touchedFields.codigo ? undefined : ""}
+              hasFeedback={touchedFields.pro_codigo}
+              validateStatus={touchedFields.pro_codigo ? undefined : ""}
             >
               <Input
                 placeholder="Ejemplo: 09"
                 size="large"
                 maxLength={10}
                 showCount
-                onBlur={() => handleFieldTouch("codigo")}
+                onBlur={() => handleFieldTouch("pro_codigo")}
               />
             </Form.Item>
 
+            {/* Campo: Nombre del Programa */}
             <Form.Item
-              name="nombre"
+              name="pro_nombre"
               label="Nombre"
               rules={[{ validator: validateNombre }]}
-              hasFeedback={touchedFields.nombre}
-              validateStatus={touchedFields.nombre ? undefined : ""}
+              hasFeedback={touchedFields.pro_nombre}
+              validateStatus={touchedFields.pro_nombre ? undefined : ""}
             >
               <Input
                 placeholder="Ejemplo: Ingeniería de Software"
                 size="large"
                 maxLength={150}
                 showCount
-                onBlur={() => handleFieldTouch("nombre")}
+                onBlur={() => handleFieldTouch("pro_nombre")}
               />
             </Form.Item>
 
+            {/* Campo: Facultad */}
             <Form.Item
-              name="facultad"
+              name="fac_nombre"
               label="Facultad"
               rules={[
                 { required: true, message: "Por favor selecciona la facultad" },
               ]}
-              hasFeedback={touchedFields.facultad}
-              validateStatus={touchedFields.facultad ? undefined : ""}
+              hasFeedback={touchedFields.fac_nombre}
+              validateStatus={touchedFields.fac_nombre ? undefined : ""}
             >
               <Select
                 placeholder="Selecciona una facultad"
@@ -223,8 +350,8 @@ const CreateProgram: React.FC = () => {
                     .toLowerCase()
                     .includes(input.toLowerCase()) ?? false
                 }
-                onBlur={() => handleFieldTouch("facultad")}
-                onSelect={() => handleFieldTouch("facultad")}
+                onBlur={() => handleFieldTouch("fac_nombre")}
+                onSelect={() => handleFieldTouch("fac_nombre")}
               >
                 {facultades.map((facultad) => (
                   <Option key={facultad} value={facultad}>
@@ -234,6 +361,7 @@ const CreateProgram: React.FC = () => {
               </Select>
             </Form.Item>
 
+            {/* Botón de Guardar */}
             <Form.Item>
               <Button
                 type="submit"
@@ -245,6 +373,7 @@ const CreateProgram: React.FC = () => {
               </Button>
             </Form.Item>
 
+            {/* Botón de Volver */}
             <Form.Item>
               <Button
                 variant="ghost"
@@ -260,26 +389,31 @@ const CreateProgram: React.FC = () => {
 
       <Footer />
 
+      {/* Modal de Advertencia/Error */}
       <WarningModal
         open={warning.open}
         message={warning.message}
         onClose={handleWarningClose}
       />
+
+      {/* Modal de Éxito */}
       <SuccessModal
         open={success.open}
         message={success.message}
         onClose={handleSuccessClose}
       />
+
+      {/* Modal de Confirmación (para reactivación de programas) */}
       <ConfirmModal
         open={confirm.open}
-        message={`¿Deseas reactivar el programa "${confirm.nombre}"?`}
+        message={`¿Deseas reactivar el programa "${confirm.pro_nombre}"?`}
         onConfirm={() => {
-          // Aquí iría la lógica de reactivación cuando la implementes
+          // TODO: Implementar lógica de reactivación cuando sea necesario
           setWarning({
             open: true,
             message: "Funcionalidad de reactivación no implementada",
           });
-          setConfirm({ open: false, codigo: "", nombre: "" });
+          setConfirm({ open: false, pro_codigo: "", pro_nombre: "" });
         }}
         onCancel={handleConfirmCancel}
       />

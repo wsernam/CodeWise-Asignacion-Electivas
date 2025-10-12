@@ -234,8 +234,8 @@ const EditElective: React.FC = () => {
                 onSelect={() => handleFieldTouch("programa")}
               >
                 {programs.map((program) => (
-                  <Option key={program.codigo} value={program.nombre}>
-                    {program.nombre}
+                  <Option key={program.pro_codigo} value={program.pro_nombre}>
+                    {program.pro_nombre}
                   </Option>
                 ))}
               </Select>

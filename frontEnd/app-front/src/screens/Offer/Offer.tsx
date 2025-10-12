@@ -65,8 +65,8 @@ const Oferta: React.FC = () => {
       const facultades = [
         ...new Set(
           programs
-            .filter((program) => program.active)
-            .map((program) => program.facultad)
+            .filter((program) => program.pro_activo)
+            .map((program) => program.fac_nombre)
         ),
       ];
 
@@ -84,24 +84,26 @@ const Oferta: React.FC = () => {
   const facultades = [
     ...new Set(
       programs
-        .filter((program) => program.active)
-        .map((program) => program.facultad)
+        .filter((program) => program.pro_activo)
+        .map((program) => program.fac_nombre)
     ),
   ].sort();
 
   const programasPorFacultad = facultades.reduce((acc, facultad) => {
     const programasDeFacultad = programs
-      .filter((program) => program.active && program.facultad === facultad)
-      .sort((a, b) => a.nombre.localeCompare(b.nombre));
+      .filter(
+        (program) => program.pro_activo && program.fac_nombre === facultad
+      )
+      .sort((a, b) => a.pro_nombre.localeCompare(b.pro_nombre));
     acc[facultad] = programasDeFacultad;
     return acc;
   }, {} as { [facultad: string]: any[] });
 
   const electivasPorPrograma = programs.reduce((acc, program) => {
     const electivasDelPrograma = electives.filter(
-      (elective) => elective.active && elective.programa === program.nombre
+      (elective) => elective.active && elective.programa === program.pro_nombre
     );
-    acc[program.nombre] = electivasDelPrograma;
+    acc[program.pro_nombre] = electivasDelPrograma;
     return acc;
   }, {} as { [programa: string]: any[] });
 

@@ -1,265 +1,217 @@
 import type { IProgram as Program } from "../models/program";
-// ========== CONFIGURACIÓN ==========
-/*
- * SWITCH ENTRE MOCK Y BACKEND REAL
- * USE_BACKEND: false = usar datos de prueba (desarrollo)
- * USE_BACKEND: true = conectar con backend real (producción)
- */
-const USE_BACKEND = false;
-const API_BASE_URL = "http://localhost:3001/api";
+import { PROGRAMS_URL } from "./config/config";
 
-// ========== DATOS MOCK (DE PRUEBA) ==========
-
-let programs: Program[] = [
-  {
-    codigo: "01",
-    nombre: "Ingeniería",
-    facultad: "Facultad de Ingeniería Electrónica y de Telecomunicaciones",
-    active: true, // true = activo, false = eliminado
-  },
-  {
-    codigo: "02",
-    nombre: "Ingeniería Electrónica",
-    facultad: "Facultad de Ingeniería Electrónica y de Telecomunicaciones",
-    active: true,
-  },
-  {
-    codigo: "03",
-    nombre: "Ingeniería de Telecomunicaciones",
-    facultad: "Facultad de Ingeniería Electrónica y de Telecomunicaciones",
-    active: true,
-  },
-];
-
-// ========== FUNCIONES DEL SERVICIO ==========
+// ========== FUNCIONES DE CONEXIÓN CON BACKEND ==========
 
 /**
- * getPrograms - Obtener TODOS los programas
- * @returns Promise<Program[]> - Lista de programas (siempre async)
+ * Obtiene todos los programas activos desde el backend
+ * @returns Promise<Program[]> - Lista de programas
  */
 export const getPrograms = async (): Promise<Program[]> => {
-  // 1. Verificar si debemos usar backend real
-  if (USE_BACKEND) {
-    try {
-      // CÓDIGO PARA BACKEND REAL:
-      // const response = await axios.get(`${API_BASE_URL}/programs`);
-      // return response.data;
-      // Simular delay de red (500ms)
-      await new Promise((resolve) => setTimeout(resolve, 500));
+  try {
+    console.log("🔄 [programService] Conectando a:", `${PROGRAMS_URL}/`);
 
-      // Por ahora lanzar error porque el backend no está implementado
-      throw new Error("Backend not implemented yet");
-    } catch (error) {
-      // Si el backend falla, usar datos mock como respaldo
-      console.warn("Backend no disponible, usando datos mock");
-      return [...programs]; // Devolver copia del array
+    const response = await fetch(`${PROGRAMS_URL}/`);
+
+    if (!response.ok) {
+      throw new Error(`Error: ${response.statusText}`);
     }
+
+    // Obtener datos crudos del backend
+    const backendData = await response.json();
+    console.log("[programService] Datos CRUDOS del backend:", backendData);
+
+    // Transformar datos al formato de nuestra interfaz Program
+    const transformedData: Program[] = backendData.map((item: any) => ({
+      pro_codigo: item.pro_codigo,
+      pro_nombre: item.pro_nombre,
+      fac_codigo: item.fac_codigo,
+      fac_nombre: item.fac_nombre,
+      pro_activo: item.pro_activo,
+    }));
+
+    console.log("[programService] Datos transformados:", transformedData);
+    return transformedData;
+  } catch (error) {
+    console.error("[programService] Error obteniendo programas:", error);
+    throw new Error("No se pudieron cargar los programas");
   }
-
-  // 2. MODO MOCK: Simular delay de red (300ms)
-  await new Promise((resolve) => setTimeout(resolve, 300));
-
-  // Devolver copia del array para no modificar el original
-  return [...programs];
 };
 
 /**
- * createProgram - Crear un NUEVO programa
- * @param program - Datos del nuevo programa
+ * Crea un nuevo programa en el backend
+ * @param program - Datos del programa a crear
  * @returns Promise<Program> - Programa creado
- * @throws Error si el programa ya existe
  */
 export const createProgram = async (program: Program): Promise<Program> => {
-  // 1. Verificar backend real
-  if (USE_BACKEND) {
-    try {
-      // CÓDIGO PARA BACKEND REAL:
-      // const response = await axios.post(`${API_BASE_URL}/programs`, program);
-      // return response.data;
+  try {
+    console.log("[programService] Creando programa:", program);
 
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      throw new Error("Backend not implemented yet");
-    } catch (error) {
-      console.warn("Backend no disponible, creando localmente");
-    }
-  }
+    const response = await fetch(`${PROGRAMS_URL}/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(program), // Envía fac_codigo al backend
+    });
 
-  // 2. Simular delay de red (400ms)
-  await new Promise((resolve) => setTimeout(resolve, 400));
-
-  // 3. VERIFICAR SI EL PROGRAMA YA EXISTE
-  const existingProgram = programs.find(
-    (p) =>
-      // Mismo código O mismo nombre (case insensitive)
-      p.codigo === program.codigo ||
-      p.nombre.toLowerCase() === program.nombre.toLowerCase()
-  );
-
-  // 4. MANEJAR CASOS DE PROGRAMA EXISTENTE
-  if (existingProgram) {
-    if (!existingProgram.active) {
-      // Caso: Existe pero está inactivo (puede reactivarse)
-      const error: any = new Error("EXISTS_INACTIVE");
-      error.existing = existingProgram; // Enviar el programa existente
-      throw error;
+    if (!response.ok) {
+      throw new Error(`Error: ${response.statusText}`);
     }
 
-    // Caso: Ya existe y está activo
-    const error: any = new Error("EXISTS_ACTIVE");
-    error.existing = existingProgram;
+    const createdProgram = await response.json();
+    console.log("[programService] Programa creado:", createdProgram);
+    return createdProgram;
+  } catch (error) {
+    console.error("[programService] Error creando programa:", error);
     throw error;
   }
-
-  // 5. CREAR NUEVO PROGRAMA
-  const newProgram: Program = {
-    ...program, // Copiar todas las propiedades
-    active: true, // Siempre activo al crear
-  };
-
-  // 6. AGREGAR A LA "BASE DE DATOS"
-  programs.push(newProgram);
-  return newProgram;
 };
 
 /**
- * updateProgram - Actualizar un programa existente
- * @param program - Programa con datos actualizados
+ * Actualiza un programa existente en el backend
+ * @param program - Datos actualizados del programa
  * @returns Promise<Program> - Programa actualizado
- * @throws Error si no se encuentra o el nombre ya existe
  */
 export const updateProgram = async (program: Program): Promise<Program> => {
-  if (USE_BACKEND) {
-    try {
-      // CÓDIGO BACKEND:
-      // const response = await axios.put(`${API_BASE_URL}/programs/${program.codigo}`, program);
-      // return response.data;
+  try {
+    console.log("[programService] Actualizando programa:", program);
+    console.log(
+      "[programService] JSON que se enviará:",
+      JSON.stringify(program)
+    );
 
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      throw new Error("Backend not implemented yet");
-    } catch (error) {
-      console.warn("Backend no disponible, actualizando localmente");
+    const response = await fetch(`${PROGRAMS_URL}/${program.pro_codigo}/`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(program), // Envía fac_codigo al backend
+    });
+
+    if (!response.ok) {
+      throw new Error(`Error: ${response.statusText}`);
     }
-  }
 
-  // Simular delay de red
-  await new Promise((resolve) => setTimeout(resolve, 400));
-
-  // 1. BUSCAR EL ÍNDICE DEL PROGRAMA
-  const index = programs.findIndex((p) => p.codigo === program.codigo);
-  if (index === -1) {
-    throw new Error("NOT_FOUND"); // Programa no encontrado
-  }
-
-  // 2. VERIFICAR SI EL NUEVO NOMBRE YA EXISTE EN OTRO PROGRAMA
-  const existingProgram = programs.find(
-    (p) =>
-      p.nombre.toLowerCase() === program.nombre.toLowerCase() &&
-      p.codigo !== program.codigo && // No comparar con sí mismo
-      p.active // Solo verificar programas activos
-  );
-
-  if (existingProgram) {
-    const error: any = new Error("NAME_EXISTS");
-    error.existing = existingProgram;
+    const updatedProgram = await response.json();
+    console.log("✅ [programService] Programa actualizado:", updatedProgram);
+    return updatedProgram;
+  } catch (error) {
+    console.error("[programService] Error actualizando programa:", error);
     throw error;
   }
-
-  // 3. ACTUALIZAR EL PROGRAMA
-  const updatedProgram = {
-    ...program,
-    active: true, // Mantener activo
-  };
-
-  programs[index] = updatedProgram;
-  return updatedProgram;
 };
 
 /**
- * getProgramByCode - Obtener un programa por su código único
+ * Obtiene un programa específico por su código
  * @param codigo - Código del programa a buscar
- * @returns Promise<Program | null> - Programa encontrado o null
+ * @returns Promise<Program | null> - Programa encontrado o null si no existe
  */
 export const getProgramByCode = async (
-  codigo: string
+  codigo: number
 ): Promise<Program | null> => {
-  if (USE_BACKEND) {
-    try {
-      // CÓDIGO BACKEND:
-      // const response = await axios.get(`${API_BASE_URL}/programs/${codigo}`);
-      // return response.data;
+  try {
+    console.log(`🔄 [programService] Buscando programa: ${codigo}`);
 
-      await new Promise((resolve) => setTimeout(resolve, 300));
-      throw new Error("Backend not implemented yet");
-    } catch (error) {
-      console.warn("Backend no disponible, buscando localmente");
+    const response = await fetch(`${PROGRAMS_URL}/${codigo}/`);
+
+    if (!response.ok) {
+      if (response.status === 404) return null;
+      throw new Error(`Error: ${response.statusText}`);
     }
+
+    const program: Program = await response.json();
+    return program;
+  } catch (error) {
+    console.error("[programService] Error buscando programa:", error);
+    throw error;
   }
-
-  // Simular delay de red
-  await new Promise((resolve) => setTimeout(resolve, 200));
-
-  // Buscar programa por código y que esté activo
-  const program = programs.find((p) => p.codigo === codigo && p.active);
-  return program || null; // Si no encuentra, devolver null
 };
 
+// ========== FUNCIONES QUE REQUIEREN IMPLEMENTACIÓN EN BACKEND ==========
+
 /**
- * searchPrograms - Buscar programas por texto
- * @param searchTerm - Texto a buscar en nombre, código o facultad
- * @returns Promise<Program[]> - Programas que coinciden
+ * Busca programas por término de búsqueda
+ * NOTA: Esta función necesita implementación en el backend
+ * @param searchTerm - Término de búsqueda
+ * @returns Promise<Program[]> - Programas que coinciden con la búsqueda
  */
 export const searchPrograms = async (
   searchTerm: string
 ): Promise<Program[]> => {
-  if (USE_BACKEND) {
-    try {
-      // CÓDIGO BACKEND:
-      // const response = await axios.get(`${API_BASE_URL}/programs/search?q=${encodeURIComponent(searchTerm)}`);
-      // return response.data;
+  try {
+    console.log(`🔍 [programService] Buscando: "${searchTerm}"`);
 
-      await new Promise((resolve) => setTimeout(resolve, 300));
-      throw new Error("Backend not implemented yet");
-    } catch (error) {
-      console.warn("Backend no disponible, buscando localmente");
-    }
+    // TODO: Implementar endpoint de búsqueda en backend
+    // Por ahora usamos filtrado client-side como temporal
+    const allPrograms = await getPrograms();
+    const lowercaseSearch = searchTerm.toLowerCase();
+
+    return allPrograms.filter(
+      (p) =>
+        p.pro_activo &&
+        (p.pro_nombre.toLowerCase().includes(lowercaseSearch) ||
+          p.pro_codigo.toString().includes(lowercaseSearch) ||
+          p.fac_nombre.toLowerCase().includes(lowercaseSearch))
+    );
+  } catch (error) {
+    console.error("[programService] Error buscando programas:", error);
+    throw error;
   }
-
-  // Simular delay de red
-  await new Promise((resolve) => setTimeout(resolve, 200));
-
-  const lowercaseSearch = searchTerm.toLowerCase();
-
-  // Filtrar programas que:
-  return programs.filter(
-    (p) =>
-      p.active && // 1. Estén activos
-      // 2. Coincidan en nombre, código o facultad (case insensitive)
-      (p.nombre.toLowerCase().includes(lowercaseSearch) ||
-        p.codigo.toLowerCase().includes(lowercaseSearch) ||
-        p.facultad.toLowerCase().includes(lowercaseSearch))
-  );
 };
 
 /**
- * getProgramStats - Obtener estadísticas de programas
- * @returns Promise con total, activos y conteo por facultad
+ * Obtiene estadísticas de programas
+ * NOTA: Esta función necesita implementación en el backend
+ * @returns Promise<{total: number, active: number, byFaculty: Record<string, number>}>
  */
 export const getProgramStats = async () => {
-  // Simular delay de red
-  await new Promise((resolve) => setTimeout(resolve, 200));
+  try {
+    console.log("[programService] Obteniendo estadísticas");
 
-  // Calcular estadísticas
-  const total = programs.length;
-  const active = programs.filter((p) => p.active).length;
+    // TODO: Implementar endpoint de estadísticas en backend
+    // Por ahora calculamos client-side como temporal
+    const allPrograms = await getPrograms();
+    const total = allPrograms.length;
+    const active = allPrograms.filter((p) => p.pro_activo).length;
+    const byFaculty = allPrograms
+      .filter((p) => p.pro_activo)
+      .reduce((acc, program) => {
+        acc[program.fac_nombre] = (acc[program.fac_nombre] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>);
 
-  // Contar programas por facultad usando reduce
-  const byFaculty = programs
-    .filter((p) => p.active)
-    .reduce((acc, program) => {
-      // Incrementar el contador para esta facultad
-      acc[program.facultad] = (acc[program.facultad] || 0) + 1;
+    return { total, active, byFaculty };
+  } catch (error) {
+    console.error("[programService] Error obteniendo estadísticas:", error);
+    throw error;
+  }
+};
+
+/**
+ * Obtiene la lista de facultades desde los programas existentes
+ * @returns Promise<Array<{fac_codigo: number, fac_nombre: string}>>
+ */
+export const getFacultiesFromPrograms = async (): Promise<
+  Array<{ fac_codigo: number; fac_nombre: string }>
+> => {
+  try {
+    console.log("[programService] Obteniendo facultades desde programas...");
+
+    const allPrograms = await getPrograms();
+
+    // Extraer facultades únicas de los programas
+    const uniqueFaculties = allPrograms.reduce((acc, program) => {
+      const existing = acc.find((f) => f.fac_codigo === program.fac_codigo);
+      if (!existing) {
+        acc.push({
+          fac_codigo: program.fac_codigo,
+          fac_nombre: program.fac_nombre,
+        });
+      }
       return acc;
-    }, {} as Record<string, number>); // Tipo: objeto con strings como keys y numbers como values
+    }, [] as Array<{ fac_codigo: number; fac_nombre: string }>);
 
-  return { total, active, byFaculty };
+    console.log("[programService] Facultades obtenidas:", uniqueFaculties);
+    return uniqueFaculties;
+  } catch (error) {
+    console.error("[programService] Error obteniendo facultades:", error);
+    throw error;
+  }
 };
