@@ -10,7 +10,9 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
+import os
 from pathlib import Path
+from decouple import config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -39,6 +41,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'gestion_hojas_de_calculo',
     'referencias',
+    'worker.apps.WorkerConfig', 
     # Apps de terceros requeridas
     'rest_framework',        
     'import_export',
@@ -78,11 +81,29 @@ WSGI_APPLICATION = 'core.wsgi.application'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 DATABASES = {
+    # Conexión a la base de datos principal de este microservicio
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': config('ASIGNACION_DB_NAME'),
+        'USER': config('ASIGNACION_DB_USER'),
+        'PASSWORD': config('ASIGNACION_DB_PASSWORD'),
+        'HOST': config('ASIGNACION_DB_HOST'), # Debería ser 'db_asignacion'
+        'PORT': config('ASIGNACION_DB_PORT'), # Debería ser '3306' (interno de Docker)
+    },
+    # --- CONFIGURACIÓN MULTI-DB ---
+    # Añadimos la conexión a la base de datos del microservicio de formularios.
+    # Esto es necesario para que el comando `sync_databases` pueda leer los datos de origen.
+    'formulario': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': config('FORM_DB_NAME'),
+        'USER': config('FORM_DB_USER'),
+        'PASSWORD': config('FORM_DB_PASSWORD'),
+        'HOST': config('FORM_DB_HOST'), # Debería ser 'db_formulario'
+        'PORT': config('FORM_DB_PORT'), # Debería ser '3306' (interno de Docker)
     }
+    # Si no se usa un router de base de datos, la conexión 'formulario' puede ser eliminada.
 }
+
 
 
 # Password validation

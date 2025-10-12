@@ -68,10 +68,19 @@ class ImportarProductosAPIView(APIView):
             error_details = []
             
             for row in result.row_errors():
-                # row[0] es el índice (base 0), sumamos 2 para la fila de Excel
+                fila_excel = row[0] + 2
+                errores_de_fila = []
+                # CORRECCIÓN: row[1] es una lista de objetos de error, debemos iterarla.
+                for error in row[1]:
+                    # Si el error es un diccionario (ValidationError), lo iteramos.
+                    if hasattr(error.error, 'items'):
+                        errores_de_fila.extend([f"Error en campo '{key}': {val[0]}" for key, val in error.error.items()])
+                    # Si no (ej. una excepción), lo convertimos a string.
+                    else:
+                        errores_de_fila.append(str(error.error))
                 error_details.append({
-                    'fila': row[0] + 2, 
-                    'errores': [f"Error de campo: {key} - {value}" for key, value in row[1].items()]
+                    'fila': fila_excel, 
+                    'errores': errores_de_fila
                 })
             
             for error in result.base_errors:
