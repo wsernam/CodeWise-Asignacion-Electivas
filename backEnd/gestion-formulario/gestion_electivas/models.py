@@ -10,7 +10,7 @@ class Facultad(models.Model):
 
 
 class Programa(models.Model):
-    pro_codigo = models.CharField(max_length=1000, primary_key=True)
+    pro_codigo = models.CharField(max_length=225, primary_key=True)
     pro_nombre = models.CharField(max_length=150, unique=True)
     fac_codigo = models.ForeignKey(Facultad, on_delete=models.CASCADE, related_name="programas")
     pro_activo = models.BooleanField(default=True)  # True=activo, False=inactivo
@@ -19,7 +19,7 @@ class Programa(models.Model):
 
 
 class Electiva(models.Model):
-    ele_codigo = models.CharField(max_length=1000, primary_key=True)
+    ele_codigo = models.CharField(max_length=225, primary_key=True)
     ele_nombre = models.CharField(max_length=150, unique=True)
     pro_codigo = models.ForeignKey(Programa, on_delete=models.CASCADE, related_name="electivas")
     ele_estado = models.BooleanField(default=True)  # True = activo (1), False = inactivo (0)

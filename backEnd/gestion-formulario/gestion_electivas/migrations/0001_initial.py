@@ -22,7 +22,7 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='Programa',
             fields=[
-                ('pro_codigo', models.CharField(max_length=1000, primary_key=True, serialize=False)),
+                ('pro_codigo', models.CharField(max_length=225, primary_key=True, serialize=False)),
                 ('pro_nombre', models.CharField(max_length=150, unique=True)),
                 ('pro_activo', models.BooleanField(default=True)),
                 ('fac_codigo', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='programas', to='gestion_electivas.facultad')),
@@ -31,7 +31,7 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='Electiva',
             fields=[
-                ('ele_codigo', models.CharField(max_length=1000, primary_key=True, serialize=False)),
+                ('ele_codigo', models.CharField(max_length=225, primary_key=True, serialize=False)),
                 ('ele_nombre', models.CharField(max_length=150, unique=True)),
                 ('ele_estado', models.BooleanField(default=True)),
                 ('pro_codigo', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='electivas', to='gestion_electivas.programa')),
