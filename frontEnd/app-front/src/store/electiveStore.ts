@@ -12,9 +12,9 @@ interface ElectiveState {
   electives: IElective[];
   fetchElectives: () => Promise<void>;
   addElective: (elective: IElective) => Promise<void>;
-  updateElective: (codigo: string, updated: IElective) => Promise<void>;
-  deleteElective: (codigo: string) => Promise<void>;
-  reactivateElective: (codigo: string) => Promise<void>;
+  updateElective: (ele_codigo: string, updated: IElective) => Promise<void>;
+  deleteElective: (ele_codigo: string) => Promise<void>;
+  reactivateElective: (ele_codigo: string) => Promise<void>;
 }
 
 export const useElectiveStore = create<ElectiveState>((set) => ({
@@ -34,7 +34,7 @@ export const useElectiveStore = create<ElectiveState>((set) => ({
       console.log("[ElectiveStore] Electiva agregada OK");
       set((state) => ({
         electives: [
-          ...state.electives.filter((e) => e.codigo !== newElective.codigo),
+          ...state.electives.filter((e) => e.ele_codigo !== newElective.ele_codigo),
           newElective,
         ],
       }));
@@ -50,7 +50,7 @@ export const useElectiveStore = create<ElectiveState>((set) => ({
     console.log("[ElectiveStore] Electiva actualizada OK");
     set((state) => ({
       electives: state.electives.map((e) =>
-        e.codigo === codigo ? updatedElective : e
+        e.ele_codigo === codigo ? updatedElective : e
       ),
     }));
   },
@@ -61,7 +61,7 @@ export const useElectiveStore = create<ElectiveState>((set) => ({
     console.log("[ElectiveStore] Electiva desactivada OK");
     set((state) => ({
       electives: state.electives.map((e) =>
-        e.codigo === codigo ? deleted : e
+        e.ele_codigo === codigo ? deleted : e
       ),
     }));
   },
@@ -72,7 +72,7 @@ export const useElectiveStore = create<ElectiveState>((set) => ({
     console.log("[ElectiveStore] Electiva reactivada OK");
     set((state) => ({
       electives: state.electives.map((e) =>
-        e.codigo === codigo ? reactivated : e
+        e.ele_codigo === codigo ? reactivated : e
       ),
     }));
   },

@@ -8,7 +8,6 @@ import Button from "../../components/ui/Button/Button";
 import ConfirmModal from "../../components/shared/ConfirmModal/ConfirmModal";
 import WarningModal from "../../components/shared/WarningModal/WarningModal";
 import SuccessModal from "../../components/shared/SuccessModal/SuccessModal";
-
 import { useNavigate } from "react-router";
 import type { IElective } from "../../models/elective";
 import "./ListElective.css";
@@ -22,12 +21,12 @@ const Electives: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [confirm, setConfirm] = useState<{
     open: boolean;
-    codigo: string;
-    nombre: string;
+    ele_codigo: string;
+    ele_nombre: string;
   }>({
     open: false,
-    codigo: "",
-    nombre: "",
+    ele_codigo: "",
+    ele_nombre: "",
   });
   const [warning, setWarning] = useState<{ open: boolean; message: string }>({
     open: false,
@@ -42,50 +41,38 @@ const Electives: React.FC = () => {
     fetchElectives();
   }, [fetchElectives]);
 
-  // Búsqueda por código O nombre
+  // Búsqueda por código O nombre y solo activas (ele_estado)
   const filteredElectives: IElective[] = electives
-    .filter((e) => e.active)
+    .filter((e) => e.ele_estado)
     .filter(
       (e) =>
-        e.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        e.codigo.toLowerCase().includes(searchTerm.toLowerCase())
+        e.ele_nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        String(e.ele_codigo).toLowerCase().includes(searchTerm.toLowerCase())
     );
 
   const handleDelete = async () => {
     try {
-      await deleteElective(confirm.codigo);
+      await deleteElective(confirm.ele_codigo); // se envía ele_codigo
       setSuccess({
         open: true,
-        message: `Electiva "${confirm.nombre}" desactivada correctamente`,
+        message: `Electiva "${confirm.ele_nombre}" desactivada correctamente`,
       });
-      setConfirm({ open: false, codigo: "", nombre: "" });
+      setConfirm({ open: false, ele_codigo: "", ele_nombre: "" });
     } catch (error) {
       setWarning({
         open: true,
         message: "No se pudo desactivar la electiva",
       });
-      setConfirm({ open: false, codigo: "", nombre: "" });
+      setConfirm({ open: false, ele_codigo: "", ele_nombre: "" });
     }
   };
 
-  const handleConfirmDelete = (codigo: string, nombre: string) => {
+  const handleConfirmDelete = (ele_codigo: string, ele_nombre: string) => {
     setConfirm({
       open: true,
-      codigo: codigo,
-      nombre: nombre,
+      ele_codigo,
+      ele_nombre,
     });
-  };
-
-  const handleSuccessClose = () => {
-    setSuccess({ open: false, message: "" });
-  };
-
-  const handleWarningClose = () => {
-    setWarning({ open: false, message: "" });
-  };
-
-  const handleConfirmCancel = () => {
-    setConfirm({ open: false, codigo: "", nombre: "" });
   };
 
   return (
@@ -126,14 +113,14 @@ const Electives: React.FC = () => {
               <tbody>
                 {filteredElectives.length > 0 ? (
                   filteredElectives.map((e) => (
-                    <tr key={e.codigo}>
-                      <td>{e.codigo}</td>
-                      <td>{e.nombre}</td>
-                      <td>{e.programa}</td>
+                    <tr key={e.ele_codigo}>
+                      <td>{e.ele_codigo}</td>
+                      <td>{e.ele_nombre}</td>
+                      <td>{e.pro_codigo}</td>
                       <td className="options">
                         <button
                           onClick={() =>
-                            navigate(`/electives/edit/${e.codigo}`)
+                            navigate(`/electives/edit/${e.ele_codigo}`)
                           }
                           className="btn-icon"
                           title="Editar electiva"
@@ -142,7 +129,7 @@ const Electives: React.FC = () => {
                         </button>
                         <button
                           onClick={() =>
-                            handleConfirmDelete(e.codigo, e.nombre)
+                            handleConfirmDelete(e.ele_codigo, e.ele_nombre)
                           }
                           className="btn-icon"
                           title="Desactivar electiva"
@@ -154,13 +141,10 @@ const Electives: React.FC = () => {
                   ))
                 ) : (
                   <tr>
-                    <td
-                      colSpan={4}
-                      style={{ textAlign: "center", padding: "20px" }}
-                    >
-                      {electives.filter((e) => e.active).length === 0
+                    <td colSpan={4} style={{ textAlign: "center", padding: 20 }}>
+                      {electives.filter((e) => e.ele_estado).length === 0
                         ? "No hay electivas activas"
-                        : "No hay se encontraron electivas que conicidan con la búsqueda"}
+                        : "No se encontraron electivas que coincidan con la búsqueda"}
                     </td>
                   </tr>
                 )}
@@ -175,23 +159,23 @@ const Electives: React.FC = () => {
       {/* Modal de confirmación para eliminar */}
       <ConfirmModal
         open={confirm.open}
-        message={`¿Seguro que deseas desactivar la electiva "${confirm.nombre}"?`}
+        message={`¿Seguro que deseas desactivar la electiva "${confirm.ele_nombre}"?`}
         onConfirm={handleDelete}
-        onCancel={handleConfirmCancel}
+        onCancel={() => setConfirm({ open: false, ele_codigo: "", ele_nombre: "" })}
       />
 
       {/* Modal de éxito */}
       <SuccessModal
         open={success.open}
         message={success.message}
-        onClose={handleSuccessClose}
+        onClose={() => setSuccess({ open: false, message: "" })}
       />
 
       {/* Modal de advertencia/error */}
       <WarningModal
         open={warning.open}
         message={warning.message}
-        onClose={handleWarningClose}
+        onClose={() => setWarning({ open: false, message: "" })}
       />
     </div>
   );

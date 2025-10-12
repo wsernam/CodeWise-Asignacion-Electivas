@@ -46,7 +46,7 @@ const router = createBrowserRouter([
     element: <AddElective />,
   },
   {
-    path: "/electives/edit/:codigo",
+    path: "/electives/edit/:ele_codigo",
     element: <EditElective />,
   },
   {

@@ -1,6 +1,6 @@
 export interface IElective {
-  codigo: string;
-  nombre: string;
-  programa: string;
-  active: boolean;
+  ele_codigo: string;
+  ele_nombre: string;
+  pro_codigo: string;
+  ele_estado: boolean;
 }

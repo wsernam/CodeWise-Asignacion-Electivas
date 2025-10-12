@@ -21,9 +21,9 @@ const AddElective: React.FC = () => {
   const formValues = Form.useWatch([], form);
 
   const [touchedFields, setTouchedFields] = useState({
-    codigo: false,
-    nombre: false,
-    programa: false,
+    ele_codigo: false,
+    ele_nombre: false,
+    pro_codigo: false,
   });
   const [isFormValid, setIsFormValid] = useState(false);
   const [warning, setWarning] = useState<{ open: boolean; message: string }>({
@@ -32,30 +32,30 @@ const AddElective: React.FC = () => {
   });
   const [confirm, setConfirm] = useState<{
     open: boolean;
-    codigo: string;
-    nombre: string;
+    ele_codigo: string;
+    ele_nombre: string;
   }>({
     open: false,
-    codigo: "",
-    nombre: "",
+    ele_codigo: "",
+    ele_nombre: "",
   });
   const [success, setSuccess] = useState<{ open: boolean; message: string }>({
     open: false,
     message: "",
   });
 
-  const addElective = useElectiveStore((state) => state.addElective);
-  const reactivateElective = useElectiveStore(
-    (state) => state.reactivateElective
-  );
-  const programs = useProgramStore((state) => state.programs);
-  const fetchPrograms = useProgramStore((state) => state.fetchPrograms);
+  // Stores
+  const addElective = useElectiveStore((s) => s.addElective);
+  const reactivateElective = useElectiveStore((s) => s.reactivateElective);
+  const programs = useProgramStore((s) => s.programs);
+  const fetchPrograms = useProgramStore((s) => s.fetchPrograms);
 
   useEffect(() => {
-    fetchPrograms();
-  }, [fetchPrograms]);
+    if (programs.length === 0) fetchPrograms();
+  }, [fetchPrograms, programs.length]);
 
-  const validateCodigo = (_: any, value: string) => {
+  // ===== Validaciones =====
+  const validateEleCodigo = (_: any, value: string) => {
     if (!value) return Promise.reject("Por favor ingresa el código");
     if (value.length < 2 || value.length > 10)
       return Promise.reject("El código debe tener entre 2 y 10 caracteres");
@@ -68,28 +68,24 @@ const AddElective: React.FC = () => {
     return Promise.resolve();
   };
 
-  const validateNombre = (_: any, value: string) => {
+  const validateEleNombre = (_: any, value: string) => {
     if (!value) return Promise.reject("Por favor ingresa el nombre");
     if (value.length < 3)
       return Promise.reject("El nombre debe tener al menos 3 caracteres");
     if (value.length > 100)
       return Promise.reject("El nombre no puede exceder 100 caracteres");
     if (/^\s+|\s+$/.test(value))
-      return Promise.reject(
-        "El nombre no puede empezar o terminar con espacios"
-      );
-    if (/\d/.test(value))
-      return Promise.reject("El nombre no puede contener números");
+      return Promise.reject("El nombre no puede empezar o terminar con espacios");
+    if (/\d/.test(value)) return Promise.reject("El nombre no puede contener números");
     if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]+$/.test(value))
       return Promise.reject("El nombre solo puede contener letras y espacios");
     return Promise.resolve();
   };
 
-  const handleFieldTouch = (fieldName: keyof typeof touchedFields) => {
-    setTouchedFields((prev) => ({ ...prev, [fieldName]: true }));
-  };
+  const handleFieldTouch = (field: keyof typeof touchedFields) =>
+    setTouchedFields((prev) => ({ ...prev, [field]: true }));
 
-  React.useEffect(() => {
+  useEffect(() => {
     const checkValidity = async () => {
       try {
         await form.validateFields();
@@ -98,45 +94,44 @@ const AddElective: React.FC = () => {
         setIsFormValid(false);
       }
     };
-
-    if (
-      touchedFields.codigo ||
-      touchedFields.nombre ||
-      touchedFields.programa
-    ) {
+    if (touchedFields.ele_codigo || touchedFields.ele_nombre || touchedFields.pro_codigo) {
       checkValidity();
     }
   }, [form, formValues, touchedFields]);
 
+  // ===== Submit =====
   const onFinish = async (values: IElective) => {
     try {
-      const cleanedValues = {
-        ...values,
-        nombre: values.nombre.trim().replace(/\s+/g, " "),
-        active: true,
+      const payload: IElective = {
+        ele_codigo: values.ele_codigo.toUpperCase(),
+        ele_nombre: values.ele_nombre.trim().replace(/\s+/g, " "),
+        pro_codigo: values.pro_codigo,
+        ele_estado: true,
       };
 
-      await addElective(cleanedValues);
+      await addElective(payload);
 
       setSuccess({
         open: true,
-        message: `Electiva "${cleanedValues.nombre}" agregada correctamente`,
+        message: `Electiva "${payload.ele_nombre}" agregada correctamente`,
       });
     } catch (err: any) {
-      if (err.message === "EXISTS_INACTIVE" && err.existing) {
+      // Estructura de error esperada del store:
+      // { message: "EXISTS_INACTIVE"|"EXISTS_ACTIVE"|..., existing: { ele_codigo, ele_nombre } }
+      if (err?.message === "EXISTS_INACTIVE" && err?.existing) {
         setWarning({
           open: true,
-          message: `Ya existe una electiva "${err.existing.nombre}" con el código "${err.existing.codigo}" pero está inactiva.`,
+          message: `Ya existe la electiva "${err.existing.ele_nombre}" con el código "${err.existing.ele_codigo}" pero está inactiva.`,
         });
         setConfirm({
           open: true,
-          codigo: err.existing.codigo,
-          nombre: err.existing.nombre,
+          ele_codigo: err.existing.ele_codigo,
+          ele_nombre: err.existing.ele_nombre,
         });
-      } else if (err.message === "EXISTS_ACTIVE" && err.existing) {
+      } else if (err?.message === "EXISTS_ACTIVE" && err?.existing) {
         setWarning({
           open: true,
-          message: `Ya existe una electiva activa con el código "${err.existing.codigo}" o nombre "${err.existing.nombre}"`,
+          message: `Ya existe una electiva activa con el código "${err.existing.ele_codigo}" o nombre "${err.existing.ele_nombre}"`,
         });
       } else {
         setWarning({
@@ -149,34 +144,28 @@ const AddElective: React.FC = () => {
 
   const handleReactivate = async () => {
     try {
-      await reactivateElective(confirm.codigo);
+      await reactivateElective(confirm.ele_codigo);
       setSuccess({
         open: true,
-        message: `Electiva "${confirm.nombre}" reactivada correctamente`,
+        message: `Electiva "${confirm.ele_nombre}" reactivada correctamente`,
       });
-      setConfirm({ open: false, codigo: "", nombre: "" });
+      setConfirm({ open: false, ele_codigo: "", ele_nombre: "" });
       setWarning({ open: false, message: "" });
-    } catch (error) {
-      setWarning({
-        open: true,
-        message: "Error al reactivar la electiva",
-      });
+    } catch {
+      setWarning({ open: true, message: "Error al reactivar la electiva" });
     }
   };
 
   const handleSuccessClose = () => {
     setSuccess({ open: false, message: "" });
     form.resetFields();
-    setTouchedFields({ codigo: false, nombre: false, programa: false });
+    setTouchedFields({ ele_codigo: false, ele_nombre: false, pro_codigo: false });
     navigate("/electives");
   };
 
-  const handleWarningClose = () => {
-    setWarning({ open: false, message: "" });
-  };
-
+  const handleWarningClose = () => setWarning({ open: false, message: "" });
   const handleConfirmCancel = () => {
-    setConfirm({ open: false, codigo: "", nombre: "" });
+    setConfirm({ open: false, ele_codigo: "", ele_nombre: "" });
     setWarning({ open: false, message: "" });
   };
 
@@ -197,18 +186,18 @@ const AddElective: React.FC = () => {
             autoComplete="off"
           >
             <Form.Item
-              name="codigo"
+              name="ele_codigo"
               label="Código"
-              rules={[{ validator: validateCodigo }]}
-              hasFeedback={touchedFields.codigo}
-              validateStatus={touchedFields.codigo ? undefined : ""}
+              rules={[{ validator: validateEleCodigo }]}
+              hasFeedback={touchedFields.ele_codigo}
+              validateStatus={touchedFields.ele_codigo ? undefined : ""}
             >
               <Input
                 placeholder="Ejemplo: ES104"
                 size="large"
                 maxLength={10}
                 showCount
-                onBlur={() => handleFieldTouch("codigo")}
+                onBlur={() => handleFieldTouch("ele_codigo")}
                 onInput={(e: React.FormEvent<HTMLInputElement>) => {
                   const input = e.target as HTMLInputElement;
                   input.value = input.value.toUpperCase();
@@ -217,29 +206,27 @@ const AddElective: React.FC = () => {
             </Form.Item>
 
             <Form.Item
-              name="nombre"
+              name="ele_nombre"
               label="Nombre de la Electiva"
-              rules={[{ validator: validateNombre }]}
-              hasFeedback={touchedFields.nombre}
-              validateStatus={touchedFields.nombre ? undefined : ""}
+              rules={[{ validator: validateEleNombre }]}
+              hasFeedback={touchedFields.ele_nombre}
+              validateStatus={touchedFields.ele_nombre ? undefined : ""}
             >
               <Input
                 placeholder="Ejemplo: Desarrollo Web Avanzado"
                 size="large"
                 maxLength={100}
                 showCount
-                onBlur={() => handleFieldTouch("nombre")}
+                onBlur={() => handleFieldTouch("ele_nombre")}
               />
             </Form.Item>
 
             <Form.Item
-              name="programa"
+              name="pro_codigo"
               label="Programa Académico"
-              rules={[
-                { required: true, message: "Por favor selecciona el programa" },
-              ]}
-              hasFeedback={touchedFields.programa}
-              validateStatus={touchedFields.programa ? undefined : ""}
+              rules={[{ required: true, message: "Por favor selecciona el programa" }]}
+              hasFeedback={touchedFields.pro_codigo}
+              validateStatus={touchedFields.pro_codigo ? undefined : ""}
             >
               <Select
                 placeholder="Selecciona un programa"
@@ -247,40 +234,28 @@ const AddElective: React.FC = () => {
                 showSearch
                 optionFilterProp="children"
                 filterOption={(input, option) =>
-                  option?.children
-                    ?.toString()
-                    .toLowerCase()
-                    .includes(input.toLowerCase()) ?? false
+                  option?.children?.toString().toLowerCase().includes(input.toLowerCase()) ?? false
                 }
                 notFoundContent="No se encontraron programas"
-                onBlur={() => handleFieldTouch("programa")}
-                onSelect={() => handleFieldTouch("programa")}
+                onBlur={() => handleFieldTouch("pro_codigo")}
+                onSelect={() => handleFieldTouch("pro_codigo")}
               >
-                {programs.map((program) => (
-                  <Option key={program.pro_codigo} value={program.fac_nombre}>
-                    {program.fac_nombre}
+                {programs.map((program: any) => (
+                  <Option key={program.pro_codigo} value={program.pro_codigo}>
+                    {program.pro_nombre}
                   </Option>
                 ))}
               </Select>
             </Form.Item>
 
             <Form.Item>
-              <Button
-                type="submit"
-                variant="primary"
-                size="medium"
-                disabled={!isFormValid}
-              >
+              <Button type="submit" variant="primary" size="medium" disabled={!isFormValid}>
                 Guardar
               </Button>
             </Form.Item>
 
             <Form.Item>
-              <Button
-                variant="ghost"
-                onClick={() => navigate("/electives")}
-                size="medium"
-              >
+              <Button variant="ghost" onClick={() => navigate("/electives")} size="medium">
                 Volver
               </Button>
             </Form.Item>
@@ -290,19 +265,12 @@ const AddElective: React.FC = () => {
 
       <Footer />
 
-      <WarningModal
-        open={warning.open}
-        message={warning.message}
-        onClose={handleWarningClose}
-      />
-      <SuccessModal
-        open={success.open}
-        message={success.message}
-        onClose={handleSuccessClose}
-      />
+      {/* Modales SIEMPRE montados */}
+      <WarningModal open={warning.open} message={warning.message} onClose={handleWarningClose} />
+      <SuccessModal open={success.open} message={success.message} onClose={handleSuccessClose} />
       <ConfirmModal
         open={confirm.open}
-        message={`¿Deseas reactivar la electiva "${confirm.nombre}"?`}
+        message={`¿Deseas reactivar la electiva "${confirm.ele_nombre}"?`}
         onConfirm={handleReactivate}
         onCancel={handleConfirmCancel}
       />

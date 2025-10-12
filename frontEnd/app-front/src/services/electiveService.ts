@@ -1,142 +1,130 @@
+// src/services/electiveService.ts
 import type { IElective } from "../models/elective";
+import { ELECTIVES_URL } from "./config/config"; // ej: "/electivas"
+import axiosInstance  from "../api/axiosInstance";  // tu instancia configurada
 
-// ========== BASE DE DATOS EN MEMORIA ==========
-/*
- * Lista en memoria que almacena las electivas
- * Cada objeto representa una materia electiva con sus propiedades
- * En una aplicación real, esto sería reemplazado por una base de datos
- */
-let electives: IElective[] = [
-  {
-    codigo: "101",
-    nombre: "Inteligencia Artificial",
-    programa: "Ingeniería",
-    active: true, // true = visible y disponible
-  },
-  {
-    codigo: "102",
-    nombre: "Ciberseguridad",
-    programa: "Ingeniería",
-    active: true,
-  },
-  {
-    codigo: "103",
-    nombre: "Historia del Arte",
-    programa: "Humanidades",
-    active: true,
-  },
-];
+// ========== HELPERS ==========
+/** Ajusta aquí si tu backend devuelve otros nombres de campo */
+const transformElective = (item: any): IElective => ({
+  ele_codigo: item.ele_codigo,
+  ele_nombre: item.ele_nombre,
+  ele_estado: item.ele_estado,            // boolean (activa/inactiva)
+  pro_codigo: item.pro_codigo,            // opcional según tu interfaz           // opcional según tu interfaz
+  // ...agrega/ajusta más campos si IElective los define
+});
 
-// ========== OPERACIONES CRUD ==========
+// ========== FUNCIONES DE CONEXIÓN CON BACKEND ==========
 
 /**
- * getElectivesService - Obtener TODAS las electivas
- * @returns Promise<IElective[]> - Lista completa de electivas
- *
- * ¿Por qué devuelve una Promise?
- * - Para simular una llamada a API real (que siempre es asíncrona)
- * - Para mantener consistencia con servicios que sí usan backend
+ * Obtiene todas las electivas
  */
 export const getElectivesService = async (): Promise<IElective[]> => {
-  // En una app real, aquí habría: await api.get('/electives')
-  return electives; // Simplemente devolvemos el array
-};
+  try {
+    console.log("🔄 [electiveService] Conectando a:", `${ELECTIVES_URL}/`);
+    const { data } = await axiosInstance.get(`${ELECTIVES_URL}/`);
+    console.log("[electiveService] Datos CRUDOS del backend:", data);
 
-/**
- * createElectiveService - Crear una NUEVA electiva
- * Verifica que no exista otra con el mismo código o nombre (case insensitive)
- * @param elective - Objeto con los datos de la nueva electiva
- * @returns Promise<IElective> - Electiva creada
- * @throws Error si la electiva ya existe activa o inactiva
- */
-export const createElectiveService = async (
-  elective: IElective
-): Promise<IElective> => {
-  // 1. BUSCAR SI YA EXISTE UNA ELECTIVA CON EL MISMO CÓDIGO O NOMBRE
-  const existing = electives.find(
-    (e) =>
-      e.codigo === elective.codigo || // Mismo código
-      e.nombre.toLowerCase() === elective.nombre.toLowerCase() // Mismo nombre (ignorando mayúsculas)
-  );
-
-  // 2. MANEJAR CASOS DE ELECTIVA EXISTENTE
-  if (existing) {
-    if (!existing.active) {
-      // Caso: Existe pero está INACTIVA - Podría reactivarse
-      const error: any = new Error("EXISTS_INACTIVE");
-      error.existing = existing; // Incluimos la electiva existente en el error
-      throw error; // Lanzamos error específico
-    }
-
-    // Caso: Ya existe y está ACTIVA - No permitir duplicados
-    const error: any = new Error("EXISTS_ACTIVE");
-    error.existing = existing;
-    throw error;
+    const transformed: IElective[] = Array.isArray(data)
+      ? data.map(transformElective)
+      : [];
+    console.log("[electiveService] Datos transformados:", transformed);
+    return transformed;
+  } catch (error: any) {
+    console.error("[electiveService] Error obteniendo electivas:", error);
+    throw new Error(error?.message || "No se pudieron cargar las electivas");
   }
-
-  // 3. SI NO EXISTE, AGREGAR A LA LISTA
-  electives.push(elective);
-  return elective; // Devolver la electiva recién creada
 };
 
 /**
- * updateElectiveService - Actualizar una electiva existente
- * @param codigo - Código único de la electiva a actualizar
- * @param updated - Objeto con los nuevos datos
- * @returns Promise<IElective> - Electiva actualizada
- * @throws Error si no se encuentra la electiva
+ * Crea una electiva
+ */
+export const createElectiveService = async (e: IElective): Promise<IElective> => {
+  try {
+    console.log("[electiveService] Creando electiva:", e);
+    const { data } = await axiosInstance.post(`${ELECTIVES_URL}/`, e);
+    const created = transformElective(data);
+    console.log("✅ [electiveService] Electiva creada:", created);
+    return created;
+  } catch (error: any) {
+    console.error("[electiveService] Error creando electiva:", error);
+    throw new Error(error?.message || "No se pudo crear la electiva");
+  }
+};
+
+/**
+ * Actualiza una electiva por código
  */
 export const updateElectiveService = async (
   codigo: string,
-  updated: IElective
+  e: IElective
 ): Promise<IElective> => {
-  // 1. BUSCAR EL ÍNDICE DE LA ELECTIVA EN EL ARRAY
-  const index = electives.findIndex((e) => e.codigo === codigo);
-
-  // 2. VERIFICAR SI EXISTE
-  if (index === -1) throw new Error("NOT_FOUND"); // No existe la electiva
-
-  // 3. ACTUALIZAR LOS DATOS MANTENIENDO EL ESTADO ACTIVO
-  electives[index] = {
-    ...updated, // Copiar todas las propiedades nuevas
-    active: true, // Asegurar que quede activa después de actualizar
-  };
-
-  return electives[index]; // Devolver la versión actualizada
+  try {
+    console.log("[electiveService] Actualizando electiva:", codigo, e);
+    console.log("[electiveService] JSON que se enviará:", JSON.stringify(e));
+    const { data } = await axiosInstance.put(`${ELECTIVES_URL}/${codigo}/`, e);
+    const updated = transformElective(data);
+    console.log("✅ [electiveService] Electiva actualizada:", updated);
+    return updated;
+  } catch (error: any) {
+    console.error("[electiveService] Error actualizando electiva:", error);
+    throw new Error(error?.message || "No se pudo actualizar la electiva");
+  }
 };
 
 /**
- * deleteElectiveService - "Eliminar" una electiva (soft delete)
- * No se borra de la lista, solo se marca como inactiva
- * Esto permite recuperarla después (reactivación)
- * @param codigo - Código de la electiva a eliminar
- * @returns Promise<IElective> - Electiva desactivada
- * @throws Error si no se encuentra la electiva
+ * Elimina (o marca inactiva) una electiva por código
  */
-export const deleteElectiveService = async (
-  codigo: string
-): Promise<IElective> => {
-  const index = electives.findIndex((e) => e.codigo === codigo);
-  if (index === -1) throw new Error("NOT_FOUND");
-
-  // SOFT DELETE: Solo cambiar active a false, no remover del array
-  electives[index].active = false;
-  return electives[index]; // Devolver la electiva desactivada
+export const deleteElectiveService = async (codigo: string): Promise<IElective> => {
+  try {
+    console.log("[electiveService] Eliminando electiva:", codigo);
+    const { data } = await axiosInstance.delete(`${ELECTIVES_URL}/${codigo}/`);
+    const deleted = transformElective(data);
+    console.log("🗑️ [electiveService] Electiva eliminada:", deleted);
+    return deleted;
+  } catch (error: any) {
+    console.error("[electiveService] Error eliminando electiva:", error);
+    throw new Error(error?.message || "No se pudo eliminar la electiva");
+  }
 };
 
 /**
- * reactivateElectiveService - Reactivar una electiva previamente desactivada
- * @param codigo - Código de la electiva a reactivar
- * @returns Promise<IElective> - Electiva reactivada
- * @throws Error si no se encuentra la electiva
+ * Reactiva una electiva por código
  */
 export const reactivateElectiveService = async (
   codigo: string
 ): Promise<IElective> => {
-  const index = electives.findIndex((e) => e.codigo === codigo);
-  if (index === -1) throw new Error("NOT_FOUND");
+  try {
+    console.log("[electiveService] Reactivando electiva:", codigo);
+    const { data } = await axiosInstance.patch(
+      `${ELECTIVES_URL}/${codigo}/reactivar/`
+    );
+    const reactivated = transformElective(data);
+    console.log("✅ [electiveService] Electiva reactivada:", reactivated);
+    return reactivated;
+  } catch (error: any) {
+    console.error("[electiveService] Error reactivando electiva:", error);
+    throw new Error(error?.message || "No se pudo reactivar la electiva");
+  }
+};
 
-  // Cambiar de inactive a active
-  electives[index].active = true;
-  return electives[index];
+/**
+ * Obtiene una electiva por su código
+ */
+export const getElectiveByCodeService = async (
+  codigo: string
+): Promise<IElective | null> => {
+  try {
+    console.log(`🔎 [electiveService] Buscando electiva: ${codigo}`);
+    const { data } = await axiosInstance.get(`${ELECTIVES_URL}/${codigo}/`);
+    return transformElective(data);
+  } catch (error: any) {
+    // Si tu backend retorna 404, puedes capturarlo así:
+    const status = error?.response?.status;
+    if (status === 404) {
+      console.warn("[electiveService] Electiva no encontrada:", codigo);
+      return null;
+    }
+    console.error("[electiveService] Error buscando electiva:", error);
+    throw new Error(error?.message || "No se pudo obtener la electiva");
+  }
 };
