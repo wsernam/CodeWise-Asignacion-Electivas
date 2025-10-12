@@ -1,17 +1,5 @@
 from django.db import models
 
-
-class Estudiante(models.Model):
-    est_codigo = models.AutoField(primary_key=True)
-    est_nombre = models.CharField(max_length=100)
-    est_apellido = models.CharField(max_length=100)
-    pro_codigo = models.CharField(max_length=100)
-    est_correo = models.CharField(max_length=100)
-
-
-    def __str__(self):
-        return f"{self.est_nombre} {self.est_apellido} ({self.est_codigo})"
-
 class SeleccionEstudianteElectiva(models.Model):
     SEMESTRE_CHOICES = (
         (1, 'Primer semestre'),
@@ -25,7 +13,7 @@ class SeleccionEstudianteElectiva(models.Model):
 
     # Foreign Keys
     est_codigo = models.ForeignKey(
-        Estudiante,
+        'gestion_estudiantes.Estudiante', # <-- APUNTAR AL MODELO CORRECTO
         on_delete=models.CASCADE,
         db_column='est_codigo'
     )
@@ -48,5 +36,3 @@ class SeleccionEstudianteElectiva(models.Model):
 
     def __str__(self):
         return f"Selección {self.sel_codigo} - Estudiante {self.est_codigo_id} - Electiva {self.ele_codigo_id}"
-
-

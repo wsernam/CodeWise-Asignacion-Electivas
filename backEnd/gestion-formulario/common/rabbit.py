@@ -7,7 +7,7 @@ class RabbitPublisher:
         self.host = os.getenv("RABBITMQ_HOST", "rabbitmq")
         self.port = int(os.getenv("RABBITMQ_PORT", "5672"))
         self.user = os.getenv("RABBITMQ_USER", "guest")
-        self.password = os.getenv("RABBITMQ_PASS", "guest")
+        self.password = os.getenv("RABBITMQ_PASSWORD", "guest")
         self.exchange = os.getenv("RABBITMQ_EXCHANGE", "asignacion.electivas")
         self.connection = None
         self.channel = None

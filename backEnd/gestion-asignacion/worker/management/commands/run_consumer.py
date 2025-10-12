@@ -4,7 +4,7 @@ from django.core.management.base import BaseCommand
 from django.db import transaction
 
 # Importamos los modelos de la app 'referencias'
-from referencias.models import Estudiante, Programa, Electiva, Oferta
+from referencias.models import Estudiante, Programa, Electiva, Oferta, SeleccionEstudianteElectiva
 
 logger = logging.getLogger(__name__)
 
@@ -16,6 +16,9 @@ QUEUES = {
     "programa.creado":   os.getenv("Q_PROG", "ms.asignacion.programas"),
     "electiva.creada":   os.getenv("Q_ELEC", "ms.asignacion.electivas"),
     "oferta.creada":     os.getenv("Q_OFER", "ms.asignacion.ofertas"),
+    "oferta.actualizada": os.getenv("Q_OFER_UPD", "ms.asignacion.ofertas.upd"),
+    "oferta.eliminada":  os.getenv("Q_OFER_DEL", "ms.asignacion.ofertas.del"),
+    "seleccion.creada":  os.getenv("Q_SEL", "ms.asignacion.selecciones"),
 }
 
 def _process_estudiante(data):
@@ -58,12 +61,36 @@ def _process_oferta(data):
     )
     logger.info(f"Oferta {data['ofe_codigo']} procesada.")
 
+def _process_oferta_eliminada(data):
+    try:
+        oferta = Oferta.objects.get(ofe_codigo=data['ofe_codigo'])
+        oferta.delete()
+        logger.info(f"Oferta {data['ofe_codigo']} eliminada.")
+    except Oferta.DoesNotExist:
+        logger.warning(f"Se intentó eliminar la oferta {data['ofe_codigo']}, pero no fue encontrada.")
+
+def _process_seleccion(data):
+    # Manejamos los FKs para que no intente asignar un objeto completo.
+    est_id = data.pop('est_codigo', None)
+    ele_id = data.pop('ele_codigo', None)
+    if est_id: data['est_codigo_id'] = est_id
+    if ele_id: data['ele_codigo_id'] = ele_id
+
+    SeleccionEstudianteElectiva.objects.update_or_create(
+        sel_codigo=data['sel_codigo'],
+        defaults=data
+    )
+    logger.info(f"Selección {data['sel_codigo']} procesada.")
+
 # Mapeo de eventos a funciones de procesamiento
 EVENT_HANDLERS = {
     "estudiante.creado": _process_estudiante,
     "programa.creado": _process_programa,
     "electiva.creada": _process_electiva,
     "oferta.creada": _process_oferta,
+    "oferta.actualizada": _process_oferta,
+    "oferta.eliminada": _process_oferta_eliminada,
+    "seleccion.creada": _process_seleccion,
 }
 
 def process_message(event, data):
@@ -98,7 +125,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         self.stdout.write("Iniciando consumidor de RabbitMQ...")
         
-        creds = pika.PlainCredentials(os.getenv("RABBITMQ_USER","guest"), os.getenv("RABBITMQ_PASS","guest"))
+        creds = pika.PlainCredentials(os.getenv("RABBITMQ_USER","guest"), os.getenv("RABBITMQ_PASSWORD","guest"))
         params = pika.ConnectionParameters(os.getenv("RABBITMQ_HOST","rabbitmq"), int(os.getenv("RABBITMQ_PORT","5672")), '/', creds, heartbeat=30)
 
         while True:

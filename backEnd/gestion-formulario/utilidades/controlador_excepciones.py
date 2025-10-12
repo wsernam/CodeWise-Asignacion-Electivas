@@ -14,9 +14,10 @@ def controlador_excepciones(exc, context):
 
         # puedes mapear cada view a un mensaje personalizado
         messages = {
-            "SeleccionElectivaViewSet": "El estudiante o la electiva referenciada no existen.",
+            "SeleccionEstudianteElectivaViewSet": "El estudiante o la electiva referenciada no existen.",
             "EstudianteViewSet": "El programa académico referenciado no existe.",
             "OfertaElectivaCreateView": "La electiva o programa referenciado no existe.",
+            "OfertaElectivaUpdateDeleteView": "La electiva o programa referenciado no existe.",
             "OtroViewSet": "Error de integridad al procesar la operación en esta vista."
         }
 

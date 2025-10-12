@@ -1,5 +1,5 @@
 from rest_framework import viewsets
-from gestion_estudiantes.models import Estudiante
+from .models import Estudiante # Usar importación relativa es una buena práctica
 from .serializers import EstudianteSerializer
 from django.db import transaction
 from events.estudiante_publisher import publish_estudiante_creado, publish_estudiante_actualizado, publish_estudiante_eliminado
