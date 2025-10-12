@@ -29,7 +29,7 @@ interface ProgramState {
   clearError: () => void;
 }
 
-export const useProgramStore = create<ProgramState>((set, get) => ({
+export const useProgramStore = create<ProgramState>((set) => ({
   programs: [],
   faculties: [],
   loading: false,

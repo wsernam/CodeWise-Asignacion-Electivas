@@ -9,7 +9,7 @@ import { PROGRAMS_URL } from "./config/config";
  */
 export const getPrograms = async (): Promise<Program[]> => {
   try {
-    console.log("🔄 [programService] Conectando a:", `${PROGRAMS_URL}/`);
+    console.log("[programService] Conectando a:", `${PROGRAMS_URL}/`);
 
     const response = await fetch(`${PROGRAMS_URL}/`);
 
@@ -90,7 +90,7 @@ export const updateProgram = async (program: Program): Promise<Program> => {
     }
 
     const updatedProgram = await response.json();
-    console.log("✅ [programService] Programa actualizado:", updatedProgram);
+    console.log("[programService] Programa actualizado:", updatedProgram);
     return updatedProgram;
   } catch (error) {
     console.error("[programService] Error actualizando programa:", error);
@@ -107,7 +107,7 @@ export const getProgramByCode = async (
   codigo: number
 ): Promise<Program | null> => {
   try {
-    console.log(`🔄 [programService] Buscando programa: ${codigo}`);
+    console.log(`[programService] Buscando programa: ${codigo}`);
 
     const response = await fetch(`${PROGRAMS_URL}/${codigo}/`);
 

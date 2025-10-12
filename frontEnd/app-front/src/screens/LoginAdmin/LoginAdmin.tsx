@@ -129,10 +129,7 @@ const LoginAdmin: React.FC = () => {
 
             {/* Botón volver */}
             <div className="back-button-section">
-              <BackButton
-                onClick={handleBack}
-                text="Volver a selección de rol"
-              />
+              <BackButton onClick={handleBack} text="Volver" />
             </div>
           </Form>
         </Card>

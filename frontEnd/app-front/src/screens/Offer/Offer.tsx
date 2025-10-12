@@ -16,15 +16,14 @@ import SuccessModal from "../../components/shared/SuccessModal/SuccessModal";
 import { useElectiveStore } from "../../store/electiveStore";
 import { useProgramStore } from "../../store/programStore";
 import { useFormStore } from "../../store/offerStore";
-import type { IOffer as Offer } from "../../models/offer";
-
+import type { IOffer } from "../../models/offer";
 const { Option } = Select;
 
-const Oferta: React.FC = () => {
+const Offer: React.FC = () => {
   // ========== STORES ==========
   const { electives, fetchElectives } = useElectiveStore();
   const { programs, fetchPrograms } = useProgramStore();
-  const { offerElectives, currentForm } = useFormStore();
+  const { currentForm, saveOfferAndManageForm } = useFormStore();
 
   // ========== ESTADO LOCAL ==========
   const [year, setYear] = useState<number>(new Date().getFullYear());
@@ -55,7 +54,6 @@ const Oferta: React.FC = () => {
     if (currentForm) {
       setYear(currentForm.for_year);
       setSemester(currentForm.for_semester as 1 | 2);
-      setStatus(currentForm.for_status);
       setSelectedElectives(currentForm.electivesByProgram);
     }
   }, [currentForm]);
@@ -89,10 +87,26 @@ const Oferta: React.FC = () => {
     ),
   ].sort();
 
+  // Filtrar programas que tienen electivas activas
+  const programasConElectivasActivas = programs.filter((program) => {
+    const electivasDelPrograma = electives.filter(
+      (elective) =>
+        elective.ele_estado &&
+        elective.pro_codigo.toString() === program.pro_codigo.toString()
+    );
+    return electivasDelPrograma.length > 0;
+  });
+
+  // Agrupar programas por facultad
   const programasPorFacultad = facultades.reduce((acc, facultad) => {
     const programasDeFacultad = programs
       .filter(
-        (program) => program.pro_activo && program.fac_nombre === facultad
+        (program) =>
+          program.pro_activo &&
+          program.fac_nombre === facultad &&
+          programasConElectivasActivas.some(
+            (p) => p.pro_codigo === program.pro_codigo
+          )
       )
       .sort((a, b) => a.pro_nombre.localeCompare(b.pro_nombre));
     acc[facultad] = programasDeFacultad;
@@ -101,7 +115,9 @@ const Oferta: React.FC = () => {
 
   const electivasPorPrograma = programs.reduce((acc, program) => {
     const electivasDelPrograma = electives.filter(
-      (elective) => elective.active && elective.programa === program.pro_nombre
+      (elective) =>
+        elective.ele_estado &&
+        elective.pro_codigo.toString() === program.pro_codigo.toString()
     );
     acc[program.pro_nombre] = electivasDelPrograma;
     return acc;
@@ -149,17 +165,17 @@ const Oferta: React.FC = () => {
     setShowConfirm(true);
   };
 
+  // Modificar las funciones de manejo
   const handleConfirmSave = async () => {
     setShowConfirm(false);
-    const formConfig: Offer = {
+    const formConfig: IOffer = {
       for_year: year,
       for_semester: semester,
-      for_status: status,
       electivesByProgram: selectedElectives,
     };
 
     try {
-      await offerElectives(formConfig);
+      saveOfferAndManageForm(formConfig, true, status);
       setShowSuccess(true);
     } catch (error) {
       setWarning({
@@ -260,25 +276,25 @@ const Oferta: React.FC = () => {
                           <div className="offer-programas-grid">
                             {programasDeEstaFacultad.map((programa) => {
                               const electivasDeEstePrograma =
-                                electivasPorPrograma[programa.nombre] || [];
+                                electivasPorPrograma[programa.pro_nombre] || [];
 
                               return (
                                 <div
-                                  key={programa.codigo}
+                                  key={programa.pro_codigo}
                                   className="offer-programa-card"
                                 >
                                   {/* HEADER DEL PROGRAMA */}
                                   <div className="offer-programa-header">
                                     <div className="offer-programa-info">
                                       <h4 className="offer-programa-name">
-                                        {programa.nombre}
+                                        {programa.pro_nombre}
                                       </h4>
                                       <div className="offer-programa-code">
-                                        Código: {programa.codigo}
+                                        Código: {programa.pro_codigo}
                                       </div>
                                     </div>
                                     <div className="offer-programa-count">
-                                      {selectedElectives[programa.nombre]
+                                      {selectedElectives[programa.pro_nombre]
                                         ?.length || 0}{" "}
                                       seleccionadas
                                     </div>
@@ -294,11 +310,11 @@ const Oferta: React.FC = () => {
                                       electivasDeEstePrograma.map(
                                         (elective) => (
                                           <label
-                                            key={elective.codigo}
+                                            key={elective.ele_codigo}
                                             className={`offer-electiva-item ${
                                               selectedElectives[
-                                                programa.nombre
-                                              ]?.includes(elective.codigo)
+                                                programa.pro_nombre
+                                              ]?.includes(elective.ele_codigo)
                                                 ? "selected"
                                                 : ""
                                             }`}
@@ -308,23 +324,24 @@ const Oferta: React.FC = () => {
                                               className="offer-electiva-checkbox"
                                               checked={
                                                 selectedElectives[
-                                                  programa.nombre
-                                                ]?.includes(elective.codigo) ||
-                                                false
+                                                  programa.pro_nombre
+                                                ]?.includes(
+                                                  elective.ele_codigo
+                                                ) || false
                                               }
                                               onChange={(e) =>
                                                 handleElectiveSelection(
-                                                  programa.nombre,
-                                                  elective.codigo,
+                                                  programa.pro_nombre,
+                                                  elective.ele_codigo,
                                                   e.target.checked
                                                 )
                                               }
                                             />
                                             <span className="offer-electiva-name">
-                                              {elective.nombre}
+                                              {elective.ele_nombre}
                                             </span>
                                             <span className="offer-electiva-code">
-                                              {elective.codigo}
+                                              {elective.ele_codigo}
                                             </span>
                                           </label>
                                         )
@@ -382,4 +399,4 @@ const Oferta: React.FC = () => {
   );
 };
 
-export default Oferta;
+export default Offer;

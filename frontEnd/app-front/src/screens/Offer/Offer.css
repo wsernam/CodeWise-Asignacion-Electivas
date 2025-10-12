@@ -244,3 +244,10 @@
     padding: var(--space-md);
   }
 }
+.offer-actions {
+  display: flex;
+  gap: 12px;
+  margin: 20px 0;
+  justify-content: flex-end;
+  padding: 0 10px;
+}

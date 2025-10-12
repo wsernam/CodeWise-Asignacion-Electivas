@@ -99,10 +99,7 @@ const LoginStudent: React.FC = () => {
 
             {/* Sección del botón volver */}
             <div className="back-button-section">
-              <BackButton
-                onClick={handleBack}
-                text="Volver a selección de rol"
-              />
+              <BackButton onClick={handleBack} text="Volver" />
             </div>
           </Form>
         </Card>
