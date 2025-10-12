@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useElectiveStore } from "../../store/electiveStore";
+import { useProgramStore } from "../../store/programStore";
 import Header from "../../components/layout/Header/Header";
 import Footer from "../../components/layout/Footer/Footer";
 import Navbar from "../../components/layout/Navbar/Navbar";
@@ -13,6 +14,8 @@ import type { IElective } from "../../models/elective";
 import "./ListElective.css";
 
 const Electives: React.FC = () => {
+  const programs = useProgramStore((state) => state.programs);
+  const fetchPrograms = useProgramStore((state) => state.fetchPrograms);
   const electives = useElectiveStore((state) => state.electives);
   const fetchElectives = useElectiveStore((state) => state.fetchElectives);
   const deleteElective = useElectiveStore((state) => state.deleteElective);
@@ -38,9 +41,9 @@ const Electives: React.FC = () => {
   });
 
   useEffect(() => {
+    fetchPrograms();
     fetchElectives();
-  }, [fetchElectives]);
-
+  }, [fetchElectives, fetchPrograms]);
   // Búsqueda por código O nombre y solo activas (ele_estado)
   const filteredElectives: IElective[] = electives
     .filter((e) => e.ele_estado)
@@ -116,7 +119,7 @@ const Electives: React.FC = () => {
                     <tr key={e.ele_codigo}>
                       <td>{e.ele_codigo}</td>
                       <td>{e.ele_nombre}</td>
-                      <td>{e.pro_codigo}</td>
+                      <td>{programs.find(p => String(p.pro_codigo) === String(e.pro_codigo))?.pro_nombre || ""}</td>
                       <td className="options">
                         <button
                           onClick={() =>
