@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'gestion_hojas_de_calculo',
+    'proceso_asignacion',
     'referencias',
     'worker.apps.WorkerConfig', 
     # Apps de terceros requeridas
