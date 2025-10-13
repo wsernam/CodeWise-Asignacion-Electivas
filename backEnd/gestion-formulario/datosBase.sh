@@ -11,25 +11,37 @@ echo "Insertando datos iniciales en la base de datos..."
 python manage.py shell <<EOF
 from gestion_electivas.models import Programa
 from gestion_estudiantes.models import Estudiante
+from gestion_electivas.models import Facultad
 
-# --- 1. CONFIGURACIÓN INICIAL DE PROGRAMAS ---
+# --- 1. CREACIÓN DE FACULTAD ---
 
-# NOTA: En tu modelo Programa, fac_codigo es un IntegerField, no una ForeignKey,
-# por lo que asignamos el ID de la facultad directamente (ej. 1 o 2).
+# Creamos o recuperamos la facultad por nombre
+facultad, created_fac = Facultad.objects.get_or_create(
+    fac_nombre="Facultad de Ingeniería"
+)
+print(f"Facultad creada: {created_fac}, código asignado: {facultad.fac_codigo}")
 
-# Crear un Programa
-# Usamos get_or_create para obtener el objeto si ya existe
-# Esto garantiza que el ID=1 sea para 'Ingenieria en Sistemas'
-programa_sistemas, created_pro = Programa.objects.get_or_create(
-    pro_nombre="Ingenieria en Sistemas", 
-    defaults={'fac_codigo': 2} # Asumimos fac_codigo 2, solo como ejemplo
+# --- 2. CREACIÓN DE PROGRAMAS ---
+
+# Creamos programas asociados a la facultad
+programa_sistemas, _ = Programa.objects.get_or_create(
+    pro_nombre="Ingenieria en Sistemas",
+    defaults={'fac_codigo': facultad}
 )
 
-# Crear otros Programas
-Programa.objects.get_or_create(pro_nombre="Ingenieria Automatica", defaults={'fac_codigo': 2})
-Programa.objects.get_or_create(pro_nombre="Ingenieria Electronica", defaults={'fac_codigo': 2})
+Programa.objects.get_or_create(
+    pro_nombre="Ingenieria Automatica",
+    defaults={'fac_codigo': facultad}
+)
 
-print("3 programas creados")
+Programa.objects.get_or_create(
+    pro_nombre="Ingenieria Electronica",
+    defaults={'fac_codigo': facultad}
+)
+
+print("3 programas creados o actualizados")
+
+
 
 
 # --- 2. CREACIÓN DE ESTUDIANTES ---
