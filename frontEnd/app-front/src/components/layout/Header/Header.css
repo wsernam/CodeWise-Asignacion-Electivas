@@ -3,7 +3,7 @@
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(10px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.3);
-  padding: 1rem 2rem;
+  padding: 1rem 2rem 1rem 5rem;
   width: 100%;
 }
 
@@ -13,6 +13,8 @@
   justify-content: space-between; /* Esto separa a extremos */
   max-width: 1200px;
   margin: 0 auto;
+  width: 100%;
+  max-width: none;
   gap: 2rem;
 }
 
@@ -23,7 +25,7 @@
 }
 
 .escudo-img {
-  height: 55px;
+  height: 80px;
   width: auto;
   object-fit: contain;
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));

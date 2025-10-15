@@ -200,14 +200,14 @@ const ElectiveSelection: React.FC = () => {
                     <Option value="">Selecciona una electiva</Option>
                     {activeElectives.map((elective) => (
                       <Option
-                        key={elective.codigo}
-                        value={elective.codigo}
+                        key={elective.ele_codigo}
+                        value={elective.ele_codigo}
                         disabled={
-                          selectedElectives.includes(elective.codigo) &&
-                          selectedElectives[index] !== elective.codigo
+                          selectedElectives.includes(elective.ele_codigo) &&
+                          selectedElectives[index] !== elective.ele_codigo
                         }
                       >
-                        {elective.nombre} ({elective.codigo})
+                        {elective.ele_nombre} ({elective.ele_codigo})
                       </Option>
                     ))}
                   </Select>

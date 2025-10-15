@@ -41,7 +41,7 @@ export const getActiveElectivesForProgram = async (
   try {
     const allElectives = await getElectivesService();
     const activeElectives = allElectives.filter(
-      (elective) => elective.active && elective.programa === programa
+      (elective) => elective.ele_estado === true && elective.pro_codigo === programa //Suponiendo que activo se representa con 1
     );
     return activeElectives;
   } catch (error) {
