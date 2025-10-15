@@ -1,0 +1,105 @@
+{
+	"info": {
+		"_postman_id": "62bfec49-885b-4cac-8789-8ef71e4eb91c",
+		"name": "Asignación - Proceso de Asignación CRUD",
+		"description": "Colección de pruebas del microservicio gestión-asignación (procesos de asignación)",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json",
+		"_exporter_id": "44403206"
+	},
+	"item": [
+		{
+			"name": "Crear proceso (POST)",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"pa_anio\": 2025,\n  \"pa_num_semestre\": 2\n}"
+				},
+				"url": "http://localhost:8002/api/asignacion/procesos/",
+				"description": "Crea un proceso de asignación. Si ya existe uno ACTIVO, devuelve error 400."
+			},
+			"response": []
+		},
+		{
+			"name": "Listar todos (GET)",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": "http://localhost:8002/api/asignacion/procesos/"
+			},
+			"response": []
+		},
+		{
+			"name": "Listar últimos 5 procesos (GET)",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": "http://localhost:8002/api/asignacion/procesos/ultimos/"
+			},
+			"response": []
+		},
+		{
+			"name": "Obtener periodo del proceso activo (GET)",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": "http://localhost:8002/api/asignacion/procesos/periodo-activo/"
+			},
+			"response": []
+		},
+		{
+			"name": "Cambiar estado (PATCH -> INACTIVO)",
+			"request": {
+				"method": "PATCH",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{ \"pa_estado\": 2 }"
+				},
+				"url": "http://localhost:8002/api/asignacion/procesos/1/estado/",
+				"description": "Cambia el estado de un proceso a INACTIVO."
+			},
+			"response": []
+		},
+		{
+			"name": "Cambiar estado (PATCH -> ACTIVO)",
+			"request": {
+				"method": "PATCH",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{ \"pa_estado\": 1 }"
+				},
+				"url": "http://localhost:8002/api/asignacion/procesos/1/estado/",
+				"description": "Intenta activar el proceso. Si otro ya está activo, devolverá 400 con mensaje de error."
+			},
+			"response": []
+		},
+		{
+			"name": "Eliminar proceso (DELETE)",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": "http://localhost:8002/api/asignacion/procesos/1/",
+				"description": "Elimina un proceso existente (solo pruebas locales)."
+			},
+			"response": []
+		}
+	]
+}
