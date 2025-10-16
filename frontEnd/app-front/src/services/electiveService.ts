@@ -20,8 +20,8 @@ const transformElective = (item: any): IElective => ({
  */
 export const getElectivesService = async (): Promise<IElective[]> => {
   try {
-    console.log("🔄 [electiveService] Conectando a:", `${ELECTIVES_URL}/`);
-    const { data } = await axiosInstance.get(`${ELECTIVES_URL}/`);
+    console.log("[electiveService] Conectando a:", `${ELECTIVES_URL}/`);
+    const { data } = await axiosInstance.get(`${ELECTIVES_URL}/?status=active`);
     console.log("[electiveService] Datos CRUDOS del backend:", data);
 
     const transformed: IElective[] = Array.isArray(data)
@@ -43,7 +43,7 @@ export const createElectiveService = async (e: IElective): Promise<IElective> =>
     console.log("[electiveService] Creando electiva:", e);
     const { data } = await axiosInstance.post(`${ELECTIVES_URL}/`, e);
     const created = transformElective(data);
-    console.log("✅ [electiveService] Electiva creada:", created);
+    console.log("[electiveService] Electiva creada:", created);
     return created;
   } catch (error: any) {
     console.error("[electiveService] Error creando electiva:", error);
@@ -63,7 +63,7 @@ export const updateElectiveService = async (
     console.log("[electiveService] JSON que se enviará:", JSON.stringify(e));
     const { data } = await axiosInstance.put(`${ELECTIVES_URL}/${codigo}/`, e);
     const updated = transformElective(data);
-    console.log("✅ [electiveService] Electiva actualizada:", updated);
+    console.log("[electiveService] Electiva actualizada:", updated);
     return updated;
   } catch (error: any) {
     console.error("[electiveService] Error actualizando electiva:", error);
@@ -79,7 +79,7 @@ export const deleteElectiveService = async (codigo: string): Promise<IElective> 
     console.log("[electiveService] Eliminando electiva:", codigo);
     const { data } = await axiosInstance.delete(`${ELECTIVES_URL}/${codigo}/`);
     const deleted = transformElective(data);
-    console.log("🗑️ [electiveService] Electiva eliminada:", deleted);
+    console.log("[electiveService] Electiva eliminada:", deleted);
     return deleted;
   } catch (error: any) {
     console.error("[electiveService] Error eliminando electiva:", error);

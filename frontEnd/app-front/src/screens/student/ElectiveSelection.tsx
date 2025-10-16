@@ -123,7 +123,6 @@ const ElectiveSelection: React.FC = () => {
   return (
     <div className="form-page-container">
       <Header />
-      <Navbar />
 
       <div className="form-page-content">
         <div style={{ maxWidth: "800px", width: "100%" }}>

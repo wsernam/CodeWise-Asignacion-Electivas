@@ -16,7 +16,7 @@ import SuccessModal from "../../components/shared/SuccessModal/SuccessModal";
 import { useElectiveStore } from "../../store/electiveStore";
 import { useProgramStore } from "../../store/programStore";
 import { useFormStore } from "../../store/offerStore";
-import type { IOffer } from "../../models/offer";
+import type { IOffer } from "../../Models/offer";
 const { Option } = Select;
 
 const Offer: React.FC = () => {

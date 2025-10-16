@@ -47,7 +47,9 @@ const Dashboard: React.FC = () => {
   const programs = useProgramStore((s) => s.programs); // ✅ AGREGADO
   const fetchPrograms = useProgramStore((s) => s.fetchPrograms); // ✅ AGREGADO
 
-  const { currentForm, changeFormStatus } = useFormStore();
+  const { currentForm, changeFormStatus, formStatus } = useFormStore();
+
+  
 
   // Cargar datos al montar el componente
   useEffect(() => {
@@ -77,7 +79,7 @@ const Dashboard: React.FC = () => {
 
   // Electivas activas (las que realmente están disponibles)
   const activeElectives = useMemo(() => {
-    return electives.filter((elective) => elective.active);
+    return electives.filter((elective) => elective.ele_estado);
   }, [electives]);
 
   // Programas activos (los que realmente existen)
@@ -91,8 +93,8 @@ const Dashboard: React.FC = () => {
     const map: Record<string, number> = {};
     activeElectives.forEach((e, i) => {
       // Valor pseudoaleatorio pero basado en datos reales
-      const base = (i + e.codigo.length) * 5;
-      map[e.codigo] = base % (CAPACITY_PER_ELECTIVE + 1);
+      const base = (i + e.ele_codigo.length) * 5;
+      map[e.ele_codigo] = base % (CAPACITY_PER_ELECTIVE + 1);
     });
     setEnrollments(map);
   }, [activeElectives]);
@@ -100,7 +102,7 @@ const Dashboard: React.FC = () => {
   // Lista de programas disponibles para filtrar (basada en programas reales)
   const programas = useMemo(() => {
     const programasConElectivas = new Set(
-      activeElectives.map((e) => e.programa)
+      activeElectives.map((e) => e.pro_codigo)
     );
     const programasActivos = activePrograms.map((p) => p.pro_nombre);
 
@@ -115,7 +117,7 @@ const Dashboard: React.FC = () => {
   // Electivas filtradas por programa (solo activas)
   const filteredElectives = useMemo(() => {
     if (programaSeleccionado === "Todos") return activeElectives;
-    return activeElectives.filter((e) => e.programa === programaSeleccionado);
+    return activeElectives.filter((e) => e.pro_codigo === programaSeleccionado);
   }, [activeElectives, programaSeleccionado]);
 
   // ====== KPIs CON DATOS REALES ======
@@ -123,7 +125,7 @@ const Dashboard: React.FC = () => {
   const totalActiveElectives = activeElectives.length; // Total real de electivas activas
   const totalPrograms = activePrograms.length; // Total real de programas activos
   const totalEnrollments = filteredElectives.reduce(
-    (acc, e) => acc + (enrollments[e.codigo] || 0),
+    (acc, e) => acc + (enrollments[e.ele_codigo] || 0),
     0
   );
 
@@ -131,21 +133,20 @@ const Dashboard: React.FC = () => {
   const occupancyPercent =
     totalActiveElectives > 0
       ? Math.round(
-          (totalEnrollments / (totalActiveElectives * CAPACITY_PER_ELECTIVE)) *
-            100
-        )
+        (totalEnrollments / (totalActiveElectives * CAPACITY_PER_ELECTIVE)) *
+        100
+      )
       : 0;
 
   // Estado del formulario actual
-  const formStatus = currentForm?.for_status || false;
 
   // ====== Datos para gráficas (REALES) ======
   // Distribución de inscritos por programa (solo programas con electivas activas)
   const pieData = useMemo(() => {
     const grouped: Record<string, number> = {};
     activeElectives.forEach((e) => {
-      const count = enrollments[e.codigo] || 0;
-      grouped[e.programa] = (grouped[e.programa] || 0) + count;
+      const count = enrollments[e.ele_codigo] || 0;
+      grouped[e.pro_codigo] = (grouped[e.pro_codigo] || 0) + count;
     });
     return Object.entries(grouped).map(([name, value]) => ({ name, value }));
   }, [activeElectives, enrollments]);
@@ -154,9 +155,9 @@ const Dashboard: React.FC = () => {
   const barData = useMemo(() => {
     return filteredElectives
       .map((e) => ({
-        name: e.nombre,
-        inscritos: enrollments[e.codigo] || 0,
-        codigo: e.codigo,
+        name: e.ele_nombre,
+        inscritos: enrollments[e.ele_codigo] || 0,
+        codigo: e.ele_codigo,
       }))
       .sort((a, b) => b.inscritos - a.inscritos)
       .slice(0, 10);
@@ -168,10 +169,10 @@ const Dashboard: React.FC = () => {
     () =>
       filteredElectives
         .map((e) => ({
-          codigo: e.codigo,
-          nombre: e.nombre,
-          programa: e.programa,
-          inscritos: enrollments[e.codigo] || 0,
+          codigo: e.ele_codigo,
+          nombre: e.ele_nombre,
+          programa: e.pro_codigo,
+          inscritos: enrollments[e.ele_codigo] || 0,
         }))
         .sort((a, b) => b.inscritos - a.inscritos),
     [filteredElectives, enrollments]
@@ -198,18 +199,14 @@ const Dashboard: React.FC = () => {
 
   const handleConfirmStatusChange = async () => {
     try {
-      if (currentForm) {
-        await changeFormStatus({
-          ...currentForm,
-          for_status: confirm.newStatus,
-        });
-        setSuccess({
-          open: true,
-          message: `Formulario ${
-            confirm.newStatus ? "activado" : "desactivado"
+      // llamar el action con el booleano (el store maneja el update)
+      await changeFormStatus(confirm.newStatus);
+
+      setSuccess({
+        open: true,
+        message: `Formulario ${confirm.newStatus ? "activado" : "desactivado"
           } correctamente`,
-        });
-      }
+      });
     } catch (error) {
       setWarning({
         open: true,
@@ -426,9 +423,8 @@ const Dashboard: React.FC = () => {
       {/* Modales */}
       <ConfirmModal
         open={confirm.open}
-        message={`¿Estás seguro de que deseas ${
-          confirm.newStatus ? "activar" : "desactivar"
-        } el formulario de asignación?`}
+        message={`¿Estás seguro de que deseas ${confirm.newStatus ? "activar" : "desactivar"
+          } el formulario de asignación?`}
         onConfirm={handleConfirmStatusChange}
         onCancel={handleConfirmCancel}
       />

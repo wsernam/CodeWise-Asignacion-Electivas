@@ -103,7 +103,6 @@ const PersonalInfo: React.FC = () => {
   return (
     <div className="form-page-container">
       <Header />
-      <Navbar />
 
       <div className="form-page-content">
         <div style={{ maxWidth: "600px", width: "100%" }}>

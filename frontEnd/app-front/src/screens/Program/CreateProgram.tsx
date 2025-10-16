@@ -4,7 +4,7 @@ import Header from "../../components/layout/Header/Header";
 import Footer from "../../components/layout/Footer/Footer";
 import { useNavigate } from "react-router";
 import { useProgramStore } from "../../store/programStore";
-import type { IProgram as Program } from "../../models/program";
+import type { IProgram as Program } from "../../Models/program";
 import WarningModal from "../../components/shared/WarningModal/WarningModal";
 import ConfirmModal from "../../components/shared/ConfirmModal/ConfirmModal";
 import SuccessModal from "../../components/shared/SuccessModal/SuccessModal";
