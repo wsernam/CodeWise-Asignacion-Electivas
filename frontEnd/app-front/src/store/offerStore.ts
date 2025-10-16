@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { IOffer } from "../Models/offer";
+import type { IOffer } from "../models/offer";
 import {
   offerElectives,
   changeFormStatus as changeFormStatusService,

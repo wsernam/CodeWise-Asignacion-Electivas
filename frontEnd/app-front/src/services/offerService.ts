@@ -1,5 +1,5 @@
 import axios from "../api/axiosInstance";
-import type { IAcademicOffer, IOffer } from "../Models/offer";
+import type { IAcademicOffer, IOffer } from "../models/offer";
 import { FORM_URL } from "./config/config";
 
 // Función transformadora de IOffer a IAcademicOffer[]
