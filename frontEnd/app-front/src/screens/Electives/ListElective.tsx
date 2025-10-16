@@ -45,7 +45,6 @@ const Electives: React.FC = () => {
     fetchElectives();
   }, [fetchElectives, fetchPrograms]);
 
-
   // Búsqueda por código O nombre y solo activas (ele_estado)
   const filteredElectives: IElective[] = electives
     .filter((e) => e.ele_estado)
@@ -121,7 +120,11 @@ const Electives: React.FC = () => {
                     <tr key={e.ele_codigo}>
                       <td>{e.ele_codigo}</td>
                       <td>{e.ele_nombre}</td>
-                      <td>{programs.find(p => String(p.pro_codigo) === String(e.pro_codigo))?.pro_nombre || ""}</td>
+                      <td>
+                        {programs.find(
+                          (p) => String(p.pro_codigo) === String(e.pro_codigo)
+                        )?.pro_nombre || ""}
+                      </td>
                       <td className="options">
                         <button
                           onClick={() =>
@@ -146,7 +149,10 @@ const Electives: React.FC = () => {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={4} style={{ textAlign: "center", padding: 20 }}>
+                    <td
+                      colSpan={4}
+                      style={{ textAlign: "center", padding: 20 }}
+                    >
                       {electives.filter((e) => e.ele_estado).length === 0
                         ? "No hay electivas activas"
                         : "No se encontraron electivas que coincidan con la búsqueda"}
@@ -166,7 +172,9 @@ const Electives: React.FC = () => {
         open={confirm.open}
         message={`¿Seguro que deseas desactivar la electiva "${confirm.ele_nombre}"?`}
         onConfirm={handleDelete}
-        onCancel={() => setConfirm({ open: false, ele_codigo: "", ele_nombre: "" })}
+        onCancel={() =>
+          setConfirm({ open: false, ele_codigo: "", ele_nombre: "" })
+        }
       />
 
       {/* Modal de éxito */}

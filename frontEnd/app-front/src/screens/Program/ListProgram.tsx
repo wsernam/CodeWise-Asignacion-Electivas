@@ -6,7 +6,8 @@ import Navbar from "../../components/layout/Navbar/Navbar";
 import Card from "../../components/ui/Card/Card";
 import Button from "../../components/ui/Button/Button";
 import { useNavigate } from "react-router";
-import type { IProgram as Program } from "../../models/program";
+//import type { IProgram as Program } from "../../models/program";
+import type { IProgram as Program } from "../../Models/program";
 import "./ListProgram.css";
 
 const ListProgram: React.FC = () => {
@@ -40,7 +41,7 @@ const ListProgram: React.FC = () => {
           <div className="actions-bar">
             <input
               type="text"
-              placeholder="Buscar programa"
+              placeholder="Buscar por código, nombre o facultad"
               className="search-input"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -64,24 +65,37 @@ const ListProgram: React.FC = () => {
                 </tr>
               </thead>
               <tbody>
-                {filteredPrograms.map((p) => (
-                  <tr key={p.pro_codigo}>
-                    <td>{p.pro_codigo}</td>
-                    <td>{p.pro_nombre}</td>
-                    <td>{p.fac_nombre}</td>
-                    <td className="options">
-                      <button
-                        onClick={() =>
-                          navigate(`/programs/edit/${p.pro_codigo}`)
-                        }
-                        className="btn-icon"
-                        title="Editar programa"
-                      >
-                        ✏️
-                      </button>
+                {filteredPrograms.length > 0 ? (
+                  filteredPrograms.map((p) => (
+                    <tr key={p.pro_codigo}>
+                      <td>{p.pro_codigo}</td>
+                      <td>{p.pro_nombre}</td>
+                      <td>{p.fac_nombre}</td>
+                      <td className="options">
+                        <button
+                          onClick={() =>
+                            navigate(`/programas/edit/${p.pro_codigo}`)
+                          }
+                          className="btn-icon"
+                          title="Editar programa"
+                        >
+                          ✏️
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td
+                      colSpan={4}
+                      style={{ textAlign: "center", padding: 20 }}
+                    >
+                      {programs.filter((p) => p.pro_activo).length === 0
+                        ? "No hay programas registrados"
+                        : "No se encontraron programas que coincidan con la búsqueda"}
                     </td>
                   </tr>
-                ))}
+                )}
               </tbody>
             </table>
           </div>

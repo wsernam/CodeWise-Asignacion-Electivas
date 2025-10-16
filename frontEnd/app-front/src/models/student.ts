@@ -1,4 +1,3 @@
-// models/student.ts
 export interface IStudent {
   codigo: string;
   email: string;
