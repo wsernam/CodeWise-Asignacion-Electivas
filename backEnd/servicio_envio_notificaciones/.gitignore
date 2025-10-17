@@ -1,0 +1,25 @@
+# Entornos virtuales
+venv/
+.venv/
+
+# Variables de entorno
+.env
+
+# Archivos de compilación de Python
+__pycache__/
+*.pyc
+*.py[cod]
+*$py.class
+
+# Archivos de log
+*.log
+
+# Archivos de base de datos SQLite
+db.sqlite3
+
+# Migraciones (puedes ignorarlas si quieres generarlas desde cero en cada entorno)
+*/migrations/__pycache__/
+*/migrations/*.py
+
+# Archivos de configuración de IDEs/editores
+.vscode/
