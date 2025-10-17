@@ -25,6 +25,7 @@ services:
       timeout: 10s
       retries: 5
       start_period: 20s
+    command: --host_cache_size=0
 
   # -------------------------------
   # Servicio para la base de datos FORMULARIO
@@ -50,6 +51,35 @@ services:
       timeout: 10s
       retries: 5
       start_period: 20s
+    command: --host_cache_size=0
+  # -------------------------------
+  # Servicio para la base de datos ASIGNACION
+  # -------------------------------
+
+  db_asignacion:
+    image: mysql:8.0
+    container_name: db_asignacion
+    restart: always
+    env_file:
+      - .env
+    environment:
+      MYSQL_DATABASE: ${ASIGNACION_DB_NAME}
+      MYSQL_USER: ${ASIGNACION_DB_USER}
+      MYSQL_PASSWORD: ${ASIGNACION_DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${ASIGNACION_DB_ROOT_PASSWORD}
+    volumes:
+      - volumen_db_asignacion:/var/lib/mysql
+    ports:
+      - "3308:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "db_asignacion", "-u${ASIGNACION_DB_USER}", "-p${ASIGNACION_DB_PASSWORD}"]
+      interval: 5s
+      timeout: 10s
+      retries: 5
+      start_period: 20s
+    command: --host_cache_size=0
+
+  
 
 
   # -------------------------------
@@ -83,7 +113,7 @@ services:
       - ./gestion-formulario:/app   # Monta todo el proyecto en /app dentro del contenedor
                  # IMPORTANTE: usar la misma convención en todos los microservicios
     ports:
-      - "8001:8000"  # Expone el puerto 8000 para acceder al servicio
+      - "8001:8000"  # Expone el puerto 8001 para acceder al servicio
 
     env_file:
       - .env
@@ -93,15 +123,104 @@ services:
       DB_PASSWORD: ${FORM_DB_PASSWORD}
       DB_HOST: ${FORM_DB_HOST}
       DB_PORT: ${FORM_DB_PORT}
+      #__________________________________
+      #RABBITMQ
+      RABBITMQ_HOST: ${RABBITMQ_HOST}
+      RABBITMQ_PORT: ${RABBITMQ_PORT}
+      RABBITMQ_USER: ${RABBITMQ_USER}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
+      RABBITMQ_EXCHANGE: ${RABBITMQ_EXCHANGE}
+      RABBITMQ_DLX: ${RABBITMQ_DLX}
+      #__________________________________
+
+
     depends_on:
       db_formulario:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+    command: >
+      sh -c "
+      python manage.py migrate && 
+      sh datosBase.sh &&
+      python manage.py runserver 0.0.0.0:8000
+      "
+
+# -------------------------------
+#MICROSERVICIO GESTION DE ASIGNACION
+# -------------------------------
+  gestion_asignacion:                 
+    build:
+      context: ./gestion-asignacion
+      dockerfile: Dockerfile    
+    container_name: gestion_asignacion
+    volumes:
+      - ./gestion-asignacion:/app   # Monta todo el proyecto en /app dentro del contenedor
+                 # IMPORTANTE: usar la misma convención en todos los microservicios
+    ports:
+      - "8002:8000"  # Expone el puerto 8002 para acceder al servicio
+
+    env_file:
+      - .env
+    environment:
+      DB_NAME: ${ASIGNACION_DB_NAME}
+      DB_USER: ${ASIGNACION_DB_USER}
+      DB_PASSWORD: ${ASIGNACION_DB_PASSWORD}
+      DB_HOST: ${ASIGNACION_DB_HOST}
+      DB_PORT: ${ASIGNACION_DB_PORT}
+      #__________________________________
+      #RABBITMQ
+      RABBITMQ_HOST: ${RABBITMQ_HOST}
+      RABBITMQ_PORT: ${RABBITMQ_PORT}
+      RABBITMQ_USER: ${RABBITMQ_USER}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
+      RABBITMQ_EXCHANGE: ${RABBITMQ_EXCHANGE}
+      RABBITMQ_DLX: ${RABBITMQ_DLX}
+      Q_EST: ${Q_EST}
+      Q_PROG: ${Q_PROG}
+      Q_ELEC: ${Q_ELEC}
+      Q_OFER: ${Q_OFER}
+      Q_OFER_UPD: ${Q_OFER_UPD}
+      Q_OFER_DEL: ${Q_OFER_DEL}
+      Q_SEL: ${Q_SEL}
+      #__________________________________
+
+    depends_on:
+      db_asignacion:
+        condition: service_healthy
+      rabbitmq:
         condition: service_healthy
 
     command: >
       sh -c "
       python manage.py migrate &&
+      python manage.py run_consumer &
       python manage.py runserver 0.0.0.0:8000
       "
+
+# -------------------------------
+# RABBITMQ
+# -------------------------------
+  rabbitmq:
+    image: "rabbitmq:3-management"  # Imagen oficial de RabbitMQ con plugin de gestión
+    container_name: rabbitmq          # Nombre del contenedor
+    ports:
+      - "5672:5672"   # Puerto para conexiones AMQP
+      - "15672:15672" # Puerto para la interfaz de gestión web
+    env_file:
+      - .env
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guest}  # Usuario por defecto (definido en .env o 'guest')
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-guest}  # Contraseña por defecto (definida en .env o 'guest')
+    healthcheck:
+      test: ["CMD-SHELL", "rabbitmq-diagnostics -q ping"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 20s
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq  # Volumen persistente para datos de RabbitMQ
 
 
 
@@ -111,3 +230,6 @@ services:
 volumes:
   volumen_db_usuarios:  # Volumen nombrado para almacenar datos de MySQL
   volumen_db_formulario:
+  volumen_db_asignacion:
+  rabbitmq_data:       # Volumen para datos de RabbitMQ
+  mysql_data:

@@ -16,7 +16,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # 4. Copiar e instalar dependencias de Python
 # Copiamos solo el archivo de requerimientos para usar el cache de Docker.
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+#Compatibilidad con paquetes modernos, Imagen más liviana, Menor riesgo de errores por versiones viejas de pip.
+RUN pip install --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
+
 
 # 5. Copiar el script de inicialización
 # Esto debe hacerse antes de copiar todo el proyecto para que el script

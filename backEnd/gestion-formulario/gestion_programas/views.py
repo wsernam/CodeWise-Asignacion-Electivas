@@ -4,7 +4,8 @@ from rest_framework.decorators import action
 from gestion_electivas.models import Programa
 from .serializers import ProgramaSerializer
 import logging
-
+from django.db import transaction
+from events.programa_publisher import publish_programa_creado, publish_programa_actualizado, publish_programa_eliminado
 logger = logging.getLogger(__name__)
 
 class ProgramaViewSet(viewsets.ModelViewSet):
@@ -13,6 +14,22 @@ class ProgramaViewSet(viewsets.ModelViewSet):
     """
     queryset = Programa.objects.select_related('fac_codigo').all()
     serializer_class = ProgramaSerializer
+    
+    def perform_create(self, serializer):
+        instance = serializer.save()
+        transaction.on_commit(lambda: publish_programa_creado(_serialize_programa(instance)))
+
+    def perform_update(self, serializer):
+        instance = serializer.save()
+        payload = _serialize_programa(instance)
+        transaction.on_commit(lambda: publish_programa_actualizado(payload))
+
+    def perform_destroy(self, instance):
+        # captura datos antes de borrar
+        payload = _serialize_programa(instance)
+        super().perform_destroy(instance)
+        transaction.on_commit(lambda: publish_programa_eliminado(payload))
+
 
     @action(detail=True, methods=['post'])
     def desactivar(self, request, pk=None):
@@ -31,3 +48,16 @@ class ProgramaViewSet(viewsets.ModelViewSet):
         programa.pro_activo = True
         programa.save(update_fields=['pro_activo'])
         return Response({"mensaje": "Programa reactivado."}, status=status.HTTP_200_OK)
+    
+def _serialize_programa(p: Programa) -> dict:
+    """
+    Convierte el objeto Programa en un dict JSON listo para enviar a RabbitMQ.
+    Usa los nombres REALES del modelo (según tu POST en Postman).
+    """
+    return {
+        "pro_codigo": getattr(p.pro_codigo, "pro_codigo", None),
+        "pro_nombre": p.pro_nombre,
+        "fac_codigo": getattr(p.fac_codigo, "fac_codigo", None),
+        "fac_nombre": getattr(p.fac_codigo, "fac_nombre", None),
+        "pro_activo": p.pro_activo
+    }
