@@ -1,2 +1,0 @@
-Hola
-Deberia funcionar con el comando docker compose up --build
