@@ -25,14 +25,16 @@ class SeleccionEstudianteElectiva(models.Model):
 
     class Meta:
         db_table = 'Seleccion_estudiante_electiva'
-        unique_together = (
-            'sel_anio',
-            'sel_num_semestre',
-            'est_codigo',
-            'ele_codigo',
-            'sel_prioridad'
-        )
+        # Un estudiante no puede seleccionar la misma electiva dos veces en el mismo periodo.
+        unique_together = [
+            ('sel_anio', 'sel_num_semestre', 'est_codigo', 'ele_codigo'),
+            # Un estudiante no puede tener la misma prioridad dos veces en el mismo periodo.
+            ('sel_anio', 'sel_num_semestre', 'est_codigo', 'sel_prioridad'),
+        ]
 
 
     def __str__(self):
-        return f"Selección {self.sel_codigo} - Estudiante {self.est_codigo_id} - Electiva {self.ele_codigo_id}"
+        # Usamos self.est_codigo y self.ele_codigo que son los objetos relacionados
+        # para poder acceder a sus campos, como el nombre.
+        # El _id al final (e.g., self.est_codigo_id) solo te da el valor de la clave foránea.
+        return f"Selección de {self.est_codigo} - {self.ele_codigo} (Prioridad {self.sel_prioridad})"
