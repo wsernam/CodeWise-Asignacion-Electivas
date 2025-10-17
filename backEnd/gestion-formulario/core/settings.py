@@ -46,7 +46,6 @@ INSTALLED_APPS = [
     'gestion_estudiantes',
     'gestion_oferta_electiva',
     "corsheaders"
-    'seleccion_electivas',
 ]
 
 MIDDLEWARE = [
@@ -107,7 +106,6 @@ DATABASES = {
 }
 
 
-
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
 
@@ -126,9 +124,7 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-REST_FRAMEWORK = {
-    "EXCEPTION_HANDLER": "utilidades.controlador_excepciones.controlador_excepciones"
-}
+
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 

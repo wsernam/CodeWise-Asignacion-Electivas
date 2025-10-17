@@ -1,7 +1,6 @@
 from django.urls import path, include
 from .views import (
     OfertaElectivaCreateView,
-    OfertaElectivaBulkCreateView,
     OfertaElectivaUpdateDeleteView,
     OfertaElectivaListByAnioSemestreView,
     OfertaElectivaListByAnioSemestreProgramaView
@@ -11,9 +10,6 @@ urlpatterns = [
     # Endpoint para 'Crear oferta_electiva'
     # Acceder con un POST a /api/ofertas/
     path('ofertas/', OfertaElectivaCreateView.as_view(), name='crear_oferta_electiva'),
-
-    # Endpoint para 'Crear múltiples ofertas de electivas'
-    path('ofertas/bulk-create/', OfertaElectivaBulkCreateView.as_view(), name='crear_oferta_electiva_bulk'),
 
     # Endpoint para 'Editar oferta_electiva' (y eliminar)
     # Acceder con PUT, PATCH, o DELETE a /api/ofertas/{id}/
