@@ -9,6 +9,8 @@ https://docs.djangoproject.com/en/5.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
+import logging
+logging.getLogger('corsheaders').setLevel(logging.DEBUG)
 
 from pathlib import Path
 from decouple import config
@@ -26,7 +28,7 @@ SECRET_KEY = 'django-insecure-j_3#o23yi6j0zsqkhkz#kyd^o@ovq-32i51_+v-rybz6^cf8#=
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*'] 
 
 
 # Application definition
@@ -43,10 +45,12 @@ INSTALLED_APPS = [
     'gestion_estado_formulario',
     'gestion_estudiantes',
     'gestion_oferta_electiva',
+    "corsheaders",
     'seleccion_electivas',
 ]
 
 MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -55,6 +59,18 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+# Configuración de CORS
+CORS_ALLOW_ALL_ORIGINS = True # Permitir todas las conexiones (desarrollo)
+CORS_ALLOW_CREDENTIALS = True # Permitir cookies y credenciales
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173", 
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+]
+CORS_ALLOW_HEADERS = ['*']  
+CORS_ALLOW_METHODS = ['*']  
 
 ROOT_URLCONF = 'core.urls'
 
@@ -134,3 +150,22 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+# DEBUG CORS
+import logging
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        'corsheaders': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+        },
+    },
+}
