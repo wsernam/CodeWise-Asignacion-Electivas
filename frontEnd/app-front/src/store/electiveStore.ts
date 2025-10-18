@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { IElective } from "../models/elective";
+import type { IElective } from "../Models/elective";
 import {
   getElectivesService,
   createElectiveService,
@@ -15,6 +15,7 @@ interface ElectiveState {
   updateElective: (ele_codigo: string, updated: IElective) => Promise<void>;
   deleteElective: (ele_codigo: string) => Promise<void>;
   reactivateElective: (ele_codigo: string) => Promise<void>;
+  getActiveElectivesForProgram: (programa: string) => Promise<IElective[]>;
 }
 
 export const useElectiveStore = create<ElectiveState>((set) => ({
@@ -75,5 +76,18 @@ export const useElectiveStore = create<ElectiveState>((set) => ({
         e.ele_codigo === codigo ? reactivated : e
       ),
     }));
+  },
+
+  getActiveElectivesForProgram: async (programa: string): Promise<IElective[]> => {
+    try {
+      const allElectives = await getElectivesService();
+      const activeElectives = allElectives.filter(
+        (elective) => elective.ele_estado === true && elective.pro_codigo === programa //Suponiendo que activo se representa con 1
+      );
+      return activeElectives;
+    } catch (error) {
+      console.error("Error al obtener electivas activas:", error);
+      return [];
+    }
   },
 }));

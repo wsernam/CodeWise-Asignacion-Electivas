@@ -6,11 +6,11 @@ import { Select } from "antd";
 // Components
 import Header from "../../components/layout/Header/Header";
 import Footer from "../../components/layout/Footer/Footer";
-import Navbar from "../../components/layout/Navbar/Navbar";
 import Card from "../../components/ui/Card/Card";
 import Button from "../../components/ui/Button/Button";
 import WarningModal from "../../components/shared/WarningModal/WarningModal";
 // Stores
+import { useStudentStore } from "../../store/studentStore";
 import { useProgramStore } from "../../store/programStore";
 
 const { Option } = Select;
@@ -18,6 +18,7 @@ const { Option } = Select;
 const PersonalInfo: React.FC = () => {
   const navigate = useNavigate();
   const { programs, fetchPrograms } = useProgramStore();
+  const { addStudent } = useStudentStore();
 
   const [formData, setFormData] = useState({
     codigo: "",
@@ -73,7 +74,7 @@ const PersonalInfo: React.FC = () => {
     return null;
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     // Validar todos los campos
     const codigoError = validateCodigo(formData.codigo);
     const nombreError = validateNombre(formData.nombre);
@@ -96,9 +97,23 @@ const PersonalInfo: React.FC = () => {
       return;
     }
 
-    // Si todo está bien, navegar
-    navigate("/elective-selection", { state: formData });
-  };
+    // Guardar los datos del estudiante
+    try {
+      await addStudent({
+        est_codigo: parseInt(formData.codigo),
+        est_correo: formData.email,
+        est_nombre: formData.nombre,
+        est_apellido: formData.apellido,
+        pro_codigo: formData.programa,
+        est_estado: true,
+      });
+
+      // Si todo está bien, navegar
+      navigate("/elective-selection", { state: formData });
+    } catch (error: any) {
+      console.log("[student Screen] Error al agregar estudiante:", error);
+    }
+  }
 
   return (
     <div className="form-page-container">
@@ -167,7 +182,7 @@ const PersonalInfo: React.FC = () => {
                 <div style={{ display: "flex", gap: "var(--space-sm)" }}>
                   <input
                     type="text"
-                    placeholder="usuario"
+                    placeholder="Correo institucional"
                     value={formData.email.replace("@unicauca.edu.co", "")}
                     onChange={(e) => {
                       const user = e.target.value;
