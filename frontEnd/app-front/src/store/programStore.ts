@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { IProgram as Program } from "../Models/program";
+import type { IProgram as Program } from "../models/program";
 import {
   getPrograms,
   createProgram,

@@ -15,20 +15,16 @@ import SuccessModal from "../../components/shared/SuccessModal/SuccessModal";
 // Stores
 import { useElectiveStore } from "../../store/electiveStore";
 import { useProgramStore } from "../../store/programStore";
-import { useFormStore } from "../../store/offerStore";
-import type { IOffer } from "../../models/offer";
+import type { IOffer as Offer } from "../../models/offer";
 const { Option } = Select;
 
 const Offer: React.FC = () => {
   // ========== STORES ==========
   const { electives, fetchElectives } = useElectiveStore();
   const { programs, fetchPrograms } = useProgramStore();
-  const { currentForm, saveOfferAndManageForm } = useFormStore();
-
   // ========== ESTADO LOCAL ==========
   const [year, setYear] = useState<number>(new Date().getFullYear());
   const [semester, setSemester] = useState<1 | 2>(1);
-  const [status, setStatus] = useState<boolean>(false);
   const [selectedElectives, setSelectedElectives] = useState<{
     [programa: string]: string[];
   }>({});
@@ -49,14 +45,6 @@ const Offer: React.FC = () => {
     fetchElectives();
     fetchPrograms();
   }, [fetchElectives, fetchPrograms]);
-
-  useEffect(() => {
-    if (currentForm) {
-      setYear(currentForm.for_year);
-      setSemester(currentForm.for_semester as 1 | 2);
-      setSelectedElectives(currentForm.electivesByProgram);
-    }
-  }, [currentForm]);
 
   useEffect(() => {
     if (programs.length > 0) {
@@ -168,14 +156,8 @@ const Offer: React.FC = () => {
   // Modificar las funciones de manejo
   const handleConfirmSave = async () => {
     setShowConfirm(false);
-    const formConfig: IOffer = {
-      for_year: year,
-      for_semester: semester,
-      electivesByProgram: selectedElectives,
-    };
 
     try {
-      saveOfferAndManageForm(formConfig, true, status);
       setShowSuccess(true);
     } catch (error) {
       setWarning({
@@ -220,18 +202,6 @@ const Offer: React.FC = () => {
                 >
                   <Option value={1}>1</Option>
                   <Option value={2}>2</Option>
-                </Select>
-              </div>
-
-              <div className="offer-config-item">
-                <span className="offer-config-label">Estado:</span>
-                <Select
-                  value={status}
-                  onChange={setStatus}
-                  style={{ width: 140 }}
-                >
-                  <Option value={true}>Habilitado</Option>
-                  <Option value={false}>Deshabilitado</Option>
                 </Select>
               </div>
             </div>

@@ -7,7 +7,7 @@ import Card from "../../components/ui/Card/Card";
 import Button from "../../components/ui/Button/Button";
 import { useNavigate } from "react-router";
 //import type { IProgram as Program } from "../../models/program";
-import type { IProgram as Program } from "../../Models/program";
+import type { IProgram as Program } from "../../models/program";
 import "./ListProgram.css";
 
 const ListProgram: React.FC = () => {

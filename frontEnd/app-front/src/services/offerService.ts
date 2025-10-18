@@ -38,7 +38,6 @@ const transformOfferToAcademicOffers = (
   return academicOffers;
 };
 
-// ESTRATEGIA MEJORADA: Verificar existencia y actualizar si es necesario
 export const offerElectives = async (
   offerData: IOffer,
   programs: any[]
@@ -91,60 +90,4 @@ export const offerElectives = async (
     updated: updatedCount,
     skipped: skippedCount,
   };
-};
-
-export const changeFormStatus = async (status: boolean): Promise<void> => {
-  console.log("[offerService] Cambiando estado del formulario a:", status);
-  try {
-    const formStatus = { estado: status }; // Enviar el estado deseado
-    const response = await axios.post(
-      `http://localhost:8001/estado/toggle-formulario/`,
-      formStatus
-    );
-    console.log(
-      "[offerService] Estado del formulario actualizado:",
-      response.data
-    );
-  } catch (error: any) {
-    console.error(
-      "[offerService] Error cambiando estado:",
-      error.response?.data
-    );
-    throw error;
-  }
-};
-
-// Función combinada que permite controlar si se cambia el estado del formulario
-export const saveOfferAndManageForm = async (
-  offerData: IOffer,
-  programs: any[],
-  shouldChangeForm?: boolean,
-  newFormStatus?: boolean
-): Promise<{
-  offerResult: { created: number; updated: number; skipped: number };
-  formChanged: boolean;
-}> => {
-  try {
-    // 1. Guardar ofertas
-    const offerResult = await offerElectives(offerData, programs);
-
-    // 2. Manejar estado del formulario solo si se solicita explícitamente
-    let formChanged = false;
-
-    if (shouldChangeForm && newFormStatus !== undefined) {
-      await changeFormStatus(newFormStatus);
-      formChanged = true;
-      console.log(
-        `[offerService] Estado del formulario cambiado a: ${newFormStatus}`
-      );
-    }
-
-    return {
-      offerResult,
-      formChanged,
-    };
-  } catch (error) {
-    console.error("Error en el proceso completo:", error);
-    throw error;
-  }
 };
