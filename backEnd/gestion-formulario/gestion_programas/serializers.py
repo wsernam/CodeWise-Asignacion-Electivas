@@ -2,13 +2,14 @@ from rest_framework import serializers
 from gestion_electivas.models import Programa, Facultad
 
 class ProgramaSerializer(serializers.ModelSerializer):
+    pro_codigo = serializers.CharField(required=True, min_length=1, max_length=100)
     fac_codigo = serializers.PrimaryKeyRelatedField(queryset=Facultad.objects.all())
     fac_nombre = serializers.CharField(source='fac_codigo.fac_nombre', read_only=True)
 
     class Meta:
         model = Programa
         fields = ['pro_codigo', 'pro_nombre', 'fac_codigo', 'fac_nombre', 'pro_activo']
-        read_only_fields = ['pro_codigo', 'fac_nombre']
+        read_only_fields = ['fac_nombre']
 
     def validate(self, attrs):
         pro_nombre = attrs.get('pro_nombre') or (self.instance and self.instance.pro_nombre)

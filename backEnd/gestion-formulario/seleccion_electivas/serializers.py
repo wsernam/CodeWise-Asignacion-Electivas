@@ -6,16 +6,17 @@ from collections import Counter
 
 class ElectivaPrioridadDTO(serializers.Serializer):
     sel_prioridad = serializers.IntegerField()
-    ele_codigo = serializers.IntegerField()
+    ele_codigo = serializers.CharField(max_length=225)
     ele_nombre = serializers.CharField(max_length=100)
 
 
 class ConsultaElectivaEstudianteDTO(serializers.Serializer):
-    ele_codigo = serializers.IntegerField()
-    ele_nombre = serializers.CharField(max_length=100)
+    ele_codigo = serializers.CharField(source='ele_codigo.ele_codigo', max_length=225)
+    ele_nombre = serializers.CharField(source='ele_codigo.ele_nombre', max_length=100)
     sel_prioridad = serializers.IntegerField()
+
 class CrearSeleccionElectivaDTO(serializers.Serializer):
-    est_codigo = serializers.IntegerField()
+    est_codigo = serializers.CharField(max_length=225)
     est_correo = serializers.CharField(max_length=100)
     sel_anio = serializers.IntegerField()
     sel_num_semestre = serializers.ChoiceField(choices=[1, 2])
@@ -45,17 +46,25 @@ class CrearSeleccionElectivaDTO(serializers.Serializer):
             raise serializers.ValidationError(errores)
         
         return electivas
-
+    
     def validate(self, data):
         """
-        Validación optimizada para verificar conflictos con la base de datos en una sola consulta.
+        Validación optimizada para verificar:
+        1. Que todas las electivas existan en la base de datos.
+        2. Conflictos de duplicados (electivas y prioridades) con registros existentes en la BD.
         """
+        electivas_data = data["electivas"]
+        codigos_nuevos = {e['ele_codigo'] for e in electivas_data}
+
+        # 1. Validar que todas las electivas existan
+        electivas_existentes_db = set(Electiva.objects.filter(ele_codigo__in=codigos_nuevos).values_list('ele_codigo', flat=True))
+        if codigos_nuevos != electivas_existentes_db:
+            raise serializers.ValidationError(f"Las siguientes electivas no existen: {list(codigos_nuevos - electivas_existentes_db)}")
+
         est_codigo = data["est_codigo"]
         sel_anio = data["sel_anio"]
         sel_num_semestre = data["sel_num_semestre"]
-        electivas_data = data["electivas"]
 
-        codigos_nuevos = {e['ele_codigo'] for e in electivas_data}
         prioridades_nuevas = {e['sel_prioridad'] for e in electivas_data}
 
         # Hacemos una única consulta a la BD para buscar todos los posibles conflictos
@@ -64,6 +73,7 @@ class CrearSeleccionElectivaDTO(serializers.Serializer):
             sel_anio=sel_anio,
             sel_num_semestre=sel_num_semestre
         ).values_list('ele_codigo_id', 'sel_prioridad')
+        # ele_codigo_id es el nombre de la columna en la BD, que es un CharField.
 
         codigos_existentes = set()
         prioridades_existentes = set()
@@ -77,12 +87,12 @@ class CrearSeleccionElectivaDTO(serializers.Serializer):
 
         errores = {}
         if conflictos_electivas:
-            errores["electivas_conflictos"] = (
-                f"El estudiante ya tiene registradas las electivas con código {list(conflictos_electivas)} para este periodo."
+            errores["electivas"] = (
+                f"El estudiante ya tiene registradas una o más de las siguientes electivas para este periodo: {list(conflictos_electivas)}."
             )
         if conflictos_prioridades:
-            errores["prioridades_conflictos"] = (
-                f"El estudiante ya tiene en uso las prioridades {list(conflictos_prioridades)} para este periodo."
+            errores["prioridades"] = (
+                f"El estudiante ya tiene en uso una o más de las siguientes prioridades para este periodo: {list(conflictos_prioridades)}."
             )
 
         if errores:
