@@ -45,7 +45,7 @@ INSTALLED_APPS = [
     'gestion_estado_formulario',
     'gestion_estudiantes',
     'gestion_oferta_electiva',
-    "corsheaders"
+    "corsheaders",
     'seleccion_electivas',
 ]
 
