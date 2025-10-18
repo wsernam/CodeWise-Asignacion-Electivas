@@ -1,11 +1,13 @@
 // Configuration file for API endpoints
-export const API_BASE_URL = "http://localhost:8001/api/";
+export const API_BASE_URL = "http://localhost:8001/";
 
 // Endpoints para el servicio de formularios (puerto 8001)
-export const PROGRAMS_URL = `${API_BASE_URL}programas`;
-export const ELECTIVES_URL = `${API_BASE_URL}electivas`;
-export const STUDENT_URL = `${API_BASE_URL}estudiantes`;
-export const FORM_STATUS_URL = "http://localhost:8001/estado"; // Para pensar
+export const PROGRAMS_URL = `${API_BASE_URL}api/programas`;
+export const ELECTIVES_URL = `${API_BASE_URL}api/electivas`;
+export const STUDENT_URL = `${API_BASE_URL}api/estudiantes`;
+export const FORM_STATUS_URL = "estado";
+export const OFFER_URL = "ofertaElectiva";
+
 // Luego vemos
 export const LOGIN_URL = `${API_BASE_URL}login`;
 //export const STUDENT_DATA_URL = `${API_BASE_URL}api/student`;
