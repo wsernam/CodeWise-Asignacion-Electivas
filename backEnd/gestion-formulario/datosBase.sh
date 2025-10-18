@@ -2,11 +2,13 @@
 sed -i 's/\r$//' "$0"
 
 echo "Ejecutando migraciones..."
+# Asegurarse de que las migraciones se creen y apliquen correctamente
 python manage.py makemigrations
 python manage.py migrate
 
 echo "Insertando datos iniciales en la base de datos..."
 
+# Usamos el bloque shell para ejecutar código Python
 python manage.py shell <<EOF
 from gestion_electivas.models import Programa, Facultad, Electiva
 from gestion_estudiantes.models import Estudiante
@@ -16,6 +18,8 @@ from datetime import date
 
 print("--- 1. CREANDO FACULTAD ---")
 # --- 1. CREACIÓN DE FACULTAD ---
+
+# Creamos o recuperamos la facultad por nombre
 facultad, created_fac = Facultad.objects.get_or_create(
     fac_nombre="Facultad de Ingeniería"
 )
@@ -23,23 +27,12 @@ print(f"Facultad creada: {created_fac}, código asignado: {facultad.fac_codigo}"
 
 print("\n--- 2. CREANDO PROGRAMAS ---")
 # --- 2. CREACIÓN DE PROGRAMAS ---
-# Asignamos manualmente los códigos de los programas
-programas_data = [
-    {"pro_codigo": "SIS001", "pro_nombre": "Ingeniería en Sistemas"},
-    {"pro_codigo": "AUT001", "pro_nombre": "Ingeniería Automática"},
-    {"pro_codigo": "ELE001", "pro_nombre": "Ingeniería Electrónica"},
-]
 
-for data in programas_data:
-    programa, created_prog = Programa.objects.get_or_create(
-        pro_codigo=data["pro_codigo"],
-        defaults={
-            "pro_nombre": data["pro_nombre"],
-            "fac_codigo": facultad,
-            "pro_activo": True
-        }
-    )
-    print(f"Programa {data['pro_nombre']} {'creado' if created_prog else 'ya existía'} con código {data['pro_codigo']}")
+# Creamos programas asociados a la facultad
+programa_sistemas, _ = Programa.objects.get_or_create(
+    pro_nombre="Ingenieria en Sistemas",
+    defaults={'fac_codigo': facultad}
+)
 
 Programa.objects.get_or_create(
     pro_nombre="Ingenieria Automatica",
@@ -100,13 +93,16 @@ codigos = [
 estudiantes_creados = 0
 selecciones_creadas = 0
 for codigo in codigos:
+    # Usamos get_or_create para manejar los estudiantes.
+    # Usamos el pro_codigo_id para asignar la clave foránea por ID, 
+    # asumiendo que el programa creado (programa_sistemas) tiene el ID 1.
     estudiante, created_est = Estudiante.objects.get_or_create(
         est_codigo=codigo,
         defaults={
             'est_nombre': f"Nombre{codigo}", 
             'est_apellido': f"Apellido{codigo}", 
             'est_correo': f"correo{codigo}@unicauca.edu.co",
-            'pro_codigo_id': programa_sistemas.pro_codigo
+            'pro_codigo_id': programa_sistemas.pro_codigo # Usamos el ID del objeto creado
         }
     )
     if created_est:
@@ -152,5 +148,5 @@ print(f"{selecciones_creadas} nuevas selecciones de electivas creadas.")
 
 EOF
 
-# Ejecuta el servidor de Django (u otro comando que pases)
+# Ejecuta el servidor de Django
 exec "$@"
