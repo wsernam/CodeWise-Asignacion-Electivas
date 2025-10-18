@@ -1,4 +1,5 @@
 #!/bin/bash
+sed -i 's/\r$//' "$0"
 
 echo "Ejecutando migraciones..."
 # Asegurarse de que las migraciones se creen y apliquen correctamente
