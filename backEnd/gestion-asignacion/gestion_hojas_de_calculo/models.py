@@ -20,12 +20,13 @@ class PerfilAcademico(models.Model):
     # Campos que se llenarán con el Excel (mapeo directo)
     promedio = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
     num_electivas_cursadas = models.IntegerField(default=0)
-    creditos_aprob_total = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    creditos_aprob_total = models.IntegerField(max_digits=10, decimal_places=2, default=0)
     num_periodos_matriculados = models.IntegerField(default=0)
     
     # Campos con valores por defecto/calculados/fijos (se definen en el Resource)
     nivelado = models.BooleanField(default=False) # Por defecto no está nivelado
     porcentaje_avance = models.DecimalField(max_digits=5, decimal_places=2, default=0)
+    creditos_aprob_oblig = models.IntegerField(default=0)
     # >>> CAMBIO AQUÍ: Por defecto es False
     estado = models.BooleanField(default=False) 
     perfil_anio = models.IntegerField(default=timezone.now().year)
