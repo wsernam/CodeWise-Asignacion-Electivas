@@ -6,9 +6,71 @@ from tablib import Dataset
 import openpyxl 
 import io
 import traceback 
+import requests
+from decimal import Decimal, InvalidOperation
 
 # Importamos el nuevo Resource
 from .resources import PerfilAcademicoResource 
+from referencias.models import SeleccionEstudianteElectiva
+
+
+class ValidarExcelAPIView(APIView):
+    parser_classes = (MultiPartParser, FormParser)
+
+    def post(self, request, format=None):
+        excel_files = request.FILES.getlist('files')
+        if not excel_files:
+            return Response({'error': 'No se encontraron archivos en la solicitud.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # 1. Obtener el periodo activo desde el otro microservicio
+        try:
+            periodo_response = requests.get('http://localhost:8002/api/asignacion/procesos/periodo-activo/')
+            if periodo_response.status_code == 204:
+                return Response({'error': 'No se encontró un proceso de asignación ACTIVO.'}, status=status.HTTP_404_NOT_FOUND)
+            periodo_response.raise_for_status()
+            periodo_data = periodo_response.json()
+            #TODO: Verificar estructura de periodo_data
+            anio_activo = periodo_data['pa_anio']
+            semestre_activo = periodo_data['pa_num_semestre']
+        except requests.RequestException as e:
+            return Response({'error': f'No se pudo comunicar con el servicio de asignación: {e}'}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
+        # 2. Obtener códigos de estudiante de la BD para el periodo activo
+        codigos_db = set(SeleccionEstudianteElectiva.objects.filter(
+            sel_anio=anio_activo,
+            sel_num_semestre=semestre_activo
+        ).values_list('est_codigo', flat=True).distinct())
+
+        # 3. Extraer códigos de estudiante de los Excels
+        codigos_excel = set()
+        for excel_file in excel_files:
+            try:
+                dataset = Dataset().load(excel_file.read())
+                # Asumimos que la columna de códigos se llama 'CODIGO'
+                for row in dataset.dict:
+                    codigo_str = str(row.get('CODIGO', '')).strip()
+                    if codigo_str:
+                        # Limpiar '.0' si viene como float
+                        if codigo_str.endswith('.0'):
+                            codigo_str = codigo_str[:-2]
+                        codigos_excel.add(int(codigo_str))
+            except (Exception, InvalidOperation, ValueError) as e:
+                # Ignorar filas o archivos mal formateados, enfocándonos en la validación de códigos
+                pass
+
+        # 4. Comparar y generar respuesta
+        faltantes = list(codigos_db - codigos_excel)
+        sobrantes = list(codigos_excel - codigos_db)
+        coinciden = not faltantes and not sobrantes
+
+        return Response({
+            'faltantes': faltantes,
+            'sobrantes': sobrantes,
+            'num_faltantes': len(faltantes),
+            'num_sobrantes': len(sobrantes),
+            'coinciden': coinciden,
+            'periodo_evaluado': f'{anio_activo}-{semestre_activo}'
+        }, status=status.HTTP_200_OK)
 
 class ImportarProductosAPIView(APIView):
     # DRF Parsers para manejar archivos y datos de formulario (FormData)

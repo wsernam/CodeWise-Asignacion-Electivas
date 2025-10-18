@@ -19,3 +19,4 @@ pika
 openpyxl
 openpyxl # Para leer archivos .xlsx
 xlrd # Para leer archivos .xls antiguos
+requests
