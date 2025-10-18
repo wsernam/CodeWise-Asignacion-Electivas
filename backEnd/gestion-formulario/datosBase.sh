@@ -1,4 +1,5 @@
 #!/bin/bash
+sed -i 's/\r$//' "$0"
 
 echo "Ejecutando migraciones..."
 python manage.py makemigrations
