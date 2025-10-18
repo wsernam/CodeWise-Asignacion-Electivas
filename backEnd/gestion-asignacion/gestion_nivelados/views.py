@@ -4,8 +4,8 @@ from .servicios.fabrica import GestionNiveladosFabrica
 from .servicios.gestor_nivelados import GestionNivelados
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from django.db import transaction
 from rest_framework import status
-# Create your views here.
 
 
 class GestionNiveladosViewSet:
@@ -14,6 +14,7 @@ class GestionNiveladosViewSet:
     fabrica = GestionNiveladosFabrica()
     queryset = PerfilAcademico.objects.all()
 
+    @transaction.atomic
     @action(detail=False, methods=['post'])
     def gestion_nivelados(self, request):
         """
