@@ -12,9 +12,8 @@ class GestionNivelados(ABC):
         Método plantilla: define el flujo general del proceso.
         """
         perfil = perfil_academico
-        #creditos_oblig = self.obtener_creditos_obligatorios(perfil_academico) #EL MODELO NO TIENE ESTE ATRIBUTO
-        # Podrías guardar estos resultados en la BD, imprimirlos, etc.
-        #perfil.creditos_aprob_oblig = creditos_oblig
+        creditos_oblig = self.obtener_creditos_obligatorios(perfil_academico) #EL MODELO NO TIENE ESTE ATRIBUTO
+        perfil.creditos_aprob_oblig = creditos_oblig
         porcentaje = self.calcular_porcentaje_avance(perfil_academico)
         perfil.porcentaje_avance = porcentaje
         nivelado = self.es_nivelado(perfil_academico)
@@ -25,7 +24,7 @@ class GestionNivelados(ABC):
         return {
             "porcentaje_avance": porcentaje,
             "nivelado": nivelado,
-            #"creditos_aprob_oblig": creditos_oblig
+            "creditos_aprob_oblig": creditos_oblig
         }
 
     @abstractmethod
