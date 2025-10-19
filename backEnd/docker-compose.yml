@@ -150,11 +150,11 @@ services:
 # -------------------------------
 #MICROSERVICIO GESTION DE ASIGNACION
 # -------------------------------
-  gestion_asignacion:                 
+  gestion-asignacion:                 
     build:
       context: ./gestion-asignacion
       dockerfile: Dockerfile    
-    container_name: gestion_asignacion
+    container_name: gestion-asignacion
     volumes:
       - ./gestion-asignacion:/app   # Monta todo el proyecto en /app dentro del contenedor
                  # IMPORTANTE: usar la misma convención en todos los microservicios
@@ -194,8 +194,13 @@ services:
 
     command: >
       sh -c "
-      python manage.py migrate &&
-      python manage.py run_consumer &
+      echo 'Esperando a que el servicio de formulario inicialice los datos...' &&
+      sleep 15 &&
+      echo 'Ejecutando migraciones y sincronización de datos...' &&
+      python manage.py migrate && 
+      python manage.py sync_databases &&
+      echo 'Iniciando consumidor de RabbitMQ en segundo plano...' &&
+      python manage.py run_consumer & 
       python manage.py runserver 0.0.0.0:8000
       "
 

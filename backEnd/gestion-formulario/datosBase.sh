@@ -30,34 +30,34 @@ print("\n--- 2. CREANDO PROGRAMAS ---")
 
 # Creamos programas asociados a la facultad
 programa_sistemas, _ = Programa.objects.get_or_create(
-    pro_nombre="Ingenieria en Sistemas",
-    defaults={'fac_codigo': facultad}
+    pro_codigo="PIS",
+    defaults={'pro_nombre': "Ingenieria en Sistemas", 'fac_codigo': facultad}
 )
 
 Programa.objects.get_or_create(
-    pro_nombre="Ingenieria Automatica",
-    defaults={'fac_codigo': facultad}
+    pro_codigo="PIA",
+    defaults={'pro_nombre': "Ingenieria Automatica", 'fac_codigo': facultad}
 )
 
 Programa.objects.get_or_create(
-    pro_nombre="Ingenieria Electronica",
-    defaults={'fac_codigo': facultad}
+    pro_codigo="PIE",
+    defaults={'pro_nombre': "Ingenieria Electronica", 'fac_codigo': facultad}
 )
 
 print("3 programas creados o actualizados.")
 
 print("\n--- 3. CREANDO ELECTIVAS ---")
 electiva1, _ = Electiva.objects.get_or_create(
-    ele_nombre="Inteligencia Artificial",
-    defaults={'pro_codigo': programa_sistemas}
+    ele_codigo="ELEC001",
+    defaults={'ele_nombre': "Inteligencia Artificial", 'pro_codigo': programa_sistemas}
 )
 electiva2, _ = Electiva.objects.get_or_create(
-    ele_nombre="Desarrollo Web Avanzado",
-    defaults={'pro_codigo': programa_sistemas}
+    ele_codigo="ELEC002",
+    defaults={'ele_nombre': "Desarrollo Web Avanzado", 'pro_codigo': programa_sistemas}
 )
 electiva3, _ = Electiva.objects.get_or_create(
-    ele_nombre="Computación en la Nube",
-    defaults={'pro_codigo': programa_sistemas}
+    ele_codigo="ELEC003",
+    defaults={'ele_nombre': "Computación en la Nube", 'pro_codigo': programa_sistemas}
 )
 print("3 electivas creadas o actualizadas.")
 

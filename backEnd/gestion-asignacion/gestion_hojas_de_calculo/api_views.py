@@ -7,12 +7,15 @@ import openpyxl
 import io
 import traceback 
 import requests
+import logging
 from decimal import Decimal, InvalidOperation
 
 # Importamos el nuevo Resource
 from .resources import PerfilAcademicoResource 
 from referencias.models import SeleccionEstudianteElectiva
 
+
+logger = logging.getLogger(__name__)
 
 class ValidarExcelAPIView(APIView):
     parser_classes = (MultiPartParser, FormParser)
@@ -24,12 +27,13 @@ class ValidarExcelAPIView(APIView):
 
         # 1. Obtener el periodo activo desde el otro microservicio
         try:
-            periodo_response = requests.get('http://localhost:8002/api/asignacion/procesos/periodo-activo/')
+            # CORRECCIÓN: En un entorno Docker, los servicios se comunican usando el nombre del servicio
+            # y el puerto INTERNO, no localhost y el puerto externo.
+            periodo_response = requests.get('http://gestion-asignacion:8000/api/asignacion/procesos/periodo-activo/')
             if periodo_response.status_code == 204:
                 return Response({'error': 'No se encontró un proceso de asignación ACTIVO.'}, status=status.HTTP_404_NOT_FOUND)
             periodo_response.raise_for_status()
             periodo_data = periodo_response.json()
-            #TODO: Verificar estructura de periodo_data
             anio_activo = periodo_data['pa_anio']
             semestre_activo = periodo_data['pa_num_semestre']
         except requests.RequestException as e:
@@ -41,22 +45,44 @@ class ValidarExcelAPIView(APIView):
             sel_num_semestre=semestre_activo
         ).values_list('est_codigo', flat=True).distinct())
 
-        # 3. Extraer códigos de estudiante de los Excels
+        # 3. Extraer códigos de estudiante de los Excels USANDO EL RESOURCE
         codigos_excel = set()
+        resource = PerfilAcademicoResource() # Instanciamos el resource
+        errores_procesamiento = []
+
         for excel_file in excel_files:
             try:
-                dataset = Dataset().load(excel_file.read())
-                # Asumimos que la columna de códigos se llama 'CODIGO'
-                for row in dataset.dict:
-                    codigo_str = str(row.get('CODIGO', '')).strip()
-                    if codigo_str:
-                        # Limpiar '.0' si viene como float
-                        if codigo_str.endswith('.0'):
-                            codigo_str = codigo_str[:-2]
-                        codigos_excel.add(int(codigo_str))
-            except (Exception, InvalidOperation, ValueError) as e:
-                # Ignorar filas o archivos mal formateados, enfocándonos en la validación de códigos
-                pass
+                filename = excel_file.name.lower()
+                if filename.endswith('.xlsx'):
+                    file_format = 'xlsx'
+                elif filename.endswith('.xls'):
+                    file_format = 'xls'
+                else:
+                    errores_procesamiento.append(f"Archivo '{excel_file.name}' ignorado: formato no soportado.")
+                    continue
+
+                # Cargamos los datos en un dataset
+                dataset = Dataset()
+                dataset.load(excel_file.read(), format=file_format)
+
+                # CORRECCIÓN: Iteramos sobre `dataset.dict`. Esto devuelve cada fila como un
+                # diccionario (ej: {'CODIGO': 123, ...}), que es lo que el método `clean` espera.
+                # El método `iter_rows` no existe en el resource para este propósito.
+                for i, row in enumerate(dataset.dict):
+                    try:
+                        # El widget del resource ya limpió y convirtió el código a un objeto Estudiante
+                        estudiante_instance = resource.fields['est_codigo'].clean(row)
+                        if estudiante_instance:
+                            codigos_excel.add(estudiante_instance.est_codigo)
+                    except ValueError as e:
+                        # Capturamos errores de validación del widget (ej: estudiante no encontrado, celda con texto)
+                        msg = f"Fila {i+2} del archivo '{excel_file.name}' ignorada: {e}"
+                        logger.warning(msg)
+                        errores_procesamiento.append(msg)
+            except Exception as e:
+                msg = f"Error crítico al procesar el archivo '{excel_file.name}': {e}. Asegúrate de tener instalada la librería 'xlrd' para archivos .xls."
+                logger.error(msg, exc_info=True)
+                errores_procesamiento.append(msg)
 
         # 4. Comparar y generar respuesta
         faltantes = list(codigos_db - codigos_excel)
@@ -69,7 +95,8 @@ class ValidarExcelAPIView(APIView):
             'num_faltantes': len(faltantes),
             'num_sobrantes': len(sobrantes),
             'coinciden': coinciden,
-            'periodo_evaluado': f'{anio_activo}-{semestre_activo}'
+            'periodo_evaluado': f'{anio_activo}-{semestre_activo}',
+            'advertencias': errores_procesamiento
         }, status=status.HTTP_200_OK)
 
 class ImportarProductosAPIView(APIView):
@@ -133,12 +160,18 @@ class ImportarProductosAPIView(APIView):
                 fila_excel = row[0] + 2
                 errores_de_fila = []
                 # CORRECCIÓN: row[1] es una lista de objetos de error, debemos iterarla.
-                for error in row[1]:
+                for error in row[1]: # row[1] es una lista de errores para esa fila
                     # Si el error es un diccionario (ValidationError), lo iteramos.
                     if hasattr(error.error, 'items'):
-                        errores_de_fila.extend([f"Error en campo '{key}': {val[0]}" for key, val in error.error.items()])
-                    # Si no (ej. una excepción), lo convertimos a string.
+                        # Caso 1: Error de validación de un campo específico.
+                        # Extraemos el nombre del campo y el mensaje de error.
+                        for field, messages in error.error.items():
+                            errores_de_fila.append(f"Campo '{field}': {messages[0]}")
+                    elif hasattr(error.error, 'message'):
+                        # Caso 2: Error con un atributo 'message' (como ValueError).
+                        errores_de_fila.append(error.error.message)
                     else:
+                        # Caso 3: Otro tipo de excepción, lo convertimos a string.
                         errores_de_fila.append(str(error.error))
                 error_details.append({
                     'fila': fila_excel, 

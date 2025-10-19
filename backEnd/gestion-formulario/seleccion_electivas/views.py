@@ -60,14 +60,29 @@ class SeleccionEstudianteElectivaViewSet(mixins.CreateModelMixin,
             ]
 
             # Usamos bulk_create para una inserción eficiente en la base de datos
-            created_instances = SeleccionEstudianteElectiva.objects.bulk_create(selecciones_a_crear)
+            SeleccionEstudianteElectiva.objects.bulk_create(selecciones_a_crear)
+
+            # Después de bulk_create, recuperamos los objetos para obtener sus IDs
+            # y poder publicar los eventos y devolverlos en la respuesta.
+            codigos_electivas = [e["ele_codigo"] for e in electivas_data]
+            created_instances = SeleccionEstudianteElectiva.objects.filter(
+                est_codigo_id=est_codigo,
+                sel_anio=sel_anio,
+                sel_num_semestre=sel_num_semestre,
+                ele_codigo_id__in=codigos_electivas
+            )
 
             # Publicamos un evento por cada selección creada
             for instance in created_instances:
                 transaction.on_commit(lambda: publish_seleccion_creada(_serialize_seleccion(instance)))
 
+        codigos_creados = [instance.sel_codigo for instance in created_instances]
+
         return Response(
-            {"detail": f"Se han registrado {len(created_instances)} electivas para el estudiante {est_codigo}."},
+            {
+                "detail": f"Se han registrado {len(created_instances)} electivas para el estudiante {est_codigo}.",
+                "selecciones_creadas": codigos_creados
+            },
             status=status.HTTP_201_CREATED,
         )
     

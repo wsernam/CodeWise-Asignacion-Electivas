@@ -1,8 +1,9 @@
 from django.db import models
 
 
+
 class Programa(models.Model):
-    pro_codigo = models.AutoField(primary_key=True)
+    pro_codigo = models.CharField(max_length=225, primary_key=True)
     pro_nombre = models.CharField(max_length=150, unique=True)
     fac_codigo = models.IntegerField()
     pro_activo = models.BooleanField(default=True)  # True=activo, False=inactivo
@@ -24,7 +25,7 @@ class Estudiante(models.Model):
 
 
 class Electiva(models.Model):
-    ele_codigo = models.AutoField(primary_key=True)
+    ele_codigo = models.CharField(max_length=225, primary_key=True)
     ele_nombre = models.CharField(max_length=150, unique=True)
     pro_codigo = models.ForeignKey("Programa", on_delete=models.PROTECT, related_name="electivas")
     ele_estado = models.BooleanField(default=True)  # True=activo, False=inactivo
@@ -98,7 +99,7 @@ class SeleccionEstudianteElectiva(models.Model):
     ele_codigo = models.ForeignKey(Electiva, on_delete=models.CASCADE)
 
     class Meta:
-        db_table = 'seleccion_estudiante_electiva'
+        db_table = 'Seleccion_estudiante_electiva'
         unique_together = (
             'sel_anio',
             'sel_num_semestre',

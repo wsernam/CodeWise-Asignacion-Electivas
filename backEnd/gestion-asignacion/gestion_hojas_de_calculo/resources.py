@@ -2,9 +2,9 @@
 
 from import_export import resources, fields
 from .models import PerfilAcademico
-from referencias.models import Estudiante 
+from referencias.models import Estudiante
 from import_export.widgets import DecimalWidget, IntegerWidget, ForeignKeyWidget
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from datetime import date
 from django.db import transaction # Necesario para guardar dentro del after_save
 import logging
@@ -47,9 +47,10 @@ class CustomForeignKeyWidget(ForeignKeyWidget):
             int_value = int(str_value)
             # --- LOGGING ---
             logger.info(f"ForeignKeyWidget.clean - Fila: {row} | Valor convertido a int: {int_value} (Tipo: {type(int_value)})")
-        except (ValueError, TypeError) as e:
-            logger.error(f"ForeignKeyWidget.clean - Fila: {row} | Error de conversión: {e}")
-            return None # Esto hará que la fila sea ignorada por skip_row
+        except (ValueError, TypeError):
+            # Si el valor no se puede convertir a número (ej: es texto como el pie de página),
+            # lanzamos un error claro en lugar de devolver None.
+            raise ValueError(f"La celda contiene texto no válido ('{value}'). Asegúrate de eliminar pies de página o texto innecesario del archivo Excel.")
 
         try:
             # Usamos el método de la clase padre para buscar el objeto
@@ -127,10 +128,12 @@ class PerfilAcademicoResource(resources.ModelResource):
 
         return super().get_or_init_instance(instance_loader, row)
 
-    def after_save_instance(self, instance, using_transactions, **kwargs):
+    # CORRECCIÓN: La firma se actualiza para usar 'new' en lugar de 'using_transactions'
+    # como segundo argumento posicional, que es lo que espera la librería.
+    def after_save_instance(self, instance, new, **kwargs):
         """
         Se llama DEPUÉS de que la instancia (PerfilAcademico) ha sido guardada
-        o actualizada exitosamente en la base de datos (MySQL).
+        o actualizada. 'new' es True si la instancia fue creada, False si fue actualizada.
         """
         # Verificamos si el estado es False (el valor por defecto del modelo)
         if instance.estado is False:
@@ -138,33 +141,29 @@ class PerfilAcademicoResource(resources.ModelResource):
             # Usamos save(update_fields=...) para un guardado más eficiente
             instance.save(update_fields=['estado'])
 
-    # CORRECCIÓN: Se añade el parámetro 'row' que es esperado por versiones
-    # más recientes de django-import-export.
+    # CORRECCIÓN: La firma del método se actualiza para aceptar los argumentos
+    # posicionales 'row' y 'row_number' que pasa la librería.
     def skip_row(self, instance, original, row, row_number=None, **kwargs):
         """
         Se ejecuta para cada fila. Si devuelve True, la fila se ignora por completo.
         Ideal para saltar filas de encabezado extra, pies de página o filas vacías.
         """
-        # CORRECCIÓN: Usamos 'row' para acceder a los datos crudos del Excel, no 'original'.
-        # 'original' es la instancia del modelo, que no es "subscriptable".
-        # Asumimos que la columna 'CODIGO' es la primera (índice 0).
-        codigo_valor = row[0]
-        # Si no hay código de estudiante, o no es un número, es una fila inválida.
-        if not codigo_valor:
-            return True # Salta la fila si la celda del código está vacía.
-        
-        # CORRECCIÓN: Convertimos a string antes de validar con Decimal.
-        # texto o está vacía pero con formato, y también maneja floats correctamente.
+        # Obtenemos el valor crudo de la columna 'CODIGO' de la fila actual.
+        # Ahora 'row' es un diccionario con los datos crudos de la fila.
+        codigo_valor = row.get('CODIGO')
+
+        # Si el valor está vacío, nulo o no es numérico, saltamos la fila.
         try:
-            Decimal(str(codigo_valor))
-        except (ValueError, TypeError, Exception) as e:
-            # --- LOGGING ---
-            logger.warning(
-                f"skip_row - Fila ignorada (row_number={row_number}). "
-                f"Causa: No se pudo convertir '{codigo_valor}' a Decimal. Error: {e}"
-            )
+            # Intentamos convertir a float, que es una forma rápida de validar si es un número.
+            float(codigo_valor)
+        except (ValueError, TypeError, InvalidOperation):
+            # Si la conversión falla, es una fila inválida (texto, vacía, etc.)
+            logger.warning(f"skip_row - Fila ignorada. Causa: El valor en la columna 'CODIGO' no es un número válido: '{codigo_valor}'")
             return True
-        return super().skip_row(instance, row, row_number=row_number, **kwargs)
+
+        # CORRECCIÓN: La llamada a super() no debe incluir 'row_number', ya que el
+        # método padre no lo espera.
+        return super().skip_row(instance, original, row=row, **kwargs)
 
     class Meta:
         model = PerfilAcademico
