@@ -1,60 +1,91 @@
-/* MultipleFileUploader.css */
-
-input[type="file"] {
-  display: block;
-  margin-bottom: 1rem;
-  padding: 0.5rem;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  width: 100%;
-  max-width: 400px;
+.file-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 16px;
 }
 
-section {
-  background-color: #f7f9fc;
-  padding: 0.75rem 1rem;
+/* Ajustes para uso dentro del modal */
+.file-list {
+  max-height: 46vh;
+  overflow-y: auto;
+  padding-right: 8px;
+}
+
+.file-list-header {
+  margin-bottom: 6px;
+}
+
+/* Alinea el botón de subir a la derecha dentro del modal */
+.upload-button {
+  margin-top: 16px;
+  align-self: flex-end;
+}
+
+/* columnas en header/filas */
+.file-list-header .col,
+.file-row .col {
+  display: flex;
+  align-items: center;
+}
+
+.file-list-header .name { flex: 1; }
+.file-list-header .size { width: 140px; text-align: right; }
+.file-list-header .action { width: 48px; }
+
+/* Card por archivo */
+.file-item-card {
+  padding: 10px 12px;
+  background-color: #f2f2f2;
   border-radius: 8px;
-  margin-bottom: 0.75rem;
-  border: 1px solid #e0e0e0;
+  box-shadow: none;
+  transition: transform 0.12s;
 }
 
-section ul {
-  margin: 0.25rem 0 0 1rem;
-  padding: 0;
-  list-style-type: disc;
+/* fila interna con layout de columnas */
+.file-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
-section li {
-  font-size: 0.9rem;
-  color: #333;
+.file-name {
+  flex: 1;
+  font-size: 14px;
+  color: #1f1f1f;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-button {
-  margin-top: 1rem;
+.file-size {
+  width: 140px;
+  text-align: right;
+  font-size: 13px;
+  color: #444;
 }
 
-p {
-  font-size: 0.95rem;
-  margin-top: 0.5rem;
-  color: #333;
+/* Botón de eliminar - papelera pequeño */
+.remove-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: #6b6b6b;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.12s, color 0.12s;
 }
 
-p:before {
-  margin-right: 0.25rem;
+.remove-btn:hover {
+  background: rgba(0,0,0,0.04);
+  color: #d9363e;
 }
 
-p.uploading {
-  color: #007bff; /* azul */
-}
-
-p.success {
-  color: #28a745; /* verde */
-}
-
-p.fail {
-  color: #dc3545; /* rojo */
-}
-
+/* Input de subir archivo */
 .custom-file-upload {
   display: inline-block;
   padding: 0.6rem 1.2rem;
@@ -67,5 +98,10 @@ p.fail {
 }
 
 .custom-file-upload input {
-  display: none; /* ocultamos el input real */
+  display: none;
+}
+
+.custom-file-upload:hover {
+  background-color: #0056b3;
+  border-color: #0056b3;
 }

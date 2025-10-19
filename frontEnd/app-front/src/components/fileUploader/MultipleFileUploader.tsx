@@ -3,14 +3,20 @@ import axios from 'axios';
 import './MultipleFileUploader.css';
 
 import Button from '../ui/Button/Button';
+import Card from '../ui/Card/Card';
 
 const MAX_SIZE_MB = 10 * 1024 * 1024; // 10 MB
 const ALLOWED_EXTENSIONS = ['xlsx', 'xls', 'xlsm', 'xltm', 'xltx', 'csv'];
 
+const formatSize = (size: number) => {
+    if (size >= 1024 * 1024) return (size / (1024 * 1024)).toFixed(2) + ' MB';
+    if (size >= 1024) return (size / 1024).toFixed(2) + ' KB';
+    return size + ' B';
+};
+
 const MultipleFileUploader = () => {
-    const [files, setFiles] = useState<File[] | null>(null);
-    const [status, setStatus] = useState<
-        'initial' | 'uploading' | 'success' | 'fail'>('initial');
+    const [files, setFiles] = useState<File[]>([]);
+    const [status, setStatus] = useState<'initial' | 'uploading' | 'success' | 'fail'>('initial');
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (!e.target.files) return;
@@ -36,26 +42,26 @@ const MultipleFileUploader = () => {
         }
 
         setStatus('initial');
-        setFiles(validFiles.length > 0 ? validFiles : null);
-
+        setFiles(validFiles);
+        // reset input value to allow re-selecting same files if needed
+        if (e.target) e.target.value = '';
     };
 
     const handleUpload = async () => {
-        if (!files?.length) return;
+        if (!files.length) return;
 
         setStatus('uploading');
         const formData = new FormData();
         files.forEach(file => formData.append('files', file));
 
-
         try {
             const response = await axios.post('https://httpbin.org/post', formData, {
-                headers: { ' Content-Type': 'multipart/form-data' },
+                headers: { 'Content-Type': 'multipart/form-data' },
                 onUploadProgress: (progressEvent) => {
                     if (progressEvent.total) {
-                        const precentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-                        console.log(`Upload Progress: ${precentCompleted}%`);
-                    };
+                        const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+                        console.log(`Upload Progress: ${percentCompleted}%`);
+                    }
                 }
             });
 
@@ -67,34 +73,52 @@ const MultipleFileUploader = () => {
         }
     };
 
+    const handleRemoveFile = (index: number) => {
+        setFiles(prev => prev.filter((_, i) => i !== index));
+    };
+
     return (
         <>
             <label className="custom-file-upload">
                 Seleccionar archivos
-                <input type="file" multiple onChange={handleFileChange} />
+                <input
+                    type="file"
+                    multiple
+                    accept=".xlsx,.xls,.xlsm,.xltm,.xltx,.csv"
+                    onChange={handleFileChange}
+                />
             </label>
 
-            {files && [...files].map((file, index) => (
-                <section key={file.name}>
-                    File number {index + 1} details:
-                    <ul>
-                        <li>Name: {file.name}</li>
-                        <li>Type: {file.type}</li>
-                        <li>Size: {file.size} bytes</li>
-                    </ul>
-                </section>
-            ))}
+            <div className="file-list">
+                {files.map((file, index) => (
+                    <Card key={`${file.name}-${file.size}-${index}`} padding="sm" className="file-item-card">
+                        <div className="file-row">
+                            <div className="file-name">{file.name}</div>
+                            <div className="file-size">{formatSize(file.size)}</div>
+                            <button
+                                className="remove-btn"
+                                onClick={() => handleRemoveFile(index)}
+                                type="button"
+                                aria-label={`Eliminar ${file.name}`}
+                                title="Eliminar"
+                            >
+                                🗑
+                            </button>
+                        </div>
+                    </Card>
+                ))}
+            </div>
 
-            {files && (
+            {files.length > 0 && (
                 <Button
-                    className='btn-add'
-                    type="submit"
+                    className="upload-button"
+                    type="button"
                     variant="primary"
                     size="medium"
-                    disabled={files.length === 0 || status === 'uploading'}
+                    disabled={status === 'uploading'}
                     onClick={handleUpload}
                 >
-                    Subir archivos {files.length > 1 ? 'files' : 'file'}
+                    Subir {files.length > 1 ? 'archivos' : 'archivo'}
                 </Button>
             )}
 

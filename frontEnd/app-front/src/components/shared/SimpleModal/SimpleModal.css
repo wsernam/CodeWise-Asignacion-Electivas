@@ -1,0 +1,45 @@
+.sm-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1200;
+  padding: 20px;
+}
+
+.sm-card {
+  background: #fff;
+  border-radius: 14px;
+  width: 820px;
+  max-width: 100%;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.12);
+  position: relative;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.sm-close {
+  position: absolute;
+  right: 16px;
+  top: 12px;
+  background: transparent;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: #111;
+}
+
+.sm-body {
+  padding: 24px;
+  overflow: auto;
+}
+
+.sm-title {
+  margin: 0 0 12px 0;
+  font-size: 18px;
+  color: #0b2a66;
+}
