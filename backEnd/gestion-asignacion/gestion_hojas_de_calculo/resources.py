@@ -112,21 +112,27 @@ class PerfilAcademicoResource(resources.ModelResource):
         Sobrescribimos este método para controlar cómo se busca o crea la instancia.
         Esto nos permite usar año y semestre fijos en la búsqueda.
         """
-        # El widget ya convirtió 'CODIGO' en una instancia de Estudiante
-        estudiante_instance = self.get_instance(instance_loader, row)
-        if estudiante_instance:
-            try:
-                # Buscamos el perfil para el año y semestre actuales
-                perfil = PerfilAcademico.objects.get(
-                    est_codigo=estudiante_instance,
-                    perfil_anio=self.fields['perfil_anio'].get_value(None),
-                    perfil_semestre=self.fields['perfil_semestre'].get_value(None)
-                )
-                return (perfil, False) # (instancia, es_nueva=False)
-            except PerfilAcademico.DoesNotExist:
-                pass # Si no existe, dejamos que el flujo normal cree una nueva
+        # CORRECCIÓN 2: La lógica de búsqueda de instancia debe ser más robusta.
+        # `get_instance` puede devolver un objeto Estudiante o None.
+        instance, new = super().get_or_init_instance(instance_loader, row)
 
-        return super().get_or_init_instance(instance_loader, row)
+        # Si la instancia ya existe (es una actualización), `instance.est_codigo` es un objeto Estudiante.
+        # Si es nueva, `instance.est_codigo` es None, pero el widget ya validó el estudiante en `row`.
+        estudiante_obj = instance.est_codigo if not new else self.fields['est_codigo'].clean(row)
+
+        if estudiante_obj:
+            anio = self.fields['perfil_anio'].get_value(None)
+            semestre = self.fields['perfil_semestre'].get_value(None)
+
+            # Buscamos si ya existe un perfil para este estudiante en este periodo.
+            perfil_existente = PerfilAcademico.objects.filter(
+                est_codigo=estudiante_obj, perfil_anio=anio, perfil_semestre=semestre
+            ).first()
+
+            if perfil_existente:
+                return (perfil_existente, False) # Devolvemos el perfil existente para que sea actualizado.
+
+        return (instance, new) # Si no se encontró, continuamos con la creación de una nueva instancia.
 
     # CORRECCIÓN: La firma se actualiza para usar 'new' en lugar de 'using_transactions'
     # como segundo argumento posicional, que es lo que espera la librería.
