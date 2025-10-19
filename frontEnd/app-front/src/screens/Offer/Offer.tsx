@@ -15,13 +15,19 @@ import SuccessModal from "../../components/shared/SuccessModal/SuccessModal";
 // Stores
 import { useElectiveStore } from "../../store/electiveStore";
 import { useProgramStore } from "../../store/programStore";
-import type { IOffer as Offer } from "../../models/offer";
+import type { IOffer } from "../../models/offer";
+import { useOfferStore } from "../../store/offerStore";
+import { useFormStatusStore } from "../../store/formStatusStore";
+
 const { Option } = Select;
 
 const Offer: React.FC = () => {
   // ========== STORES ==========
   const { electives, fetchElectives } = useElectiveStore();
   const { programs, fetchPrograms } = useProgramStore();
+  const { createBulkOffer } = useOfferStore();
+  const { formStatus } = useFormStatusStore();
+
   // ========== ESTADO LOCAL ==========
   const [year, setYear] = useState<number>(new Date().getFullYear());
   const [semester, setSemester] = useState<1 | 2>(1);
@@ -156,8 +162,33 @@ const Offer: React.FC = () => {
   // Modificar las funciones de manejo
   const handleConfirmSave = async () => {
     setShowConfirm(false);
-
     try {
+      // Transformar los datos que se seleccionaron pero actualizados al formato del back
+      const oferta: { ele_codigo: string; pro_codigo: string }[] = [];
+
+      Object.entries(selectedElectives).forEach(
+        ([programName, electiveCodes]) => {
+          const program = programs.find((p) => p.pro_nombre === programName);
+
+          if (program) {
+            electiveCodes.forEach((electiveCode) => {
+              oferta.push({
+                ele_codigo: electiveCode,
+                pro_codigo: program.pro_codigo.toString(),
+              });
+            });
+          }
+        }
+      );
+
+      // Objeto para el bulk de crear
+      const bulkData: IOffer = {
+        ofe_anio: year,
+        ofe_num_semestre: semester,
+        ofertas: oferta,
+      };
+
+      await createBulkOffer(bulkData);
       setShowSuccess(true);
     } catch (error) {
       setWarning({
@@ -176,6 +207,23 @@ const Offer: React.FC = () => {
       <div className="offer-content">
         <div style={{ maxWidth: "1000px", width: "100%" }}>
           <Card className="offer-card" padding="xl">
+            {formStatus && (
+              <div className="offer-blocking-overlay">
+                <div className="offer-blocking-message">
+                  <div className="offer-blocking-icon">🔒</div>
+                  <h3>Formulario en Modo Activo</h3>
+                  <p>
+                    No se pueden realizar modificaciones mientras el formulario
+                    esté activo para los estudiantes.
+                  </p>
+                  <p>
+                    Desactiva el formulario desde el Inicio para habilitar
+                    ediciones.
+                  </p>
+                </div>
+              </div>
+            )}
+
             <h2 className="offer-title">
               Configuración de Oferta de Electivas
             </h2>
@@ -336,7 +384,7 @@ const Offer: React.FC = () => {
                 variant="primary"
                 size="medium"
                 onClick={handleSave}
-                disabled={!hasSelectedElectives}
+                disabled={!hasSelectedElectives || formStatus}
               >
                 Guardar
               </Button>

@@ -6,7 +6,7 @@ interface OfferState {
   loading: boolean;
   error: string | null;
 
-  createBulkOffers: (offerData: IOffer) => Promise<any>;
+  createBulkOffer: (offerData: IOffer) => Promise<any>;
   clearError: () => void;
 }
 
@@ -16,7 +16,7 @@ export const useOfferStore = create<OfferState>((set) => ({
 
   clearError: () => set({ error: null }),
 
-  createBulkOffers: async (offerData: IOffer): Promise<any> => {
+  createBulkOffer: async (offerData: IOffer): Promise<any> => {
     set({ loading: true, error: null });
 
     try {

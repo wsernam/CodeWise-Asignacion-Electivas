@@ -5,8 +5,8 @@ export const API_BASE_URL = "http://localhost:8001/";
 export const PROGRAMS_URL = `${API_BASE_URL}api/programas`;
 export const ELECTIVES_URL = `${API_BASE_URL}api/electivas`;
 export const STUDENT_URL = `${API_BASE_URL}api/estudiantes`;
-export const FORM_STATUS_URL = "estado";
-export const OFFER_URL = "ofertaElectiva";
+export const FORM_STATUS_URL = `${API_BASE_URL}estado`;
+export const OFFER_URL = `${API_BASE_URL}ofertaElectiva`;
 
 // Luego vemos
 export const LOGIN_URL = `${API_BASE_URL}login`;

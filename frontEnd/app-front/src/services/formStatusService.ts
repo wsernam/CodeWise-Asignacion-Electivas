@@ -5,7 +5,7 @@ export const getFormStatus = async (): Promise<boolean> => {
   console.log("[formStatusService] Obteniendo estado del formulario...");
   try {
     const response = await axios.get(
-      `${FORM_STATUS_URL}/get_estado_formulario/`
+      `${FORM_STATUS_URL}/get_estado-formulario/`
     );
     console.log("[formStatusService] Estado obtenido:", response.data);
     return response.data.estado;

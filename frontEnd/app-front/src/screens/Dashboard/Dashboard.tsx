@@ -3,14 +3,13 @@ import Header from "../../components/layout/Header/Header";
 import Footer from "../../components/layout/Footer/Footer";
 import Navbar from "../../components/layout/Navbar/Navbar";
 import Card from "../../components/ui/Card/Card";
-import Button from "../../components/ui/Button/Button";
 import ConfirmModal from "../../components/shared/ConfirmModal/ConfirmModal";
 import SuccessModal from "../../components/shared/SuccessModal/SuccessModal";
 import WarningModal from "../../components/shared/WarningModal/WarningModal";
 
+import { useFormStatusStore } from "../../store/formStatusStore";
 import { useElectiveStore } from "../../store/electiveStore";
-import { useProgramStore } from "../../store/programStore"; // ✅ AGREGADO
-import { useFormStore } from "../../store/offerStore";
+import { useProgramStore } from "../../store/programStore";
 import "./Dashboard.css";
 
 // Librería de gráficas
@@ -46,16 +45,15 @@ const Dashboard: React.FC = () => {
   const fetchElectives = useElectiveStore((s) => s.fetchElectives);
   const programs = useProgramStore((s) => s.programs); // ✅ AGREGADO
   const fetchPrograms = useProgramStore((s) => s.fetchPrograms); // ✅ AGREGADO
-
-  const { currentForm, changeFormStatus, formStatus } = useFormStore();
-
-  
+  const { formStatus, changeFormStatus, fetchFormStatus } =
+    useFormStatusStore();
 
   // Cargar datos al montar el componente
   useEffect(() => {
     fetchElectives();
     fetchPrograms();
-  }, [fetchElectives, fetchPrograms]);
+    fetchFormStatus();
+  }, [fetchElectives, fetchPrograms, fetchFormStatus]);
 
   // ====== Estado local ======
   const [enrollments, setEnrollments] = useState<Record<string, number>>({}); // inscritos por electiva
@@ -121,7 +119,6 @@ const Dashboard: React.FC = () => {
   }, [activeElectives, programaSeleccionado]);
 
   // ====== KPIs CON DATOS REALES ======
-  const totalElectives = filteredElectives.length;
   const totalActiveElectives = activeElectives.length; // Total real de electivas activas
   const totalPrograms = activePrograms.length; // Total real de programas activos
   const totalEnrollments = filteredElectives.reduce(
@@ -133,9 +130,9 @@ const Dashboard: React.FC = () => {
   const occupancyPercent =
     totalActiveElectives > 0
       ? Math.round(
-        (totalEnrollments / (totalActiveElectives * CAPACITY_PER_ELECTIVE)) *
-        100
-      )
+          (totalEnrollments / (totalActiveElectives * CAPACITY_PER_ELECTIVE)) *
+            100
+        )
       : 0;
 
   // Estado del formulario actual
@@ -190,11 +187,21 @@ const Dashboard: React.FC = () => {
   };
 
   // ====== Manejo del estado del formulario ======
-  const handleToggleFormStatus = (newStatus: boolean) => {
-    setConfirm({
-      open: true,
-      newStatus: newStatus,
-    });
+  const handleToggleFormStatus = async (newStatus: boolean) => {
+    try {
+      await changeFormStatus(newStatus);
+      setSuccess({
+        open: true,
+        message: `Formulario ${
+          newStatus ? "activado" : "desactivado"
+        } correctamente`,
+      });
+    } catch (error) {
+      setWarning({
+        open: true,
+        message: "Error al cambiar el estado del formulario",
+      });
+    }
   };
 
   const handleConfirmStatusChange = async () => {
@@ -204,8 +211,9 @@ const Dashboard: React.FC = () => {
 
       setSuccess({
         open: true,
-        message: `Formulario ${confirm.newStatus ? "activado" : "desactivado"
-          } correctamente`,
+        message: `Formulario ${
+          confirm.newStatus ? "activado" : "desactivado"
+        } correctamente`,
       });
     } catch (error) {
       setWarning({
@@ -229,7 +237,7 @@ const Dashboard: React.FC = () => {
     setConfirm({ open: false, newStatus: false });
   };
 
-  // ====== 🖼️ Render ======
+  // ====== Render ======
   return (
     <div className="auth-page">
       <Header />
@@ -237,12 +245,12 @@ const Dashboard: React.FC = () => {
 
       <div className="auth-page-content">
         <div className="dashboard-main">
-          {/* 🔎 Filtro y Estado del Formulario en la misma fila */}
+          {/* Filtro y Estado del Formulario en la misma fila */}
           <div className="filter-status-row">
             {/* Filtro */}
             <Card padding="lg" className="filter-card">
               <div className="dashboard-filter">
-                <label htmlFor="programa">Filtrar por programa:</label>
+                <div className="form-status-title">Filtrar por programa:</div>
                 <select
                   id="programa"
                   value={programaSeleccionado}
@@ -260,21 +268,30 @@ const Dashboard: React.FC = () => {
             {/* Estado del Formulario */}
             <Card padding="lg" className="form-status-card">
               <div className="form-status-content">
-                <div className="form-status-title">
-                  Estado del Formulario: {formStatus ? "Activo" : "Inactivo"}
+                <div className="form-status-title">Estado del Formulario</div>
+                <div className="toggle-wrapper">
+                  <label className="toggle-label">
+                    <input
+                      type="checkbox"
+                      checked={formStatus}
+                      onChange={(e) => handleToggleFormStatus(e.target.checked)}
+                      className="toggle-input"
+                    />
+                    <span className="toggle-slider">
+                      <span className="toggle-knob">
+                        {formStatus ? "✓" : "✕"}
+                      </span>
+                    </span>
+                  </label>
+                  <span className="toggle-status-text">
+                    {formStatus ? "Activado" : "Desactivado"}
+                  </span>
                 </div>
-                <Button
-                  variant={formStatus ? "secondary" : "primary"}
-                  size="small"
-                  onClick={() => handleToggleFormStatus(!formStatus)}
-                >
-                  {formStatus ? "Desactivar" : "Activar"} Formulario
-                </Button>
               </div>
             </Card>
           </div>
 
-          {/* 📌 KPIs */}
+          {/* KPIs */}
           <div className="kpi-row">
             <Card padding="lg">
               <div className="kpi-card">
@@ -308,7 +325,7 @@ const Dashboard: React.FC = () => {
             </Card>
           </div>
 
-          {/* 📊 Gráficas */}
+          {/* Gráficas */}
           <div className="charts-row">
             {/* Top 10 electivas */}
             <Card padding="lg">
@@ -353,7 +370,7 @@ const Dashboard: React.FC = () => {
             )}
           </div>
 
-          {/* 📋 Tablas */}
+          {/* Tablas */}
           <div className="tables-row">
             {/* Top 5 más demandadas */}
             <Card padding="lg">
@@ -423,8 +440,9 @@ const Dashboard: React.FC = () => {
       {/* Modales */}
       <ConfirmModal
         open={confirm.open}
-        message={`¿Estás seguro de que deseas ${confirm.newStatus ? "activar" : "desactivar"
-          } el formulario de asignación?`}
+        message={`¿Estás seguro de que deseas ${
+          confirm.newStatus ? "activar" : "desactivar"
+        } el formulario de asignación?`}
         onConfirm={handleConfirmStatusChange}
         onCancel={handleConfirmCancel}
       />

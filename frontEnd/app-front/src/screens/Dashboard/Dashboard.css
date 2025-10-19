@@ -184,3 +184,77 @@
     align-items: flex-start;
   }
 }
+/* ===== TOGGLE STYLES ===== */
+.toggle-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.toggle-label {
+  position: relative;
+  display: inline-block;
+  width: 60px;
+  height: 30px;
+  cursor: pointer;
+}
+
+.toggle-input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+}
+
+.toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ff4d4f; /* Rojo cuando está desactivado */
+  transition: 0.4s;
+  border-radius: 34px;
+  display: flex;
+  align-items: center;
+  padding: 3px;
+}
+
+.toggle-knob {
+  height: 24px;
+  width: 24px;
+  background-color: white;
+  border-radius: 50%;
+  transition: 0.4s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: #ff4d4f; /* Color del ícono cuando está desactivado */
+  transform: translateX(0);
+}
+
+/* Cuando el toggle está activado */
+.toggle-input:checked + .toggle-slider {
+  background-color: #52c41a; /* Verde cuando está activado */
+}
+
+.toggle-input:checked + .toggle-slider .toggle-knob {
+  transform: translateX(30px);
+  color: #52c41a; /* Color del ícono cuando está activado */
+}
+
+.toggle-status-text {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.form-status-description {
+  font-size: 0.8rem;
+  color: #6b7280;
+  text-align: center;
+  margin-top: 8px;
+}
