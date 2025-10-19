@@ -1,0 +1,71 @@
+/* MultipleFileUploader.css */
+
+input[type="file"] {
+  display: block;
+  margin-bottom: 1rem;
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  width: 100%;
+  max-width: 400px;
+}
+
+section {
+  background-color: #f7f9fc;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  margin-bottom: 0.75rem;
+  border: 1px solid #e0e0e0;
+}
+
+section ul {
+  margin: 0.25rem 0 0 1rem;
+  padding: 0;
+  list-style-type: disc;
+}
+
+section li {
+  font-size: 0.9rem;
+  color: #333;
+}
+
+button {
+  margin-top: 1rem;
+}
+
+p {
+  font-size: 0.95rem;
+  margin-top: 0.5rem;
+  color: #333;
+}
+
+p:before {
+  margin-right: 0.25rem;
+}
+
+p.uploading {
+  color: #007bff; /* azul */
+}
+
+p.success {
+  color: #28a745; /* verde */
+}
+
+p.fail {
+  color: #dc3545; /* rojo */
+}
+
+.custom-file-upload {
+  display: inline-block;
+  padding: 0.6rem 1.2rem;
+  border: 1px solid #007bff;
+  border-radius: 6px;
+  background-color: #007bff;
+  color: #fff;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.custom-file-upload input {
+  display: none; /* ocultamos el input real */
+}
