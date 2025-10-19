@@ -99,6 +99,87 @@ class ValidarExcelAPIView(APIView):
             'advertencias': errores_procesamiento
         }, status=status.HTTP_200_OK)
 
+
+class PrevisualizarIncompletosAPIView(APIView):
+    parser_classes = (MultiPartParser, FormParser)
+
+    def post(self, request, format=None):
+        excel_files = request.FILES.getlist('files')
+        if not excel_files:
+            return Response({'error': 'No se encontraron archivos en la solicitud.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        codigos_incompletos = set()
+        errores_procesamiento = []
+
+        # Columnas que deben estar vacías para que una fila se considere "incompleta"
+        # (además de que 'CODIGO' debe estar lleno)
+        columnas_a_verificar = [
+            'CREDITOS_APROBADOS',
+            'PROMEDIO_CARRERA',
+            'APROBADAS',
+            'PERIODOS_MATRICULADOS'
+        ]
+
+        for excel_file in excel_files:
+            try:
+                filename = excel_file.name.lower()
+                if filename.endswith('.xlsx'):
+                    file_format = 'xlsx'
+                elif filename.endswith('.xls'):
+                    file_format = 'xls'
+                else:
+                    errores_procesamiento.append(f"Archivo '{excel_file.name}' ignorado: formato no soportado.")
+                    continue
+
+                # CORRECCIÓN: Se elimina la carga duplicada.
+                # Nos aseguramos de que el puntero del archivo esté al inicio antes de leerlo.
+                # Esto previene errores si el stream ya fue leído por algún middleware.
+                excel_file.seek(0)
+                
+                dataset = Dataset()
+                dataset.load(excel_file.read(), format=file_format)
+
+                # --- INICIO: DIAGNÓSTICO MEJORADO ---
+                logger.info(f"Previsualizar - Archivo '{excel_file.name}' cargado. Contiene {len(dataset)} filas.")
+
+                for i, row in enumerate(dataset.dict):
+                    logger.info(f"Previsualizar - Fila {i+2} de '{excel_file.name}': {row}")
+                    # --- FIN: DIAGNÓSTICO ---
+
+                    codigo_valor = row.get('CODIGO')
+
+                    # CORRECCIÓN: El valor del código viene como string. En lugar de usar `isinstance`,
+                    # intentamos convertirlo a número. Si la conversión es exitosa, procedemos.
+                    # Esto maneja tanto strings ('123') como números (123.0).
+                    try:
+                        float(codigo_valor) # Usamos float para validar, ya que acepta '123' y 123.0
+                    except (ValueError, TypeError):
+                        continue # Si no es un número válido, ignoramos la fila y continuamos.
+                    else:
+                        def is_cell_empty(value):
+                            """
+                            Función robusta para determinar si una celda está vacía.
+                            Devuelve True para: None, '', '   '.
+                            Devuelve False para: 'texto', 0, 123, '0'.
+                            """
+                            return value is None or not str(value).strip()
+
+                        otras_columnas_vacias = all(is_cell_empty(row.get(col)) for col in columnas_a_verificar)
+
+                        if otras_columnas_vacias:
+                            # Limpiamos el código para asegurar que sea un entero
+                            str_value = str(codigo_valor)
+                            if str_value.endswith('.0'):
+                                str_value = str_value[:-2]
+                            codigos_incompletos.add(int(str_value))
+
+            except Exception as e:
+                msg = f"Error crítico al procesar el archivo '{excel_file.name}': {e}"
+                logger.error(msg, exc_info=True)
+                errores_procesamiento.append(msg)
+
+        return Response({'codigos_incompletos': list(codigos_incompletos), 'advertencias': errores_procesamiento}, status=status.HTTP_200_OK)
+
 class ImportarProductosAPIView(APIView):
     # DRF Parsers para manejar archivos y datos de formulario (FormData)
     parser_classes = (MultiPartParser, FormParser)

@@ -147,3 +147,20 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# --- CONFIGURACIÓN DE LOGGING ---
+# Esto asegura que los mensajes de logger.info(), logger.warning(), etc.,
+# se impriman en la consola del servidor, lo cual es crucial para la depuración.
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'INFO', # Cambia a 'DEBUG' para ver aún más detalles (ej: consultas SQL)
+    },
+}
