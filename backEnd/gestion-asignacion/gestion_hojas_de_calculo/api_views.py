@@ -108,7 +108,7 @@ class PrevisualizarIncompletosAPIView(APIView):
         if not excel_files:
             return Response({'error': 'No se encontraron archivos en la solicitud.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        codigos_incompletos = set()
+        filas_incompletas = []
         errores_procesamiento = []
 
         # Columnas que deben estar vacías para que una fila se considere "incompleta"
@@ -171,14 +171,19 @@ class PrevisualizarIncompletosAPIView(APIView):
                             str_value = str(codigo_valor)
                             if str_value.endswith('.0'):
                                 str_value = str_value[:-2]
-                            codigos_incompletos.add(int(str_value))
+                            
+                            filas_incompletas.append({
+                                'codigo': int(str_value),
+                                'fila': i + 2, # i es 0-indexed, la data empieza en la fila 2
+                                'archivo': excel_file.name
+                            })
 
             except Exception as e:
                 msg = f"Error crítico al procesar el archivo '{excel_file.name}': {e}"
                 logger.error(msg, exc_info=True)
                 errores_procesamiento.append(msg)
 
-        return Response({'codigos_incompletos': list(codigos_incompletos), 'advertencias': errores_procesamiento}, status=status.HTTP_200_OK)
+        return Response({'filas_incompletas': filas_incompletas, 'advertencias': errores_procesamiento}, status=status.HTTP_200_OK)
 
 class ImportarProductosAPIView(APIView):
     # DRF Parsers para manejar archivos y datos de formulario (FormData)
