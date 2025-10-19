@@ -1,7 +1,7 @@
 // src/services/electiveService.ts
-import type { IElective } from "../models/elective";
+import type { IElective } from "../Models/elective";
 import { ELECTIVES_URL } from "./config/config"; // ej: "/electivas"
-import axiosInstance  from "../api/axiosInstance";  // tu instancia configurada
+import axiosInstance from "../api/axiosInstance";  // tu instancia configurada
 
 // ========== HELPERS ==========
 /** Ajusta aquí si tu backend devuelve otros nombres de campo */

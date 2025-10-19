@@ -6,7 +6,6 @@ import { Select } from "antd";
 // Components
 import Header from "../../components/layout/Header/Header";
 import Footer from "../../components/layout/Footer/Footer";
-import Navbar from "../../components/layout/Navbar/Navbar";
 import Card from "../../components/ui/Card/Card";
 import Button from "../../components/ui/Button/Button";
 import WarningModal from "../../components/shared/WarningModal/WarningModal";
@@ -14,25 +13,34 @@ import ConfirmModal from "../../components/shared/ConfirmModal/ConfirmModal";
 import SuccessModal from "../../components/shared/SuccessModal/SuccessModal";
 // Stores
 import { useStudentStore } from "../../store/studentStore";
-import type { IStudent } from "../../models/student";
+import { useSelectionStore } from "../../store/selectionStore";
+
+// Models
+import type { ISelectionStudentElective } from "../../Models/selection";
+import type { IElective } from "../../Models/elective";
 
 const { Option } = Select;
 
 const ElectiveSelection: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { activeElectives, fetchActiveElectives, addStudent, loading } =
-    useStudentStore();
 
-  const studentData = location.state as Omit<IStudent, "electivas">;
+  // Obtener funciones y estados de los stores
+  const { loading } = useStudentStore();
+  const { fetchActiveElectives, activeElectives, addSelection} = useSelectionStore() as any;
 
-  const [selectedElectives, setSelectedElectives] = useState<string[]>([
-    "",
-    "",
-    "",
-    "",
-    "",
-  ]);
+  const studentData = location.state as {
+    codigo?: string | number;
+    email?: string;
+    nombre?: string;
+    apellido?: string;
+    programa?: string;
+  };
+
+  const [selectedElectives, setSelectedElectives] = useState<string[]>(
+    Array(5).fill("")
+  );
+
   const [showConfirm, setShowConfirm] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [warning, setWarning] = useState<{ open: boolean; message: string }>({
@@ -79,36 +87,43 @@ const ElectiveSelection: React.FC = () => {
     setShowConfirm(true);
   };
 
+  const getCurrentSemester = () => {
+    const month = new Date().getMonth() + 1; // getMonth() is zero-based
+    return month <= 6 ? 1: 2;
+  };
+
   const handleConfirmSubmit = async () => {
     setShowConfirm(false);
 
-    const student: IStudent = {
-      ...studentData,
-      electivas: selectedElectives,
+    const semester = getCurrentSemester();
+    const year = new Date().getFullYear();
+    // Construir ISelectionStudentElective 
+    const selectionsPayload: ISelectionStudentElective = {
+      est_codigo: Number(studentData.codigo),
+      est_correo: studentData.email || "",
+      sel_anio: year,
+      sel_num_semestre: semester,
+      electivas: selectedElectives.map((ele_codigo, index) => {
+        const elective = activeElectives.find(
+          (e: IElective) => e.ele_codigo === ele_codigo
+        );
+        return{
+          ele_codigo: elective.ele_codigo,
+          sel_prioridad: index + 1,
+          ele_nombre: elective.ele_nombre,
+        };
+      }),
     };
 
     try {
-      await addStudent(student);
+      await addSelection(selectionsPayload);
       setShowSuccess(true);
-    } catch (error: any) {
-      if (error.message === "EXISTS_ACTIVE") {
-        setWarning({
-          open: true,
-          message: `Ya existe un estudiante registrado con el código ${studentData.codigo}.`,
-        });
-      } else if (error.message === "INVALID_ELECTIVES") {
-        setWarning({
-          open: true,
-          message: `Error en las electivas seleccionadas: ${error.details?.join(
-            ", "
-          )}`,
-        });
-      } else {
-        setWarning({
-          open: true,
-          message: "Error al registrar. Por favor intenta nuevamente.",
-        });
-      }
+    }
+    catch (error) {
+      setWarning({
+        open: true,
+        message: "Error al registrar la selección de electivas. Por favor, intenta nuevamente.",
+      });
     }
   };
 
@@ -197,7 +212,7 @@ const ElectiveSelection: React.FC = () => {
                     disabled={loading}
                   >
                     <Option value="">Selecciona una electiva</Option>
-                    {activeElectives.map((elective) => (
+                    {activeElectives.map((elective: IElective) => (
                       <Option
                         key={elective.ele_codigo}
                         value={elective.ele_codigo}

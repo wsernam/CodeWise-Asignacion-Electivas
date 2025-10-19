@@ -11,10 +11,12 @@ import Button from "../../components/ui/Button/Button";
 import BackButton from "../../components/ui/BackButton/BackButton";
 
 // Servicio de autenticación
-import { loginStudentService } from "../../services/authService";
+import { useStudentStore } from "../../store/studentStore";
+import { useAuthStore } from "../../store/authStore";
 
 const LoginStudent: React.FC = () => {
   const navigate = useNavigate();
+  const { loginStudent, role, error } = useAuthStore();
 
   /**
    * handleBack - Navegar de vuelta a la selección de roles
@@ -25,27 +27,22 @@ const LoginStudent: React.FC = () => {
   };
 
   /**
-   * onFinish - Manejar envío del formulario
+   * handleLogin - Manejar envío del formulario
    * Se ejecuta cuando el formulario pasa todas las validaciones
    * @param values - Objeto con los valores del formulario { username }
    */
-  const onFinish = async (values: any) => {
+  const handleLogin = async (values: { code: string }) => {
+   
+    
+    /* Realiza el login del estudiante usando el store de autenticación */
     try {
-      // Llamar al servicio de autenticación para estudiantes
-      const result = await loginStudentService(values.username);
-
-      // Si es exitoso, mostrar mensaje y procesar resultado
-      message.success("Inicio de sesión exitoso");
-      console.log("LoginStudent. Respuesta del backend: ", result);
-
-      // En una aplicación real, aquí:
-      // 1. Guardaríamos el token en localStorage
-      // 2. Redirigiríamos al dashboard del estudiante
-      // 3. Actualizaríamos el estado global de autenticación
-    } catch (error) {
-      // Manejar errores de autenticación
-      message.error("Error en el inicio de sesión");
-      console.error("LoginStudent. Error: ", error);
+      const code = values.code;
+      await loginStudent(code);
+      if (role === "estudiante") navigate("/elective-selection");
+    }
+    catch (err) {
+      message.error("Error en el inicio de sesión del estudiante");
+      console.error("[LoginStudent] Error en loginStudent: ", err);
     }
   };
 
@@ -70,22 +67,22 @@ const LoginStudent: React.FC = () => {
            */}
           <Form
             name="login-student-form"
-            onFinish={onFinish}
+            onFinish={handleLogin}
             style={{ width: "100%" }}
           >
             {/* Campo de usuario */}
             <Form.Item
-              name="username"
+              name="code"
               rules={[
                 {
                   required: true,
-                  message: "Por favor ingresa tu usuario!",
+                  message: "Por favor ingresa tu código",
                 },
               ]}
             >
               <Input
                 prefix={<UserOutlined />}
-                placeholder="Usuario"
+                placeholder="Código estudiante"
                 size="large"
               />
             </Form.Item>

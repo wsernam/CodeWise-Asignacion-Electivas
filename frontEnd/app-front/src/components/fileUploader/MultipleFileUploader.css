@@ -1,0 +1,107 @@
+.file-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+/* Ajustes para uso dentro del modal */
+.file-list {
+  max-height: 46vh;
+  overflow-y: auto;
+  padding-right: 8px;
+}
+
+.file-list-header {
+  margin-bottom: 6px;
+}
+
+/* Alinea el botón de subir a la derecha dentro del modal */
+.upload-button {
+  margin-top: 16px;
+  align-self: flex-end;
+}
+
+/* columnas en header/filas */
+.file-list-header .col,
+.file-row .col {
+  display: flex;
+  align-items: center;
+}
+
+.file-list-header .name { flex: 1; }
+.file-list-header .size { width: 140px; text-align: right; }
+.file-list-header .action { width: 48px; }
+
+/* Card por archivo */
+.file-item-card {
+  padding: 10px 12px;
+  background-color: #f2f2f2;
+  border-radius: 8px;
+  box-shadow: none;
+  transition: transform 0.12s;
+}
+
+/* fila interna con layout de columnas */
+.file-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.file-name {
+  flex: 1;
+  font-size: 14px;
+  color: #1f1f1f;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.file-size {
+  width: 140px;
+  text-align: right;
+  font-size: 13px;
+  color: #444;
+}
+
+/* Botón de eliminar - papelera pequeño */
+.remove-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: #6b6b6b;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.12s, color 0.12s;
+}
+
+.remove-btn:hover {
+  background: rgba(0,0,0,0.04);
+  color: #d9363e;
+}
+
+/* Input de subir archivo */
+.custom-file-upload {
+  display: inline-block;
+  padding: 0.6rem 1.2rem;
+  border: 1px solid #007bff;
+  border-radius: 6px;
+  background-color: #007bff;
+  color: #fff;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.custom-file-upload input {
+  display: none;
+}
+
+.custom-file-upload:hover {
+  background-color: #0056b3;
+  border-color: #0056b3;
+}

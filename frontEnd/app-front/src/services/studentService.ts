@@ -1,85 +1,106 @@
-// services/studentService.ts
-import type { IStudent } from "../models/student";
-import type { IElective } from "../models/elective";
-import { getElectivesService } from "./electiveService";
+import axiosInstance from "../api/axiosInstance";
+import { STUDENT_URL } from "./config/config";
+import type { IStudent } from "../Models/student";
 
-let students: IStudent[] = [
-  {
-    codigo: "202412345",
-    email: "estudiante1@university.edu",
-    nombre: "María",
-    apellido: "González",
-    programa: "01",
-    electivas: ["101", "102", "103", "104", "105"],
-  },
-  {
-    codigo: "202456789",
-    email: "estudiante2@university.edu",
-    nombre: "Carlos",
-    apellido: "Rodríguez",
-    programa: "02",
-    electivas: ["102", "101", "104", "103", "105"],
-  },
-];
+// ========== HELPERS ==========
+const transformStudent = (item:any): IStudent => ({
+    est_codigo: item.est_codigo,
+    est_nombre: item.est_nombre,
+    est_apellido: item.est_apellido,
+    est_correo: item.est_correo,
+    pro_codigo: item.pro_codigo,
+    est_estado: true,
+});
 
+// ========== FUNCIONES DE CONEXIÓN CON BACKEND ==========
+
+/**
+ * Obtiene todos los estudiantes
+ */
 export const getStudentsService = async (): Promise<IStudent[]> => {
-  await new Promise((resolve) => setTimeout(resolve, 300));
-  return [...students];
+    try {
+        console.log("[studentService] Conectando a:", `${STUDENT_URL}/`);
+        const { data } = await axiosInstance.get(`${STUDENT_URL}/`);
+        console.log("[studentService] Datos CRUDOS del backend:", data);
+
+        const transformed: IStudent[] = Array.isArray(data)
+            ? data.map(transformStudent)
+            : [];
+        console.log("[studentService] Datos transformados:", transformed);
+        return transformed;
+    } catch (error: any) {
+        console.error("[studentService] Error obteniendo estudiantes:", error);
+        throw new Error(error?.message || "No se pudieron cargar los estudiantes");
+    }
 };
 
-export const getStudentByCode = async (
-  codigo: string
-): Promise<IStudent | null> => {
-  await new Promise((resolve) => setTimeout(resolve, 200));
-  const student = students.find((s) => s.codigo === codigo);
-  return student || null;
+/**
+ * Obtiene un estudiante por código
+ * @param codigo - Código del estudiante
+ */
+
+export const getStudentById = async (codigo: number): Promise<IStudent> => {
+    try {
+        console.log("[studentService] Conectando a:", `${STUDENT_URL}/${codigo}/`);
+        const { data } = await axiosInstance.get(`${STUDENT_URL}/${codigo}/`);
+        const transformed = transformStudent(data);
+        console.log("[studentService] Estudiante obtenido:", transformed);
+        return transformed;
+    } catch (error: any) {
+        console.error("[studentService] Error obteniendo estudiante:", error);
+        throw new Error(error?.message || "No se pudo cargar el estudiante");
+    }
 };
 
-export const getActiveElectivesForProgram = async (
-  programa: string
-): Promise<IElective[]> => {
-  try {
-    const allElectives = await getElectivesService();
-    const activeElectives = allElectives.filter(
-      (elective) => elective.ele_estado === true && elective.pro_codigo === programa //Suponiendo que activo se representa con 1
-    );
-    return activeElectives;
-  } catch (error) {
-    console.error("Error al obtener electivas activas:", error);
-    return [];
-  }
+/**
+ * Crea un nuevo estudiante
+ * @param student - Datos del estudiante a crear
+ */
+
+export const createStudent = async ( student: IStudent ): Promise<IStudent> => {
+    try {
+        console.log("[studentService] Creando estudiante:", student);
+        const { data } = await axiosInstance.post(`${STUDENT_URL}/`, student);
+        const created = transformStudent(data);
+        console.log("[studentService] Estudiante creado:", created);
+        return created;
+    }
+    catch (error: any) {
+        console.error("[studentService] Error creando estudiante:", error);
+        throw new Error(error?.message || "No se pudo crear el estudiante");
+    }
 };
 
-export const createStudentService = async (
-  student: IStudent
-): Promise<IStudent> => {
-  await new Promise((resolve) => setTimeout(resolve, 400));
+/**
+ * Actualizar un estudiante por código
+ */
+export const updateStudent = async (code: number, student: IStudent): Promise<IStudent> => {
+    try{
+        console.log("[studentService] Actualizando estudiante:", student.est_codigo, student);
+        const { data } = await axiosInstance.put(`${STUDENT_URL}/${code}/`, student);
+        const updated = transformStudent(data);
+        console.log("[studentService] Estudiante actualizado:", updated);
+        return updated;
+    }
+    catch (error: any) {
+        console.error("[studentService] Error actualizando estudiante:", error);
+        throw new Error(error?.message || "No se pudo actualizar el estudiante");
+    }
+};
 
-  const existingStudent = students.find((s) => s.codigo === student.codigo);
-
-  if (existingStudent) {
-    const error: any = new Error("EXISTS_ACTIVE");
-    error.existing = existingStudent;
-    throw error;
-  }
-
-  // Validar 5 electivas exactas
-  if (student.electivas.length !== 5) {
-    const error: any = new Error("INVALID_ELECTIVES");
-    error.details = [
-      `Se requieren exactamente 5 electivas. Seleccionaste: ${student.electivas.length}`,
-    ];
-    throw error;
-  }
-
-  // Validar sin duplicados
-  const uniqueElectives = new Set(student.electivas);
-  if (uniqueElectives.size !== 5) {
-    const error: any = new Error("INVALID_ELECTIVES");
-    error.details = ["No se permiten electivas duplicadas"];
-    throw error;
-  }
-
-  students.push(student);
-  return student;
+/**
+ * Actualizar estado del estudiante
+ */
+export const updateStudentStatus = async (code: number, status: boolean): Promise<IStudent> => {
+    try {
+        console.log("[studentService] Actualizando estado del estudiante: ", code);
+        const { data } = await axiosInstance.patch(`${STUDENT_URL}/${code}/`, status);
+        const updated = transformStudent(data);
+        console.log("[studentService] Estado del estudiante actualizado:", updated);
+        return updated;
+    }
+    catch (error: any) {
+        console.error("[studentService] Error actualizando estado del estudiante:", error);
+        throw new Error(error?.message || "No se pudo actualizar el estado del estudiante");
+    }
 };

@@ -1,84 +1,88 @@
-// stores/studentStore.ts
 import { create } from "zustand";
-import type { IStudent } from "../models/student";
-import type { IElective } from "../models/elective";
-
+import type { IStudent } from "../Models/student";
 import {
-  getStudentsService,
-  getStudentByCode,
-  createStudentService,
-  getActiveElectivesForProgram,
+    getStudentsService,
+    getStudentById,
+    createStudent,
 } from "../services/studentService";
 
-interface StudentState {
-  students: IStudent[];
-  loading: boolean;
-  error: string | null;
-  activeElectives: IElective[];
+// Importación para futura implementación de login
+// import { loginStudentService } from "../services/authService";
 
-  fetchStudents: () => Promise<void>;
-  getStudentByCode: (codigo: string) => Promise<IStudent | null>;
-  addStudent: (student: IStudent) => Promise<void>;
-  fetchActiveElectives: (programa: string) => Promise<void>;
-  clearError: () => void;
+/**
+ * Estado global para manejar estudiantes
+ */
+ interface StudentState {
+    students: IStudent[];
+    loading: boolean;
+    error: string | null;
+
+    // Métodos
+    fetchStudents: () => Promise<void>;
+    getStudentById: (codigo: number) => Promise<IStudent | null>;
+    addStudent: (student: IStudent) => Promise<void>;
+    clearError: () => void;
+
+    loginStudent: (code: string) => Promise<void>;
+    logoutStudent: () => void;
 }
 
-export const useStudentStore = create<StudentState>((set, get) => ({
-  students: [],
-  loading: false,
-  error: null,
-  activeElectives: [],
+/**
+ * Store de estudiantes usando Zustand
+ */
 
-  clearError: () => set({ error: null }),
+export const useStudentStore = create<StudentState>((set) => ({
+    students: [],
+    loading: false,
+    error: null,
 
-  fetchStudents: async () => {
-    set({ loading: true, error: null });
-    try {
-      const data = await getStudentsService();
-      set({ students: [...data], loading: false });
-    } catch (err: any) {
-      set({
-        students: [],
-        loading: false,
-        error: "Error al cargar estudiantes",
-      });
-    }
-  },
+    clearError: () => set({ error: null }),
 
-  getStudentByCode: async (codigo: string) => {
-    try {
-      return await getStudentByCode(codigo);
-    } catch (err: any) {
-      return null;
-    }
-  },
+    fetchStudents: async () => {
+        set ({ loading: true, error: null });
+        try {
+            const data = await getStudentsService();
+            set ({ students: [...data], loading: false });
+        }
+        catch (err: any) {
+            set ({
+                students: [],
+                loading: false,
+                error: "Error al cargar estudiantes",
+            });
+        }
+    },
 
-  addStudent: async (student: IStudent) => {
-    try {
-      const newStudent = await createStudentService(student);
-      set((state) => ({
-        students: [...state.students, newStudent],
-        error: null,
-      }));
-    } catch (err: any) {
-      if (err.message === "EXISTS_ACTIVE") {
-        throw { message: "EXISTS_ACTIVE", existing: err.existing };
-      }
-      if (err.message === "INVALID_ELECTIVES") {
-        throw { message: "INVALID_ELECTIVES", details: err.details };
-      }
-      set({ error: "Error al crear estudiante" });
-      throw err;
-    }
-  },
+    getStudentById: async (codigo: number) => {
+        try {
+            return await getStudentById(codigo);
+        }
+        catch (err: any) {
+            return null;
+        }
+    },
 
-  fetchActiveElectives: async (programa: string) => {
-    set({ loading: true });
-    try {
-      const electives = await getActiveElectivesForProgram(programa);
-      set({ activeElectives: electives, loading: false });
-    } catch (err: any) {
-      set({ activeElectives: [], loading: false });
-    }
-  },
+    addStudent: async (student: IStudent) => {
+        try {
+            const newStudent = await createStudent(student);
+            set ((state) => ({
+                students: [...state.students, newStudent],
+                error: null,
+            }));
+        } catch (err: any) {
+            if (err.message === "EXISTS_ACTIVE") {
+                throw new Error("EXISTS_ACTIVE");
+            }
+            set ({ error: "Error al crear estudiante" });
+            throw err;
+        }
+    },
+
+// -------------- SIN IMPLEMENTAR --------------
+    loginStudent: async (code: string) => {
+        console.log("[studentStore] Pendiente por implementar", code);
+        // Llamar al servicio de login
+    },
+
+    logoutStudent: () => {},
 }));
