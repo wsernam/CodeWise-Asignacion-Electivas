@@ -1,11 +1,13 @@
 from django.urls import path
-from .api_views import ImportarProductosAPIView, ValidarExcelAPIView, PrevisualizarIncompletosAPIView
+from .api_views import ImportarProductosAPIView, ValidarExcelAPIView, PrevisualizarIncompletosAPIView, CompletarYProcesarAPIView
 
 urlpatterns = [
     # Endpoint para subir y procesar el archivo Excel
     path('api/importar-perfiles/', ImportarProductosAPIView.as_view(), name='api-importar-perfiles'),
     # Endpoint para validar los estudiantes de un Excel contra la BD
     path('api/excel/validar/', ValidarExcelAPIView.as_view(), name='api-excel-validar'),
+    # Endpoint para completar filas y procesar la importación final
+    path('api/excel/completar-y-procesar/', CompletarYProcesarAPIView.as_view(), name='api-excel-completar-procesar'),
     # Endpoint para previsualizar filas incompletas
     path('api/excel/previsualizar/', PrevisualizarIncompletosAPIView.as_view(), name='api-excel-previsualizar'),
 ]

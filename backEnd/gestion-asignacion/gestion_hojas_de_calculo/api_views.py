@@ -8,6 +8,9 @@ import io
 import traceback 
 import requests
 import logging
+import uuid
+from django.core.cache import cache
+import xlrd
 from decimal import Decimal, InvalidOperation
 
 # Importamos el nuevo Resource
@@ -24,6 +27,20 @@ class ValidarExcelAPIView(APIView):
         excel_files = request.FILES.getlist('files')
         if not excel_files:
             return Response({'error': 'No se encontraron archivos en la solicitud.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # --- INICIO: Guardado en Caché ---
+        cache_key = f"excel_files_{uuid.uuid4()}"
+        files_to_cache = []
+        for f in excel_files:
+            f.seek(0)
+            files_to_cache.append({
+                'name': f.name,
+                'content': f.read(),
+                'content_type': f.content_type
+            })
+        # Guardamos los archivos en caché por 15 minutos
+        cache.set(cache_key, files_to_cache, timeout=3600) 
+        # --- FIN: Guardado en Caché ---
 
         # 1. Obtener el periodo activo desde el otro microservicio
         try:
@@ -61,13 +78,17 @@ class ValidarExcelAPIView(APIView):
                     errores_procesamiento.append(f"Archivo '{excel_file.name}' ignorado: formato no soportado.")
                     continue
 
+                excel_file.seek(0)
+                file_content = excel_file.read()
+
                 # Cargamos los datos en un dataset
                 dataset = Dataset()
-                dataset.load(excel_file.read(), format=file_format)
-
-                # CORRECCIÓN: Iteramos sobre `dataset.dict`. Esto devuelve cada fila como un
+                # CORRECCIÓN: Se unifica la carga. Tablib usará la librería correcta (xlrd o openpyxl)
+                # basándose en el formato que le pasemos.
+                dataset.load(file_content, format=file_format)
+                
+                # Iteramos sobre `dataset.dict`. Esto devuelve cada fila como un
                 # diccionario (ej: {'CODIGO': 123, ...}), que es lo que el método `clean` espera.
-                # El método `iter_rows` no existe en el resource para este propósito.
                 for i, row in enumerate(dataset.dict):
                     try:
                         # El widget del resource ya limpió y convirtió el código a un objeto Estudiante
@@ -90,6 +111,7 @@ class ValidarExcelAPIView(APIView):
         coinciden = not faltantes and not sobrantes
 
         return Response({
+            'cache_key': cache_key, # Devolvemos la clave para los siguientes pasos
             'faltantes': faltantes,
             'sobrantes': sobrantes,
             'num_faltantes': len(faltantes),
@@ -98,6 +120,146 @@ class ValidarExcelAPIView(APIView):
             'periodo_evaluado': f'{anio_activo}-{semestre_activo}',
             'advertencias': errores_procesamiento
         }, status=status.HTTP_200_OK)
+
+
+class CompletarYProcesarAPIView(APIView):
+    def post(self, request, format=None):
+        cache_key = request.data.get('cache_key')
+        filas_a_completar = request.data.get('filas_a_completar', [])
+
+        if not cache_key:
+            return Response({'error': 'No se proporcionó un `cache_key`.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # 1. Recuperar archivos de la caché
+        cached_files = cache.get(cache_key)
+        if not cached_files:
+            return Response({'error': 'Los archivos han expirado o la clave es inválida. Por favor, vuelva a subirlos.'}, status=status.HTTP_404_NOT_FOUND)
+
+        # 2. Identificar todas las filas incompletas originales
+        vista_previsualizar = PrevisualizarIncompletosAPIView()
+        # Simulamos una request para reutilizar la lógica de previsualización
+        from django.core.files.uploadedfile import InMemoryUploadedFile
+        
+        temp_files_for_preview = []
+        for file_data in cached_files:
+            file_stream = io.BytesIO(file_data['content'])
+            temp_file = InMemoryUploadedFile(file_stream, None, file_data['name'], file_data['content_type'], len(file_data['content']), None)
+            temp_files_for_preview.append(temp_file)
+
+        # CORRECCIÓN: El MockRequest debe simular la estructura de request.FILES,
+        # que es un objeto con un método getlist, no un diccionario simple.
+        class MockRequest:
+            class MockFILES:
+                def __init__(self, files):
+                    self._files = files
+                def getlist(self, key):
+                    return self._files.get(key, [])
+            FILES = MockFILES({'files': temp_files_for_preview})
+
+        mock_request = MockRequest()
+        preview_response = vista_previsualizar.post(mock_request)
+        todas_las_filas_incompletas = preview_response.data.get('filas_incompletas', [])
+
+        # 3. Determinar qué filas eliminar
+        filas_completadas_set = {(item['archivo'], item['fila']) for item in filas_a_completar}
+        filas_a_eliminar = [
+            item for item in todas_las_filas_incompletas 
+            if (item['archivo'], item['fila']) not in filas_completadas_set
+        ]
+
+        # 4. Editar los archivos Excel en memoria
+        archivos_procesados_para_importar = []
+        for file_data in cached_files:
+            try:
+                file_content_stream = io.BytesIO(file_data['content'])
+                file_name = file_data['name']
+                
+                # --- INICIO: Lógica para manejar .xls y .xlsx ---
+                # Si es un archivo .xls, lo convertimos a .xlsx en memoria antes de procesar.
+                if file_name.lower().endswith('.xls'):
+                    logger.info(f"Detectado archivo .xls ('{file_name}'). Convirtiendo a .xlsx en memoria.")
+                    # Leer .xls con xlrd
+                    xls_book = xlrd.open_workbook(file_contents=file_content_stream.read())
+                    # Crear un nuevo workbook .xlsx con openpyxl
+                    workbook = openpyxl.Workbook()
+                    sheet = workbook.active
+                    
+                    # Copiar datos celda por celda
+                    xls_sheet = xls_book.sheet_by_index(0)
+                    for row in range(xls_sheet.nrows):
+                        for col in range(xls_sheet.ncols):
+                            sheet.cell(row=row + 1, column=col + 1).value = xls_sheet.cell_value(row, col)
+                else:
+                    # Si ya es .xlsx, simplemente lo cargamos
+                    workbook = openpyxl.load_workbook(file_content_stream)
+                sheet = workbook.active
+                # --- FIN: Lógica para manejar .xls y .xlsx ---
+
+                # Mapeo de cabeceras a índices de columna (1-based)
+                headers = {cell.value: cell.column for cell in sheet[1]}
+
+                # --- Eliminar filas (de abajo hacia arriba para no afectar índices) ---
+                filas_para_este_archivo = sorted(
+                    [item['fila'] for item in filas_a_eliminar if item['archivo'] == file_name],
+                    reverse=True
+                )
+                for row_num in filas_para_este_archivo:
+                    sheet.delete_rows(row_num)
+                    logger.info(f"Fila {row_num} eliminada del archivo '{file_name}'.")
+
+                # --- Actualizar filas ---
+                filas_para_actualizar = [item for item in filas_a_completar if item['archivo'] == file_name]
+                for item in filas_para_actualizar:
+                    row_num = item['fila']
+                    datos = item['datos']
+                    for col_name, value in datos.items():
+                        if col_name in headers:
+                            col_idx = headers[col_name]
+                            sheet.cell(row=row_num, column=col_idx, value=value)
+                    logger.info(f"Fila {row_num} actualizada en el archivo '{file_name}'.")
+
+                # Guardar el workbook modificado en un stream de bytes
+                output_stream = io.BytesIO()
+                workbook.save(output_stream)
+                output_stream.seek(0)
+                
+                # Cambiamos la extensión a .xlsx si era un .xls para que la importación funcione
+                final_file_name = file_name if not file_name.lower().endswith('.xls') else file_name[:-4] + '.xlsx'
+
+                archivos_procesados_para_importar.append(
+                    ('files', (final_file_name, output_stream.read(), 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'))
+                )
+
+            except Exception as e:
+                logger.error(f"Error procesando el archivo en memoria '{file_name}': {e}", exc_info=True)
+                return Response({'error': f"Error al modificar el archivo '{file_name}': {e}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        # 5. Llamar al endpoint de importación
+        if not archivos_procesados_para_importar:
+            return Response({'message': 'No hay archivos para importar después del procesamiento.'}, status=status.HTTP_200_OK)
+
+        try:
+            # NOTA: Asegúrate de que los servicios se puedan comunicar.
+            # Si se ejecutan en el mismo servidor/contenedor, 'localhost' funciona.
+            # En Docker Compose, usarías el nombre del servicio, ej: 'http://gestion-asignacion:8000/...'
+            import_url = request.build_absolute_uri('http://gestion-asignacion:8000/inventario/api/importar-perfiles/')
+            
+            response = requests.post(import_url, files=archivos_procesados_para_importar)
+            response.raise_for_status()
+
+            # Limpiar la caché después de una importación exitosa
+            cache.delete(cache_key)
+
+            return Response(response.json(), status=response.status_code)
+
+        except requests.RequestException as e:
+            error_data = {'error': f'Error al llamar al servicio de importación: {e}'}
+            if e.response is not None:
+                try:
+                    error_data['detalle_servicio'] = e.response.json()
+                except ValueError:
+                    error_data['detalle_servicio'] = e.response.text
+            return Response(error_data, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
 
 class PrevisualizarIncompletosAPIView(APIView):
