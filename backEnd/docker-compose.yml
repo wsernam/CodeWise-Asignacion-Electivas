@@ -130,10 +130,7 @@ services:
       sh -c " python -u ./notificacion/config_rabbit.py &  python -u manage.py migrate && python -u manage.py runserver 0.0.0.0:8002 "
     ports:
       - "8002:8002"
-    networks:
-      - app-net
     restart: unless-stopped
-
     env_file:
       - .env
     environment:
