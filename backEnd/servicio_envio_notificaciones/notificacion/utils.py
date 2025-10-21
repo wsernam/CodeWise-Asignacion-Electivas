@@ -1,3 +1,4 @@
+import json
 import os
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
@@ -15,8 +16,7 @@ def send_html_email_with_logo(data):
             "est_codigo": 1,
             "sel_anio": 2026,
             "sel_num_semestre": 1,
-            "est_correo": "ashleecampaz",
-            "fecha": "2024-10-01 10:00:00",
+            "est_correo": "ashleecampaz"
             "electivas": 
             [
                 { "ele_codigo": 2, "sel_prioridad": 1 , "ele_nombre": "Redes Avanzadas"},

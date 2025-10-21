@@ -22,10 +22,10 @@ def callback(ch, method, properties, body):
 
     try:
         data = json.loads(body)
-        print(f"Contenido del mensaje: {data}")
-
+        print(f"Se obtuvo un mensaje desde {data.get('source')} a las {data.get('timestamp')}")
+        json_seleccion = data.get("data", {})
         # Envía el correo usando la función utilitaria
-        send_html_email_with_logo(data)
+        send_html_email_with_logo(json_seleccion)
 
     except json.JSONDecodeError:
         print("Error: el mensaje recibido no es un JSON válido.")
@@ -46,7 +46,7 @@ def connect_rabbitmq(max_retries=10, delay=5):
                     credentials=credentials
                 )
             )
-            print("onexión exitosa a RabbitMQ.")
+            print("Conexión exitosa a RabbitMQ.")
             return connection
         except pika.exceptions.AMQPConnectionError:
             print(f"Intento {attempt+1}/{max_retries}: no se pudo conectar. Reintentando en {delay}s...")
@@ -60,14 +60,26 @@ def main():
     connection = connect_rabbitmq()
 
     channel = connection.channel()
-    channel.queue_declare(queue=settings.RABBITMQ_QUEUE, durable=True)
+
+    exchange_name = settings.RABBITMQ_EXCHANGE
+    channel.exchange_declare(exchange=exchange_name, exchange_type="topic", durable=True)
+
+
+    queue_name = settings.RABBITMQ_QUEUE
+    channel.queue_declare(queue=queue_name, durable=True)
+
+   
+    channel.queue_bind(
+        exchange=exchange_name,
+        queue=queue_name,
+        routing_key=queue_name  
+    )    
 
     channel.basic_consume(
-        queue=settings.RABBITMQ_QUEUE,
+        queue=queue_name,
         on_message_callback=callback,
         auto_ack=True
     )
-
     try:
         channel.start_consuming()
     except KeyboardInterrupt:
