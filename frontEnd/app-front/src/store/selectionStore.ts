@@ -6,7 +6,7 @@ import {
 import type { IElective } from "../Models/elective";
 import type { IStudent } from "../Models/student";
 import { getStudentById } from "../services/studentService";
-import { useElectiveStore } from "../store/electiveStore";
+import { useOfferStore } from "./offerStore";
 
 interface SelectionState {
     student: IStudent | null;
@@ -17,7 +17,7 @@ interface SelectionState {
     
     addSelection: (selection: ISelectionStudentElective) => Promise<void>;
     fetchStudentById: (code: string) => Promise<IStudent | null>;
-    fetchActiveElectives: (programa: string) => Promise<void>;
+    fetchActiveElectives: (programa: string, year:number, semester: number) => Promise<void>;
     clearError: () => void;
     logout: () => void;
 }
@@ -51,11 +51,11 @@ export const useSelectionStore = create<SelectionState>((set) => ({
         }
     },
 
-    fetchActiveElectives: async (programa: string) => {
-        const electiveStore = useElectiveStore.getState();
+    fetchActiveElectives: async (programa: string, year: number, semester: number) => {
+        const offerStore = useOfferStore.getState();
         set({ loading: true, error: null });
         try {
-            const electives = await electiveStore.getActiveElectivesForProgram(programa);
+            const electives = await offerStore.getOffersByProgram(programa, year, semester);
             set({ activeElectives: electives, loading: false });
         } catch (err: any) {
             set({ activeElectives: [], loading: false,  error: "[selectionStore] Error al cargar electivas activas" });

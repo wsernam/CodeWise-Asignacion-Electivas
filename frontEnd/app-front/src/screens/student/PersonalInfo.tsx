@@ -12,6 +12,8 @@ import WarningModal from "../../components/shared/WarningModal/WarningModal";
 // Stores
 import { useStudentStore } from "../../store/studentStore";
 import { useProgramStore } from "../../store/programStore";
+import { getStudentById } from "../../services/studentService";
+import { useLocation } from "react-router";
 
 const { Option } = Select;
 
@@ -20,13 +22,18 @@ const PersonalInfo: React.FC = () => {
   const { programs, fetchPrograms } = useProgramStore();
   const { addStudent } = useStudentStore();
 
+  // El código del estudiante puede ser pasado desde LoginStudent
+  const location = useLocation();
+  const prefilledCode = location.state?.codigo || "";
+
   const [formData, setFormData] = useState({
-    codigo: "",
+    codigo: prefilledCode,
     email: "",
     nombre: "",
     apellido: "",
     programa: "",
   });
+
 
   const [warning, setWarning] = useState<{ open: boolean; message: string }>({
     open: false,
@@ -46,6 +53,9 @@ const PersonalInfo: React.FC = () => {
 
   // Validaciones como en AddElective
   const validateCodigo = (value: string) => {
+    // Si el código viene del login, no lo validamos de nuevo
+    if (prefilledCode) return null;
+
     if (!value) return "Por favor ingresa el código";
     if (!/^\d+$/.test(value)) return "El código debe contener solo números";
     if (value.length !== 12)
@@ -74,6 +84,10 @@ const PersonalInfo: React.FC = () => {
     return null;
   };
 
+  const handleBack = () => {
+    navigate("/login-student");
+  };
+
   const handleNext = async () => {
     // Validar todos los campos
     const codigoError = validateCodigo(formData.codigo);
@@ -99,17 +113,28 @@ const PersonalInfo: React.FC = () => {
 
     // Guardar los datos del estudiante
     try {
-      await addStudent({
-        est_codigo: parseInt(formData.codigo),
-        est_correo: formData.email,
-        est_nombre: formData.nombre,
-        est_apellido: formData.apellido,
-        pro_codigo: formData.programa,
-        est_estado: true,
-      });
 
-      // Si todo está bien, navegar
-      navigate("/elective-selection", { state: formData });
+      const student = await getStudentById(parseInt(formData.codigo));
+
+      if (student) { // Verificar si el estudiante ya se encuentra registrado
+        setWarning({
+          open: true,
+          message: "Ya existe un estudiante con este código",
+        });
+        navigate("/login-student");
+      }
+      else {
+        await addStudent({
+          est_codigo: parseInt(formData.codigo),
+          est_correo: formData.email.toLocaleLowerCase(),
+          est_nombre: formData.nombre,
+          est_apellido: formData.apellido,
+          pro_codigo: formData.programa,
+          est_estado: true,
+        });
+        // Si todo está bien, navegar
+        navigate("/elective-selection", { state: formData });
+      }
     } catch (error: any) {
       console.log("[student Screen] Error al agregar estudiante:", error);
     }
@@ -147,25 +172,27 @@ const PersonalInfo: React.FC = () => {
                   placeholder="123456789012 (12 dígitos)"
                   value={formData.codigo}
                   onChange={(e) => {
-                    const value = e.target.value
-                      .replace(/\D/g, "")
-                      .slice(0, 12);
-                    handleInputChange("codigo", value);
+                    if (!prefilledCode) { // ← solo permite escribir si NO viene del login
+                      const value = e.target.value.replace(/\D/g, "").slice(0, 12);
+                      handleInputChange("codigo", value);
+                    }
                   }}
+                  disabled={!!prefilledCode} // ← desactiva el campo si vino del login
                   style={{
                     width: "100%",
                     padding: "var(--space-md)",
                     border: "1px solid var(--gray-medium)",
                     borderRadius: "4px",
+                    backgroundColor: prefilledCode ? "var(--gray-light)" : "white",
+                    cursor: prefilledCode ? "not-allowed" : "text",
                   }}
                 />
-                {formData.codigo && validateCodigo(formData.codigo) && (
-                  <span
-                    style={{ color: "var(--primary-red)", fontSize: "0.8rem" }}
-                  >
+                {!prefilledCode && formData.codigo && validateCodigo(formData.codigo) && (
+                  <span style={{ color: "var(--primary-red)", fontSize: "0.8rem" }}>
                     {validateCodigo(formData.codigo)}
                   </span>
                 )}
+
               </div>
 
               {/* Email - Solo @unicauca.edu.co */}
@@ -356,6 +383,13 @@ const PersonalInfo: React.FC = () => {
                 Siguiente
               </Button>
             </div>
+            {/* Sección del botón volver */}
+            <div className="back-button-section">
+              <Button onClick={handleBack}>
+                Volver
+              </Button>
+            </div>
+
           </Card>
         </div>
       </div>

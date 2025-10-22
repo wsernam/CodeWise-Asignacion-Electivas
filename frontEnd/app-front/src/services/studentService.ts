@@ -1,4 +1,5 @@
 import axiosInstance from "../api/axiosInstance";
+import axios from "axios";
 import { STUDENT_URL } from "./config/config";
 import type { IStudent } from "../Models/student";
 
@@ -19,15 +20,16 @@ const transformStudent = (item:any): IStudent => ({
  */
 export const getStudentsService = async (): Promise<IStudent[]> => {
     try {
-        console.log("[studentService] Conectando a:", `${STUDENT_URL}/`);
         const { data } = await axiosInstance.get(`${STUDENT_URL}/`);
-        console.log("[studentService] Datos CRUDOS del backend:", data);
+        console.log("[studentService] Estudiante recuperado:", data);
 
         const transformed: IStudent[] = Array.isArray(data)
             ? data.map(transformStudent)
             : [];
         console.log("[studentService] Datos transformados:", transformed);
+
         return transformed;
+
     } catch (error: any) {
         console.error("[studentService] Error obteniendo estudiantes:", error);
         throw new Error(error?.message || "No se pudieron cargar los estudiantes");
@@ -39,7 +41,7 @@ export const getStudentsService = async (): Promise<IStudent[]> => {
  * @param codigo - Código del estudiante
  */
 
-export const getStudentById = async (codigo: number): Promise<IStudent> => {
+export const getStudentById = async (codigo: number): Promise<IStudent | null> => {
     try {
         console.log("[studentService] Conectando a:", `${STUDENT_URL}/${codigo}/`);
         const { data } = await axiosInstance.get(`${STUDENT_URL}/${codigo}/`);
@@ -47,6 +49,12 @@ export const getStudentById = async (codigo: number): Promise<IStudent> => {
         console.log("[studentService] Estudiante obtenido:", transformed);
         return transformed;
     } catch (error: any) {
+
+        if (axios.isAxiosError(error) && error.response?.status ===404) {
+            console.warn("[studentService] No se encontraron estudiantes (404)");
+            return null;
+        }
+
         console.error("[studentService] Error obteniendo estudiante:", error);
         throw new Error(error?.message || "No se pudo cargar el estudiante");
     }

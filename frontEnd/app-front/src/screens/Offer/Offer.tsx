@@ -15,7 +15,7 @@ import SuccessModal from "../../components/shared/SuccessModal/SuccessModal";
 // Stores
 import { useElectiveStore } from "../../store/electiveStore";
 import { useProgramStore } from "../../store/programStore";
-import type { IOffer } from "../../models/offer";
+import type { IOffer } from "../../Models/offer";
 import { useOfferStore } from "../../store/offerStore";
 import { useFormStatusStore } from "../../store/formStatusStore";
 
@@ -37,6 +37,7 @@ const Offer: React.FC = () => {
   const [expandedFacultades, setExpandedFacultades] = useState<{
     [key: string]: boolean;
   }>({});
+  const [program, setProgram] = useState<string>("");
 
   const [showConfirm, setShowConfirm] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
@@ -156,6 +157,14 @@ const Offer: React.FC = () => {
       setWarning({ open: true, message: "Selecciona al menos una electiva." });
       return;
     }
+    if (!program) {
+      setWarning({
+        open: true,
+        message: "Selecciona un programa para la oferta.",
+      });
+      return;
+    }
+
     setShowConfirm(true);
   };
 
@@ -163,36 +172,44 @@ const Offer: React.FC = () => {
   const handleConfirmSave = async () => {
     setShowConfirm(false);
     try {
-      // Transformar los datos que se seleccionaron pero actualizados al formato del back
-      const oferta: { ele_codigo: string; pro_codigo: string }[] = [];
+      if (!program) {
+        setWarning({
+          open: true,
+          message: "Selecciona un programa para crear la oferta.",
+        });
+        return;
+      }
 
-      Object.entries(selectedElectives).forEach(
-        ([programName, electiveCodes]) => {
-          const program = programs.find((p) => p.pro_nombre === programName);
+      // Construir la oferta con el programa seleccionado
+      const oferta = Object.values(selectedElectives)
+        .flat()
+        .map((ele_codigo) => ({
+          ele_codigo,
+          pro_codigo: program, //  código seleccionado en el Select
+        }));
 
-          if (program) {
-            electiveCodes.forEach((electiveCode) => {
-              oferta.push({
-                ele_codigo: electiveCode,
-                pro_codigo: program.pro_codigo.toString(),
-              });
-            });
-          }
-        }
-      );
+      if (oferta.length === 0) {
+        setWarning({
+          open: true,
+          message: "No se seleccionaron electivas para ofertar.",
+        });
+        return;
+      }
 
-      // Objeto para el bulk de crear
       const bulkData: IOffer = {
         ofe_anio: year,
         ofe_num_semestre: semester,
         ofertas: oferta,
       };
 
+      console.log("[FRONT] Enviando oferta:", bulkData);
+
       await createBulkOffer(bulkData);
       setShowSuccess(true);
     } catch (error) {
+      console.error("[Offer] Error al guardar oferta:", error);
       setWarning({
-        message: "Error al guardar. Revisa la configuración.",
+        message: "Error al guardar la oferta. Revisa la configuración.",
         open: true,
       });
     }
@@ -252,6 +269,23 @@ const Offer: React.FC = () => {
                   <Option value={2}>2</Option>
                 </Select>
               </div>
+
+              <div className="offer-config-program">
+                <span className="offer-config-progra">Programa:</span>
+                <Select
+                  value={program}
+                  onChange={(value: string) => setProgram(value)}
+                  style={{ width: 320 }}
+                  placeholder="Selecciona el programa para el cual se va a crear la oferta"
+                >
+                  {programs
+                    .map((p) => (
+                      <Option key={p.pro_codigo} value={p.pro_codigo.toString()}>
+                        {p.pro_nombre} ({p.pro_codigo})
+                      </Option>
+                    ))}
+                </Select>
+              </div>
             </div>
 
             {/* SECCIONES POR FACULTAD */}
@@ -275,9 +309,8 @@ const Offer: React.FC = () => {
                         </span>
                       </h3>
                       <span
-                        className={`offer-facultad-arrow ${
-                          isExpanded ? "expanded" : ""
-                        }`}
+                        className={`offer-facultad-arrow ${isExpanded ? "expanded" : ""
+                          }`}
                       >
                         ▼
                       </span>
@@ -329,13 +362,12 @@ const Offer: React.FC = () => {
                                         (elective) => (
                                           <label
                                             key={elective.ele_codigo}
-                                            className={`offer-electiva-item ${
-                                              selectedElectives[
-                                                programa.pro_nombre
-                                              ]?.includes(elective.ele_codigo)
-                                                ? "selected"
-                                                : ""
-                                            }`}
+                                            className={`offer-electiva-item ${selectedElectives[
+                                              programa.pro_nombre
+                                            ]?.includes(elective.ele_codigo)
+                                              ? "selected"
+                                              : ""
+                                              }`}
                                           >
                                             <input
                                               type="checkbox"

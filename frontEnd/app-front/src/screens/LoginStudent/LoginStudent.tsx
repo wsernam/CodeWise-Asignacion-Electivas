@@ -12,11 +12,25 @@ import BackButton from "../../components/ui/BackButton/BackButton";
 
 // Servicio de autenticación
 import { useStudentStore } from "../../store/studentStore";
-import { useAuthStore } from "../../store/authStore";
+// import { useAuthStore } from "../../store/authStore";
 
 const LoginStudent: React.FC = () => {
   const navigate = useNavigate();
-  const { loginStudent, role, error } = useAuthStore();
+  // const { loginStudent, role, error } = useAuthStore();
+  const { getStudentById } = useStudentStore();
+
+  /**
+   * Valida si el código del estudiante es correcto
+   * @param value 
+   * @returns 
+   */
+  const validateCodigo = (value: string) => {
+    if (!value) return "Por favor ingresa el código";
+    if (!/^\d+$/.test(value)) return "El código debe contener solo números";
+    if (value.length !== 12)
+      return "El código debe tener exactamente 12 dígitos";
+    return null;
+  };
 
   /**
    * handleBack - Navegar de vuelta a la selección de roles
@@ -32,13 +46,25 @@ const LoginStudent: React.FC = () => {
    * @param values - Objeto con los valores del formulario { username }
    */
   const handleLogin = async (values: { code: string }) => {
-   
-    
-    /* Realiza el login del estudiante usando el store de autenticación */
+
+
+    /* Realiza el login del estudiante usando consulta, más no autorización */
     try {
-      const code = values.code;
-      await loginStudent(code);
-      if (role === "estudiante") navigate("/elective-selection");
+      const code = parseInt(values.code);
+      const student = await getStudentById(code);
+
+      if (student) {
+        const studentState = {
+          codigo: student.est_codigo,
+          email: student.est_correo,
+          nombre: student.est_nombre,
+          apellido: student.est_apellido,
+          programa: student.pro_codigo, // <-- o el campo correcto del backend
+        };
+        navigate("/elective-selection", { state: studentState });
+      } else {
+        navigate("/personal-info", { state: { codigo: code } });
+      }
     }
     catch (err) {
       message.error("Error en el inicio de sesión del estudiante");
@@ -78,14 +104,22 @@ const LoginStudent: React.FC = () => {
                   required: true,
                   message: "Por favor ingresa tu código",
                 },
+                {
+                  validator: (_, value) => {
+                    const error = validateCodigo(value);
+                    return error ? Promise.reject(new Error(error)) : Promise.resolve();
+                  },
+                },
               ]}
             >
               <Input
                 prefix={<UserOutlined />}
                 placeholder="Código estudiante"
                 size="large"
+                maxLength={12} // <-- opcional para prevenir que escriba más
               />
             </Form.Item>
+
 
             {/* Botón de envío */}
             <Form.Item style={{ marginBottom: "1rem" }}>

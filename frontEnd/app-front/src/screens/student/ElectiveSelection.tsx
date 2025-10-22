@@ -14,6 +14,7 @@ import SuccessModal from "../../components/shared/SuccessModal/SuccessModal";
 // Stores
 import { useStudentStore } from "../../store/studentStore";
 import { useSelectionStore } from "../../store/selectionStore";
+import { useOfferStore } from "../../store/offerStore";
 
 // Models
 import type { ISelectionStudentElective } from "../../Models/selection";
@@ -25,10 +26,21 @@ const ElectiveSelection: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
+  // Determinar año y semestre actual
+  const getCurrentSemester = () => {
+    const month = new Date().getMonth() + 1; // getMonth() is zero-based
+    return month <= 6 ? 1 : 2;
+  };
+
+  const semester = getCurrentSemester();
+  const year = new Date().getFullYear();
+
   // Obtener funciones y estados de los stores
   const { loading } = useStudentStore();
-  const { fetchActiveElectives, activeElectives, addSelection} = useSelectionStore() as any;
+  const { fetchActiveElectives, activeElectives, addSelection } = useSelectionStore() as any;
+  const { getOffersByProgram } = useOfferStore();
 
+  // Datos del estudiante pasados desde la pantalla anterior
   const studentData = location.state as {
     codigo?: string | number;
     email?: string;
@@ -50,7 +62,11 @@ const ElectiveSelection: React.FC = () => {
 
   useEffect(() => {
     if (studentData?.programa) {
-      fetchActiveElectives(studentData.programa);
+      fetchActiveElectives(
+        studentData.programa,
+        year,
+        semester
+      );
     } else {
       navigate("/personal-info");
     }
@@ -87,16 +103,9 @@ const ElectiveSelection: React.FC = () => {
     setShowConfirm(true);
   };
 
-  const getCurrentSemester = () => {
-    const month = new Date().getMonth() + 1; // getMonth() is zero-based
-    return month <= 6 ? 1: 2;
-  };
-
   const handleConfirmSubmit = async () => {
     setShowConfirm(false);
 
-    const semester = getCurrentSemester();
-    const year = new Date().getFullYear();
     // Construir ISelectionStudentElective 
     const selectionsPayload: ISelectionStudentElective = {
       est_codigo: Number(studentData.codigo),
@@ -107,7 +116,7 @@ const ElectiveSelection: React.FC = () => {
         const elective = activeElectives.find(
           (e: IElective) => e.ele_codigo === ele_codigo
         );
-        return{
+        return {
           ele_codigo: elective.ele_codigo,
           sel_prioridad: index + 1,
           ele_nombre: elective.ele_nombre,
