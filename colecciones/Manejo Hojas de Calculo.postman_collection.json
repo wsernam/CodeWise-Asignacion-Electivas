@@ -1,0 +1,127 @@
+{
+	"info": {
+		"_postman_id": "bfe565c7-b4c6-4d7a-bd76-d17c64299d14",
+		"name": "Manejo Hojas de Calculo",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "39878300"
+	},
+	"item": [
+		{
+			"name": "1 paso validacion",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "files",
+							"description": "files",
+							"type": "file",
+							"src": [
+								"postman-cloud:///1f0ac68a-88d1-4580-a180-526a29dd8de5",
+								"postman-cloud:///1f0ac68a-8785-4500-a0f5-15a98db1ff87",
+								"postman-cloud:///1f0ac68a-8696-40e0-94f7-ab3fd76712fc"
+							]
+						}
+					]
+				},
+				"url": {
+					"raw": "http://127.0.0.1:8002/inventario/api/excel/validar/",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8002",
+					"path": [
+						"inventario",
+						"api",
+						"excel",
+						"validar",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "2 paso INACTIVOS",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "files",
+							"description": "files",
+							"type": "file",
+							"src": [
+								"/C:/Users/ACER/Documentos/pruebaExel2.xls",
+								"/C:/Users/ACER/Documentos/pruebaExel3.xls",
+								"/C:/Users/ACER/Documentos/pruebaExel1INACTIVOS.xls"
+							]
+						}
+					]
+				},
+				"url": {
+					"raw": "http://127.0.0.1:8002/inventario/api/excel/previsualizar/",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8002",
+					"path": [
+						"inventario",
+						"api",
+						"excel",
+						"previsualizar",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "3 Completar y guardar",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"cache_key\": \"excel_files_390cd2c2-1e65-44e4-8e0e-d7b0fbe84a88\",\r\n    \"filas_a_completar\": [\r\n        {\r\n            \"archivo\": \"pruebaExel1INACTIVOS.xls\",\r\n            \"fila\": 2,\r\n            \"datos\": {\r\n                \"CREDITOS_APROBADOS\": 120,\r\n                \"PROMEDIO_CARRERA\": 4.1,\r\n                \"APROBADAS\": 5,\r\n                \"PERIODOS_MATRICULADOS\": 8\r\n            }\r\n        },\r\n        {\r\n            \"archivo\": \"pruebaExel1INACTIVOS.xls\",\r\n            \"fila\": 3,\r\n            \"datos\": {\r\n                \"CREDITOS_APROBADOS\": 120,\r\n                \"PROMEDIO_CARRERA\": 4.1,\r\n                \"APROBADAS\": 5,\r\n                \"PERIODOS_MATRICULADOS\": 8\r\n            }\r\n        }\r\n    ]\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://127.0.0.1:8002/inventario/api/excel/completar-y-procesar/",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8002",
+					"path": [
+						"inventario",
+						"api",
+						"excel",
+						"completar-y-procesar",
+						""
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
