@@ -12,6 +12,7 @@ class Programa(models.Model):
         return self.pro_nombre
 
 
+
 class Estudiante(models.Model):
     # CAMBIO: Se ajusta a IntegerField para coincidir con el modelo original.
     est_codigo = models.BigIntegerField(primary_key=True)
