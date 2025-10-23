@@ -21,7 +21,7 @@ class GestionNiveladosViewSet(viewsets.ViewSet):
 
     @transaction.atomic
     @action(detail=False,
-             methods=['post'],
+             methods=['put'],
              url_path='gestionar-nivelados/')
     def gestionar_nivelados(self, request):
         """
@@ -62,7 +62,7 @@ class GestionNiveladosViewSet(viewsets.ViewSet):
         return Response(serializer.data, status=status.HTTP_200_OK)
     
     @action(detail=False,
-             methods=['post'],
+             methods=['put'],
              url_path='confirmar-nivelados/(?P<anio>\d{4})/(?P<semestre>\d+)')
     def confirmar_nivelados(self, request,anio, semestre):
         """
