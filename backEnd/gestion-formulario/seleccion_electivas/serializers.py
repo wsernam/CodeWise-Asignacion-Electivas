@@ -5,6 +5,7 @@ from gestion_electivas.models import Electiva
 from collections import Counter
 from gestion_estudiantes.models import Estudiante
 from gestion_oferta_electiva.models import Oferta_electiva
+
 class ElectivaPrioridadDTO(serializers.Serializer):
     sel_prioridad = serializers.IntegerField()
     ele_codigo = serializers.CharField(max_length=225)
