@@ -1,0 +1,110 @@
+{
+	"info": {
+		"_postman_id": "c091aeab-33e1-41cc-aaa8-460f3ad73539",
+		"name": "Gestionar nivelados",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "38802838"
+	},
+	"item": [
+		{
+			"name": "gestionar nivelados",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"anio\": 2025,\n    \"num_semestre\": 1\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8002/api/nivelados/gestionar-nivelados/",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8002",
+					"path": [
+						"api",
+						"nivelados",
+						"gestionar-nivelados",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "obtener nivelados",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://127.0.0.1:8002/api/nivelados/listar-nivelados/2025/1/",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8002",
+					"path": [
+						"api",
+						"nivelados",
+						"listar-nivelados",
+						"2025",
+						"1",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "confirmar nivelados",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "    [{\n        \"est_codigo\": 104621011351,\n        \"nivelado\": true\n    },\n    {\n        \"est_codigo\": 104621011382,\n        \"nivelado\": false\n    }\n]",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8002/api/nivelados/confirmar-nivelados/2025/1/",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8002",
+					"path": [
+						"api",
+						"nivelados",
+						"confirmar-nivelados",
+						"2025",
+						"1",
+						""
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
