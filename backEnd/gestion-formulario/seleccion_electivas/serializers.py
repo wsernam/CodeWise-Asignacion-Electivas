@@ -3,7 +3,8 @@ from rest_framework import serializers
 from .models import SeleccionEstudianteElectiva
 from gestion_electivas.models import Electiva
 from collections import Counter
-
+from gestion_estudiantes.models import Estudiante
+from gestion_oferta_electiva.models import Oferta_electiva
 class ElectivaPrioridadDTO(serializers.Serializer):
     sel_prioridad = serializers.IntegerField()
     ele_codigo = serializers.CharField(max_length=225)
@@ -47,6 +48,27 @@ class CrearSeleccionElectivaDTO(serializers.Serializer):
         
         return electivas
     
+    def validate_oferta(selft, data):
+        anio = data['sel_anio']
+        semestre = data['sel_num_semestre']
+        electivas_data = data['electivas']
+        est_codigo = data['est_codigo']
+        estudiante = Estudiante.objects.filter(est_codigo=est_codigo).first()
+        pro_codigo = estudiante.pro_codigo.pro_codigo
+        ofertas_disponibles = Oferta_electiva.objects.filter(
+            ofe_anio=anio,
+            ofe_num_semestre=semestre,
+            pro_codigo__pro_codigo=pro_codigo
+        ).values_list('ele_codigo__ele_codigo', flat=True)
+        codigos_solicitados = {e['ele_codigo'] for e in electivas_data}
+
+        electivas_sin_oferta = codigos_solicitados - set(ofertas_disponibles)
+        errores = {}
+        if electivas_sin_oferta:
+            errores["oferta"] = (
+                f"Las siguientes electivas no hacen parte de la oferta para el año {anio}, semestre {semestre} y programa {pro_codigo}: {list(electivas_sin_oferta)}."
+            )
+            raise serializers.ValidationError(errores)
     def validate(self, data):
         """
         Validación optimizada para verificar:
@@ -60,6 +82,9 @@ class CrearSeleccionElectivaDTO(serializers.Serializer):
         electivas_existentes_db = set(Electiva.objects.filter(ele_codigo__in=codigos_nuevos).values_list('ele_codigo', flat=True))
         if codigos_nuevos != electivas_existentes_db:
             raise serializers.ValidationError(f"Las siguientes electivas no existen: {list(codigos_nuevos - electivas_existentes_db)}")
+
+        # 2. Validar que las electivas esten ofertadas para el periodo y programa del estudiante
+        self.validate_oferta(data)
 
         est_codigo = data["est_codigo"]
         sel_anio = data["sel_anio"]
