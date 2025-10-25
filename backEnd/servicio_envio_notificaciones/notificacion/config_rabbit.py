@@ -22,11 +22,10 @@ def callback(ch, method, properties, body):
 
     try:
         data = json.loads(body)
-        print(f"Contenido del mensaje: {data}")
-
+        print(f"Se obtuvo un mensaje desde {data.get('source')} a las {data.get('timestamp')}")
+        json_seleccion = data.get("data", {})
         # Envía el correo usando la función utilitaria
-        send_html_email_with_logo(data)
-
+        send_html_email_with_logo(json_seleccion)
     except json.JSONDecodeError:
         print("Error: el mensaje recibido no es un JSON válido.")
     except Exception as e:
