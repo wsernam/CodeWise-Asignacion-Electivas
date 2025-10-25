@@ -60,8 +60,18 @@ def main():
     connection = connect_rabbitmq()
 
     channel = connection.channel()
-    channel.queue_declare(queue=settings.RABBITMQ_QUEUE, durable=True)
+    queue_name = settings.RABBITMQ_QUEUE
+    channel.queue_declare(queue=queue_name, durable=True)
+    exchange_name = settings.RABBITMQ_EXCHANGE
+    channel.exchange_declare(exchange=exchange_name, exchange_type="topic", durable=True)
 
+    channel.queue_declare(queue=queue_name, durable=True)
+
+    channel.queue_bind(
+        exchange=exchange_name,
+        queue=queue_name,
+        routing_key=queue_name  
+    )   
     channel.basic_consume(
         queue=settings.RABBITMQ_QUEUE,
         on_message_callback=callback,
