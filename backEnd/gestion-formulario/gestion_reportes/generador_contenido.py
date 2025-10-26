@@ -14,31 +14,31 @@ class GeneradorContenidoReporteSeleccion:
     def generar_contenido(self):
         """
         Genera el contenido del reporte en formato Platypus.
-        :param datos: diccionario con estructura del serializer
         :return: lista de elementos (Flowables)
         """
         elementos = []
         styles = getSampleStyleSheet()
-
-        # Estilo personalizado para el texto principal
         styles.add(ParagraphStyle(name='Texto', fontSize=12, leading=16))
 
-        estudiante = self.datos_reporte.estudiante
-        electivas = self.datos_reporte.electivas
-        anio = self.datos_reporte.sel_anio
-        semestre = self.datos_reporte.sel_num_semestre
+        #Obtener los datos serializados correctamente
+        datos_seleccion = self.datos_reporte.data
 
-
+        estudiante = datos_seleccion.get("estudiante", {})
+        electivas = datos_seleccion.get("electivas", [])
+        anio = datos_seleccion.get("sel_anio")
+        semestre = datos_seleccion.get("sel_num_semestre")
 
         # --- Mensaje principal ---
         mensaje = (
-            f"El estudiante <b>{estudiante.est_nombre} {estudiante.est_apellido}</b> del programa <b>{estudiante.pro_codigo.pro_codigo}</b> "
+            f"El estudiante <b>{estudiante.get('est_nombre', '')} {estudiante.get('est_apellido', '')}</b> "
+            f"del programa <b>{estudiante.get('pro_nombre', '')}</b> "
             f"realizó la siguiente selección de electivas para el periodo académico "
             f"<b>{anio}-{semestre}</b>:"
         )
-        elementos.append(Spacer(1, 2*cm))
+
+        elementos.append(Spacer(1, 2 * cm))
         elementos.append(Paragraph(mensaje, styles["Texto"]))
-        elementos.append(Spacer(1, 1*cm))
+        elementos.append(Spacer(1, 1 * cm))
 
         # --- Tabla de electivas ---
         if not electivas:
@@ -52,13 +52,13 @@ class GeneradorContenidoReporteSeleccion:
         # Filas de datos
         for e in electivas:
             data.append([
-                e.ele_codigo,
-                e.ele_nombre,
-                e.sel_prioridad,
+                e.get("ele_codigo", ""),
+                e.get("ele_nombre", ""),
+                e.get("sel_prioridad", ""),
             ])
 
-        # Crear tabla
-        tabla = Table(data, colWidths=[4*cm, 9*cm, 3*cm])
+        # Crear tabla con estilo
+        tabla = Table(data, colWidths=[4 * cm, 9 * cm, 3 * cm])
         tabla.setStyle(TableStyle([
             ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#003366")),
             ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
@@ -71,3 +71,4 @@ class GeneradorContenidoReporteSeleccion:
         elementos.append(tabla)
 
         return elementos
+
