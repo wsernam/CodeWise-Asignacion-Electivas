@@ -30,8 +30,8 @@ class GeneradorContenidoReporteSeleccion:
 
         # --- Mensaje principal ---
         mensaje = (
-            f"El estudiante <b>{estudiante.get('est_nombre', '')} {estudiante.get('est_apellido', '')}</b> "
-            f"del programa <b>{estudiante.get('pro_nombre', '')}</b> "
+            f"El estudiante {estudiante.get('est_nombre', '')} {estudiante.get('est_apellido', '')},"
+            f" identificado con codigo <b>{estudiante.get('est_codigo', '')}</b> del programa <b>{estudiante.get('pro_nombre', '')}</b> "
             f"realizó la siguiente selección de electivas para el periodo académico "
             f"<b>{anio}-{semestre}</b>:"
         )
