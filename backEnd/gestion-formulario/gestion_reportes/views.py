@@ -14,7 +14,7 @@ class ReporteSeleccionElectivasEstudianteViewSet(viewsets.ViewSet):
     """
     serializer_class = ReporteSeleccionElectivasSerializer
     generador_contenido: GeneradorContenidoReporteSeleccion
-    
+    nombre_informe = "Reporte de Selección de Electivas"
     @action(
         detail=False,
         methods=["get"],
@@ -44,7 +44,7 @@ class ReporteSeleccionElectivasEstudianteViewSet(viewsets.ViewSet):
         self.generador_contenido = GeneradorContenidoReporteSeleccion(reporte_data)
         nombre_archivo = f"R_seleccion_{est_codigo}_{sel_anio}_{sel_num_semestre}.pdf"
         elementos = self.generador_contenido.generar_contenido()
-        pdf_data = crear_pdf(nombre_archivo,elementos)
+        pdf_data = crear_pdf(self.nombre_informe,elementos)
         
         response = HttpResponse(content_type='application/pdf')
         response['Content-Disposition'] = f'inline; filename="{nombre_archivo}.pdf"'
