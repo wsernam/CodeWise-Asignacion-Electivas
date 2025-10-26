@@ -11,7 +11,7 @@ NOMBRE_ORGANIZACION = "Universidad del Cauca"
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 LOGO_PATH = os.path.join(BASE_DIR, "resources", "logo_unicauca.png")
 
-def crear_pdf(nombre_archivo, elementos):
+def crear_pdf(nombre_informe, elementos):
     """
     Genera un PDF con encabezado, pie de página y contenido dinámico.
     :param nombre_archivo: nombre del archivo PDF a generar.
@@ -26,8 +26,6 @@ def crear_pdf(nombre_archivo, elementos):
         topMargin=4 * cm,   # dejamos espacio para el encabezado
         bottomMargin=3 * cm  # dejamos espacio para el pie
     )
-    ancho, alto = A4
-
      # --- Función para dibujar encabezado ---
     def dibujar_encabezado(canvas, doc):
         ancho, alto = A4
@@ -38,7 +36,7 @@ def crear_pdf(nombre_archivo, elementos):
             print(f"No se pudo cargar el logo: {e}")
 
         canvas.setFont("Helvetica-Bold", 14)
-        canvas.drawString(5 * cm, alto - 2 * cm, NOMBRE_ORGANIZACION)
+        canvas.drawString(5 * cm, alto - 2 * cm, nombre_informe)
 
         # Línea separadora
         canvas.setLineWidth(1)
@@ -63,7 +61,7 @@ def crear_pdf(nombre_archivo, elementos):
 
     pdf_data = buffer.getvalue()
     buffer.close()
-    print(f"PDF generado: {nombre_archivo}")
+    print(f"PDF generado: {nombre_informe}")
     return pdf_data
 
 
