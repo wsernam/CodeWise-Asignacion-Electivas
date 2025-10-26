@@ -1,3 +1,4 @@
+from django.http import HttpResponse
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
@@ -5,6 +6,7 @@ from seleccion_electivas.models import SeleccionEstudianteElectiva
 from gestion_estudiantes.models import Estudiante
 from .serializers import ReporteSeleccionElectivasSerializer
 from .generador_contenido import GeneradorContenidoReporteSeleccion
+from .generador_pdf import crear_pdf
 class ReporteSeleccionElectivasEstudianteViewSet(viewsets.ViewSet):
     """
     ViewSet para generar reportes de selección de electivas por estudiante.
@@ -15,7 +17,7 @@ class ReporteSeleccionElectivasEstudianteViewSet(viewsets.ViewSet):
     @action(
         detail=False,
         methods=["get"],
-        url_path=r"reporte-seleccion/(?P<est_codigo>\d+)/(?P<sel_anio>\d+)/(?P<sel_num_semestre>\d+)"
+        url_path=r"/(?P<est_codigo>\d+)/(?P<sel_anio>\d+)/(?P<sel_num_semestre>\d+)"
     )
     def electivas_por_estudiante(self, request, est_codigo=None, sel_anio=None, sel_num_semestre=None):
         """
@@ -37,7 +39,13 @@ class ReporteSeleccionElectivasEstudianteViewSet(viewsets.ViewSet):
             )
         reporte_data =  ReporteSeleccionElectivasSerializer(queryset)
         self.generador_contenido = GeneradorContenidoReporteSeleccion(reporte_data)
-        contenido = self.generador_contenido.generar_contenido()
+        nombre_archivo = f"R_seleccion_{est_codigo}_{sel_anio}_{sel_num_semestre}.pdf"
+        pdf_data = crear_pdf(nombre_archivo,self.generador_contenido.generar_contenido())
+        response = HttpResponse(content_type='application/pdf')
+        response['Content-Disposition'] = f'inline; filename="{nombre_archivo}.pdf"'
+        response.write(pdf_data)
+        return response
+
 
 
 
