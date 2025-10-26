@@ -3,7 +3,7 @@ from reportlab.lib.units import cm
 from reportlab.pdfgen import canvas
 from datetime import datetime
 import os
-
+from io import BytesIO
 # --- Configuración general ---
 NOMBRE_ORGANIZACION = "Universidad del Cauca"
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -15,7 +15,8 @@ def crear_pdf(nombre_archivo, contenido_func):
     :param nombre_archivo: nombre del archivo PDF a generar.
     :param contenido_func: función que recibe el canvas y escribe el contenido.
     """
-    pdf = canvas.Canvas(nombre_archivo, pagesize=A4)
+    buffer = BytesIO()
+    pdf = canvas.Canvas(buffer,nombre_archivo, pagesize=A4)
     ancho, alto = A4
 
     def dibujar_encabezado():
@@ -50,7 +51,14 @@ def crear_pdf(nombre_archivo, contenido_func):
     contenido_func(pdf, nueva_pagina, alto)
     dibujar_pie_pagina()
 
+
+    pdf.showPage()
     pdf.save()
+
+
+    pdf_data = buffer.getvalue()
+    buffer.close()
     print(f"PDF generado: {nombre_archivo}")
+    return pdf_data
 
 
