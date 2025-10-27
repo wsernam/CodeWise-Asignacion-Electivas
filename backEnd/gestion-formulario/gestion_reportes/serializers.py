@@ -2,7 +2,9 @@ from rest_framework import serializers
 
 from seleccion_electivas.serializers import ConsultaElectivaEstudianteDTO
 from gestion_estudiantes.models import Estudiante
-
+from gestion_oferta_electiva.models import Oferta_electiva
+from gestion_electivas.models import Electiva
+from gestion_electivas.serializers import ElectivaSerializer
 class EstudianteSerializer(serializers.ModelSerializer):
     pro_nombre = serializers.CharField(source='pro_codigo.pro_nombre', read_only=True)
     class Meta:
@@ -12,6 +14,7 @@ class EstudianteSerializer(serializers.ModelSerializer):
 
     def validate_est_nombre(self, v): return v.strip()
     def validate_est_apellido(self, v): return v.strip()
+
 class ReporteSeleccionElectivasSerializer(serializers.Serializer):
     estudiante  = EstudianteSerializer(read_only=True, source='est_codigo')
     electivas = ConsultaElectivaEstudianteDTO(required=False,many=True)
@@ -29,3 +32,14 @@ class ReporteSeleccionElectivasSerializer(serializers.Serializer):
         # Agregar electivas desde el contexto (si existen)
         rep['electivas'] = self.get_electivas(instance)
         return rep
+
+class ElectivasOfertadasPorProgramaDTO(serializers.Serializer):
+    pro_codigo = serializers.CharField(read_only=True)
+    pro_nombre = serializers.CharField(read_only=True)
+    electivas = ElectivaSerializer(many=True)
+
+    
+class ReporteOfertaElectivasSerializer(serializers.Serializer):
+    ofe_anio = serializers.IntegerField()
+    ofe_num_semestre = serializers.IntegerField()
+    ofertas_programas = ElectivasOfertadasPorProgramaDTO(many=True)
