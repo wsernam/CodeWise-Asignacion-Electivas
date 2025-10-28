@@ -11,6 +11,7 @@ from typing import Dict, Iterable, Optional
 # parametrizado por PROGRAMA -> {SEMESTRE: MAX_ELECTIVAS}
 # Ej.: en PIS, en semestre 8 se pueden asignar 2 electivas, en 9: 2, en 10: 1.
 # Ojo: en PIET aparece "9: 11" (¿intencional? suena a typo de 1). Revísalo.
+ADVANCE_MIN_NO_NIV = float(os.getenv("MIN_PORCENTAJE_AVANCE_NO_NIVELADO", "65"))
 NIVELADO_FIJO: int = int(os.getenv("NIVELADO_FIJO", "2"))
 REGLAS_MAX_POR_SEM = {
     "DEFAULT": NIVELADO_FIJO,

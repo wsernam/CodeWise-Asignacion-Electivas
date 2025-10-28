@@ -11,6 +11,7 @@ from asignacion.variables import (
     ElectivaCupoPool,
     ELECTIVAS_DEBE_VER,
     REGLAS_MAX_POR_SEM,
+    ADVANCE_MIN_NO_NIV,
     # opcional: NIVELADO_FIJO
 )
 
@@ -70,6 +71,9 @@ def _necesidad_final(perfil: PerfilLigero) -> int:
       (si no hay clave exacta, toma el máximo definido para ese programa).
     - No nivelado: sin tope aquí; la prioridad se resuelve por ranking.
     """
+    #Veto SOLO para NO nivelados con avance < 65%
+    if (not perfil.nivelado) and (perfil.avance < ADVANCE_MIN_NO_NIV):  # o < 65.0 si no quieres variable
+        return 0
     prog = perfil.pro_codigo or "DEFAULT"
     debe_ver_total = ELECTIVAS_DEBE_VER.get(prog, ELECTIVAS_DEBE_VER["DEFAULT"])
     n_base = max(0, debe_ver_total - perfil.cursadas)
