@@ -11,10 +11,10 @@ import Button from "../../components/ui/Button/Button";
 import WarningModal from "../../components/shared/WarningModal/WarningModal";
 import ConfirmModal from "../../components/shared/ConfirmModal/ConfirmModal";
 import SuccessModal from "../../components/shared/SuccessModal/SuccessModal";
+
 // Stores
 import { useStudentStore } from "../../store/studentStore";
 import { useSelectionStore } from "../../store/selectionStore";
-import { useOfferStore } from "../../store/offerStore";
 
 // Models
 import type { ISelectionStudentElective } from "../../Models/selection";
@@ -38,7 +38,6 @@ const ElectiveSelection: React.FC = () => {
   // Obtener funciones y estados de los stores
   const { loading } = useStudentStore();
   const { fetchActiveElectives, activeElectives, addSelection } = useSelectionStore() as any;
-  const { getOffersByProgram } = useOfferStore();
 
   // Datos del estudiante pasados desde la pantalla anterior
   const studentData = location.state as {

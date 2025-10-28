@@ -105,3 +105,9 @@
   background-color: #0056b3;
   border-color: #0056b3;
 }
+
+.upload-button {
+  margin-top: 16px;
+  align-self: flex-end;
+  display: inline-block;
+}

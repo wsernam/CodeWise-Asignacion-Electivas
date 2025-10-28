@@ -205,7 +205,9 @@ const Offer: React.FC = () => {
       console.log("[FRONT] Enviando oferta:", bulkData);
 
       await createBulkOffer(bulkData);
+
       setShowSuccess(true);
+      
     } catch (error) {
       console.error("[Offer] Error al guardar oferta:", error);
       setWarning({

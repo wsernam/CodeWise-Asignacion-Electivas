@@ -28,3 +28,7 @@
   background-color: #a52a2a;
   border-color: #a52a2a;
 }
+
+.warning-modal-backdrop {
+  z-index: 2000; /* Asegura que el modal esté por encima de otros elementos */
+}

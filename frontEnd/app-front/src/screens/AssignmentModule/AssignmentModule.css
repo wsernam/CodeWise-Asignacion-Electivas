@@ -1,0 +1,67 @@
+.main-card {
+  width: 100%; /* ocupa todo el ancho del contenedor */
+  max-width: 2000px; /* opcional: límite máximo */
+  margin: 0 auto; /* centrar horizontalmente */
+};
+
+.divider {
+  height: 20px; /* espacio vertical entre las secciones */
+}
+
+/* Estilos para tarjetas */
+.current-process-card {
+  margin-bottom: 16px; /* Ajusta el valor a tu gusto */
+}
+
+/* Estilos botones */
+
+.btn-create-assignament {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 120px; /* ancho mínimo deseado */
+  padding: 0.5rem 1rem; /* control del tamaño visual */
+  width: auto; /* permitir crecer si es necesario */
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.95rem;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  width: auto;      /* importante: no fijar ancho */
+  min-width: 0;     /* permitir que clases externas impongan min-width */
+  box-sizing: border-box;
+}
+
+/* Estilos para creación de asignaciones */
+.assignment-form-inline .ant-form-item {
+  margin-right: 16px;
+}
+
+.form-create-actions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.im-wrapper { padding: 16px; }
+.im-modal-content { padding: 12px; }
+.im-empty { text-align: center; padding: 24px; color: #334; }
+.im-empty .actions { margin-top: 12px; display:flex; gap:8px; justify-content:center; }
+.im-table { width:100%; border-collapse:separate; border-spacing:0 10px; }
+.im-th { text-align:left; padding:8px 12px; color:#3b3b3b; font-weight:700; }
+.im-td-card { background:#fff; border-radius:8px; padding:12px; box-shadow:0 1px 4px rgba(0,0,0,0.04); vertical-align:middle; }
+.im-cell { padding:8px 12px; vertical-align:middle; }
+.im-status-wrapper { display:flex; justify-content:flex-end; align-items:center; gap:8px; }
+.im-small-actions { display:flex; gap:8px; margin-top:12px; justify-content:flex-end; }
+.im-add-btn { margin-bottom:12px; }
+.im-action-bar { margin-top:16px; }

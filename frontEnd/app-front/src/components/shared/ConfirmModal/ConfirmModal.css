@@ -84,3 +84,7 @@
 .btn-confirm:hover {
   background: #14206d;
 }
+
+.confirm-modal-backdrop {
+  z-index: 2000; /* Asegura que el modal esté por encima de otros elementos */
+}

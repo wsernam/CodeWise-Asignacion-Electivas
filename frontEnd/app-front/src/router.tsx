@@ -12,6 +12,7 @@ import CreateProgram from "./screens/Program/CreateProgram.tsx";
 import ListProgram from "./screens/Program/ListProgram.tsx";
 import EditProgram from "./screens/Program/EditProgram.tsx";
 import Offer from "./screens/Offer/Offer.tsx";
+import AssignmentModule from "./screens/AssignmentModule/AssignmentModule.tsx";
 
 // ---------------------- IMPORTS DE ROUTER ----------------------
 import { createBrowserRouter } from "react-router";
@@ -22,6 +23,7 @@ const router = createBrowserRouter([
     path: "/",
     element: <PreLogin />,
   },
+// Estudiante
   {
     path: "/login-student",
     element: <LoginStudent />,
@@ -34,6 +36,8 @@ const router = createBrowserRouter([
     path: "/elective-selection",
     element: <ElectiveSelection />,
   },
+
+  // Administrador
   {
     path: "/login-admin",
     element: <LoginAdmin />,
@@ -69,6 +73,12 @@ const router = createBrowserRouter([
   {
     path: "/offer",
     element: <Offer />,
+  },
+
+// Asignador
+  {
+    path: "/assignment-module",
+    element: <AssignmentModule />,
   },
 ]);
 

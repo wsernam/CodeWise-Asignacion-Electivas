@@ -36,7 +36,7 @@ const Sidebar: React.FC<SidebardProps> = ({ onRoleChange, currentRole }) => {
 
   const handleRoleClick = (role: "admin" | "asignador") => {
     onRoleChange(role);
-    navigate(role === "admin" ? "/dashboard" : "/electives");
+    navigate(role === "admin" ? "/dashboard" : "/assignment-module");
   };
 
   return (

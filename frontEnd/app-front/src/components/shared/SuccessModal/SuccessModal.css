@@ -28,3 +28,7 @@
   background-color: #40891b;
   border-color: #40891b;
 }
+
+.success-modal-backdrop {
+  z-index: 2000; /* Asegura que el modal esté por encima de otros elementos */
+}

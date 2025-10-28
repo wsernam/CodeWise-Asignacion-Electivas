@@ -4,6 +4,9 @@ import './MultipleFileUploader.css';
 
 import Button from '../ui/Button/Button';
 import Card from '../ui/Card/Card';
+import ConfirModal from '../shared/ConfirmModal/ConfirmModal';
+import SuccessModal from '../shared/SuccessModal/SuccessModal';
+import WarningModal from '../shared/WarningModal/WarningModal';
 
 const MAX_SIZE_MB = 10 * 1024 * 1024; // 10 MB
 const ALLOWED_EXTENSIONS = ['xlsx', 'xls', 'xlsm', 'xltm', 'xltx', 'csv'];
@@ -17,6 +20,9 @@ const formatSize = (size: number) => {
 const MultipleFileUploader = () => {
     const [files, setFiles] = useState<File[]>([]);
     const [status, setStatus] = useState<'initial' | 'uploading' | 'success' | 'fail'>('initial');
+    const [showConfirm, setShowConfirm] = useState(false);
+    const [showSuccess, setShowSuccess] = useState(false);
+    const [showWarning, setShowWarning] = useState(false);
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (!e.target.files) return;
@@ -47,9 +53,14 @@ const MultipleFileUploader = () => {
         if (e.target) e.target.value = '';
     };
 
-    const handleUpload = async () => {
-        if (!files.length) return;
+    const handleButtonClick = () => {
+        if (!files.length) return setShowWarning(true);
 
+        setShowConfirm(true);
+    }
+
+    const handleUpload = async () => {
+        
         setStatus('uploading');
         const formData = new FormData();
         files.forEach(file => formData.append('files', file));
@@ -65,6 +76,7 @@ const MultipleFileUploader = () => {
                 }
             });
 
+            setShowSuccess(true);
             console.log('Response:', response.data);
             setStatus('success');
         } catch (error) {
@@ -116,28 +128,32 @@ const MultipleFileUploader = () => {
                     variant="primary"
                     size="medium"
                     disabled={status === 'uploading'}
-                    onClick={handleUpload}
+                    onClick={handleButtonClick}
                 >
                     Subir {files.length > 1 ? 'archivos' : 'archivo'}
                 </Button>
             )}
 
-            <Result status={status} />
+            <SuccessModal
+                open={showSuccess}
+                message={`Archivos subidos con éxito.`}
+                onClose={() => setShowSuccess(false)}
+            />
+
+            <ConfirModal
+                open={showConfirm}
+                message={`¿Está seguro de subir ${files.length} ${files.length > 1 ? 'archivos' : 'archivo'}?`}
+                onConfirm={() => {handleUpload(); setShowConfirm(false);}}
+                onCancel={() => setShowConfirm(false)}
+            />
+
+            <WarningModal
+                open={showWarning}
+                message={`No ha seleccionado ningún archivo para subir.`}
+                onClose={() => setShowWarning(false)}
+            />
         </>
     );
-};
-
-const Result = ({ status }: { status: string }) => {
-    switch (status) {
-        case 'uploading':
-            return <p>Subiendo archivos...</p>;
-        case 'success':
-            return <p>Archivos subidos con éxito.</p>;
-        case 'fail':
-            return <p>Error al subir los archivos.</p>;
-        default:
-            return null;
-    }
 };
 
 export default MultipleFileUploader;
