@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'referencias',
     'worker.apps.WorkerConfig', 
     'gestion_nivelados',
+    'asignacion',
     # Apps de terceros requeridas
     'rest_framework',        
     'import_export',

@@ -26,6 +26,13 @@ RUN pip install --upgrade pip && \
 
 
 # 5. No hay script de inicialización
+COPY seed_perfiles.sh /usr/local/bin/seed_perfiles.sh
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN sed -i 's/\r$//' /usr/local/bin/entrypoint.sh /usr/local/bin/seed_perfiles.sh
+RUN chmod +x /usr/local/bin/seed_perfiles.sh
+
+# Corregir finales de línea para compatibilidad con Unix (importante en Windows)
+RUN sed -i 's/\r$//' /usr/local/bin/seed_perfiles.sh
 
 # 6. Copiar el código del proyecto
 # Ahora copiamos el resto de tu aplicación.
@@ -34,6 +41,12 @@ COPY . .
 
 # 7. Exponer el puerto
 EXPOSE 8002
+
+# 8. Corregir el punto de entrada (ENTRYPOINT)
+# Aquí es donde se hace el cambio crucial. El ENTRYPOINT es el comando
+# principal del contenedor. Usamos nuestro script de shell para manejar
+# toda la lógica de inicialización.
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 
 
 # El compose sobreescribe este CMD

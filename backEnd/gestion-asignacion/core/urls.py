@@ -23,5 +23,6 @@ urlpatterns = [
     # donde estará el endpoint API
     path('inventario/', include('gestion_hojas_de_calculo.urls')),
     path("api/asignacion/", include("proceso_asignacion.urls")),
-    path("api/", include("gestion_nivelados.urls"))
+    path("api/", include("gestion_nivelados.urls")),
+    path('api/', include('asignacion.urls'))
 ]
