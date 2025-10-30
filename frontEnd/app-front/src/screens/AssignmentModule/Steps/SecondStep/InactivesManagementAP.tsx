@@ -1,5 +1,7 @@
+// InactivesManagementAP.tsx - VERSIÓN CON CSS DEDICADO
 import React, { useState } from "react";
 import "../AssignmentProcessSteps.css";
+import "./InactivesTable.css"; // <-- NUEVO CSS
 import { Tag } from "antd";
 import {
   FaUserSlash,
@@ -171,11 +173,11 @@ const InactivesManagementAP: React.FC<AssignmentProcessProps> = ({
           title="Gestión de potenciales inactivos"
           onClose={() => setShowModal(false)}
         >
-          <div className="im-modal-content">
+          <div className="inactives-modal-content">
             {inactiveRows.length === 0 ? (
-              <div className="im-empty">
+              <div className="inactives-empty">
                 <p>No se han identificado posibles estudiantes inactivos</p>
-                <div className="actions">
+                <div className="inactives-actions">
                   <Button variant="secondary" onClick={detectInactives}>
                     Detectar inactivos
                   </Button>
@@ -186,9 +188,7 @@ const InactivesManagementAP: React.FC<AssignmentProcessProps> = ({
               </div>
             ) : (
               <>
-                <div
-                  style={{ display: "flex", gap: "10px", marginBottom: "16px" }}
-                >
+                <div className="inactives-actions">
                   <Button variant="secondary" onClick={addEmptyRow}>
                     Añadir estudiante
                   </Button>
@@ -200,25 +200,25 @@ const InactivesManagementAP: React.FC<AssignmentProcessProps> = ({
                   </Button>
                 </div>
 
-                <div style={{ overflowX: "auto" }}>
-                  <table className="im-table">
+                <div className="inactives-table-container">
+                  <table className="inactives-table">
                     <thead>
                       <tr>
-                        <th className="im-th">Código</th>
-                        <th className="im-th">Nombre</th>
-                        <th className="im-th">Apellido</th>
-                        <th className="im-th">Programa</th>
-                        <th className="im-th">Cr. oblig.</th>
-                        <th className="im-th">Periodos</th>
-                        <th className="im-th">% avance</th>
-                        <th className="im-th">Estado</th>
-                        <th className="im-th">Acción</th>
+                        <th>Código</th>
+                        <th>Nombre</th>
+                        <th>Apellido</th>
+                        <th>Programa</th>
+                        <th>Cr. oblig.</th>
+                        <th>Periodos</th>
+                        <th>% avance</th>
+                        <th>Estado</th>
+                        <th>Acción</th>
                       </tr>
                     </thead>
                     <tbody>
                       {inactiveRows.map((row) => (
                         <tr key={row.id}>
-                          <td className="im-cell">
+                          <td>
                             <input
                               type="text"
                               value={row.codigo}
@@ -229,16 +229,11 @@ const InactivesManagementAP: React.FC<AssignmentProcessProps> = ({
                                   e.target.value
                                 )
                               }
+                              className="inactives-input"
                               placeholder="Código"
-                              style={{
-                                width: "100%",
-                                padding: "4px 8px",
-                                border: "1px solid #d9d9d9",
-                                borderRadius: "4px",
-                              }}
                             />
                           </td>
-                          <td className="im-cell">
+                          <td>
                             <input
                               type="text"
                               value={row.nombre}
@@ -249,16 +244,11 @@ const InactivesManagementAP: React.FC<AssignmentProcessProps> = ({
                                   e.target.value
                                 )
                               }
+                              className="inactives-input"
                               placeholder="Nombre"
-                              style={{
-                                width: "100%",
-                                padding: "4px 8px",
-                                border: "1px solid #d9d9d9",
-                                borderRadius: "4px",
-                              }}
                             />
                           </td>
-                          <td className="im-cell">
+                          <td>
                             <input
                               type="text"
                               value={row.apellido}
@@ -269,16 +259,11 @@ const InactivesManagementAP: React.FC<AssignmentProcessProps> = ({
                                   e.target.value
                                 )
                               }
+                              className="inactives-input"
                               placeholder="Apellido"
-                              style={{
-                                width: "100%",
-                                padding: "4px 8px",
-                                border: "1px solid #d9d9d9",
-                                borderRadius: "4px",
-                              }}
                             />
                           </td>
-                          <td className="im-cell">
+                          <td>
                             <input
                               type="text"
                               value={row.programa}
@@ -289,16 +274,11 @@ const InactivesManagementAP: React.FC<AssignmentProcessProps> = ({
                                   e.target.value
                                 )
                               }
+                              className="inactives-input"
                               placeholder="Programa"
-                              style={{
-                                width: "100%",
-                                padding: "4px 8px",
-                                border: "1px solid #d9d9d9",
-                                borderRadius: "4px",
-                              }}
                             />
                           </td>
-                          <td className="im-cell">
+                          <td>
                             <input
                               type="text"
                               value={row.creditosObligatorios}
@@ -309,16 +289,11 @@ const InactivesManagementAP: React.FC<AssignmentProcessProps> = ({
                                   e.target.value
                                 )
                               }
+                              className="inactives-input"
                               placeholder="0"
-                              style={{
-                                width: "100%",
-                                padding: "4px 8px",
-                                border: "1px solid #d9d9d9",
-                                borderRadius: "4px",
-                              }}
                             />
                           </td>
-                          <td className="im-cell">
+                          <td>
                             <input
                               type="text"
                               value={row.periodosMatriculados}
@@ -329,16 +304,11 @@ const InactivesManagementAP: React.FC<AssignmentProcessProps> = ({
                                   e.target.value
                                 )
                               }
+                              className="inactives-input"
                               placeholder="0"
-                              style={{
-                                width: "100%",
-                                padding: "4px 8px",
-                                border: "1px solid #d9d9d9",
-                                borderRadius: "4px",
-                              }}
                             />
                           </td>
-                          <td className="im-cell">
+                          <td>
                             <input
                               type="text"
                               value={row.porcentajeAvance}
@@ -349,23 +319,18 @@ const InactivesManagementAP: React.FC<AssignmentProcessProps> = ({
                                   e.target.value
                                 )
                               }
+                              className="inactives-input"
                               placeholder="0%"
-                              style={{
-                                width: "100%",
-                                padding: "4px 8px",
-                                border: "1px solid #d9d9d9",
-                                borderRadius: "4px",
-                              }}
                             />
                           </td>
-                          <td className="im-cell">
+                          <td>
                             {isActive(row) ? (
                               <Tag color="green">Activo</Tag>
                             ) : (
                               <Tag color="default">Incompleto</Tag>
                             )}
                           </td>
-                          <td className="im-cell">
+                          <td>
                             <Button
                               variant="secondary"
                               onClick={() => removeRow(row.id)}
