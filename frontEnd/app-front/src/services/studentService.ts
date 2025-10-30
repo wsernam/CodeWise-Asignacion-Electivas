@@ -1,16 +1,16 @@
 import axiosInstance from "../api/axiosInstance";
 import axios from "axios";
 import { STUDENT_URL } from "./config/config";
-import type { IStudent } from "../Models/student";
+import type { IStudent } from "../models/student";
 
 // ========== HELPERS ==========
-const transformStudent = (item:any): IStudent => ({
-    est_codigo: item.est_codigo,
-    est_nombre: item.est_nombre,
-    est_apellido: item.est_apellido,
-    est_correo: item.est_correo,
-    pro_codigo: item.pro_codigo,
-    est_estado: true,
+const transformStudent = (item: any): IStudent => ({
+  est_codigo: item.est_codigo,
+  est_nombre: item.est_nombre,
+  est_apellido: item.est_apellido,
+  est_correo: item.est_correo,
+  pro_codigo: item.pro_codigo,
+  est_estado: true,
 });
 
 // ========== FUNCIONES DE CONEXIÓN CON BACKEND ==========
@@ -19,21 +19,20 @@ const transformStudent = (item:any): IStudent => ({
  * Obtiene todos los estudiantes
  */
 export const getStudentsService = async (): Promise<IStudent[]> => {
-    try {
-        const { data } = await axiosInstance.get(`${STUDENT_URL}/`);
-        console.log("[studentService] Estudiante recuperado:", data);
+  try {
+    const { data } = await axiosInstance.get(`${STUDENT_URL}/`);
+    console.log("[studentService] Estudiante recuperado:", data);
 
-        const transformed: IStudent[] = Array.isArray(data)
-            ? data.map(transformStudent)
-            : [];
-        console.log("[studentService] Datos transformados:", transformed);
+    const transformed: IStudent[] = Array.isArray(data)
+      ? data.map(transformStudent)
+      : [];
+    console.log("[studentService] Datos transformados:", transformed);
 
-        return transformed;
-
-    } catch (error: any) {
-        console.error("[studentService] Error obteniendo estudiantes:", error);
-        throw new Error(error?.message || "No se pudieron cargar los estudiantes");
-    }
+    return transformed;
+  } catch (error: any) {
+    console.error("[studentService] Error obteniendo estudiantes:", error);
+    throw new Error(error?.message || "No se pudieron cargar los estudiantes");
+  }
 };
 
 /**
@@ -41,23 +40,24 @@ export const getStudentsService = async (): Promise<IStudent[]> => {
  * @param codigo - Código del estudiante
  */
 
-export const getStudentById = async (codigo: number): Promise<IStudent | null> => {
-    try {
-        console.log("[studentService] Conectando a:", `${STUDENT_URL}/${codigo}/`);
-        const { data } = await axiosInstance.get(`${STUDENT_URL}/${codigo}/`);
-        const transformed = transformStudent(data);
-        console.log("[studentService] Estudiante obtenido:", transformed);
-        return transformed;
-    } catch (error: any) {
-
-        if (axios.isAxiosError(error) && error.response?.status ===404) {
-            console.warn("[studentService] No se encontraron estudiantes (404)");
-            return null;
-        }
-
-        console.error("[studentService] Error obteniendo estudiante:", error);
-        throw new Error(error?.message || "No se pudo cargar el estudiante");
+export const getStudentById = async (
+  codigo: number
+): Promise<IStudent | null> => {
+  try {
+    console.log("[studentService] Conectando a:", `${STUDENT_URL}/${codigo}/`);
+    const { data } = await axiosInstance.get(`${STUDENT_URL}/${codigo}/`);
+    const transformed = transformStudent(data);
+    console.log("[studentService] Estudiante obtenido:", transformed);
+    return transformed;
+  } catch (error: any) {
+    if (axios.isAxiosError(error) && error.response?.status === 404) {
+      console.warn("[studentService] No se encontraron estudiantes (404)");
+      return null;
     }
+
+    console.error("[studentService] Error obteniendo estudiante:", error);
+    throw new Error(error?.message || "No se pudo cargar el estudiante");
+  }
 };
 
 /**
@@ -65,50 +65,68 @@ export const getStudentById = async (codigo: number): Promise<IStudent | null> =
  * @param student - Datos del estudiante a crear
  */
 
-export const createStudent = async ( student: IStudent ): Promise<IStudent> => {
-    try {
-        console.log("[studentService] Creando estudiante:", student);
-        const { data } = await axiosInstance.post(`${STUDENT_URL}/`, student);
-        const created = transformStudent(data);
-        console.log("[studentService] Estudiante creado:", created);
-        return created;
-    }
-    catch (error: any) {
-        console.error("[studentService] Error creando estudiante:", error);
-        throw new Error(error?.message || "No se pudo crear el estudiante");
-    }
+export const createStudent = async (student: IStudent): Promise<IStudent> => {
+  try {
+    console.log("[studentService] Creando estudiante:", student);
+    const { data } = await axiosInstance.post(`${STUDENT_URL}/`, student);
+    const created = transformStudent(data);
+    console.log("[studentService] Estudiante creado:", created);
+    return created;
+  } catch (error: any) {
+    console.error("[studentService] Error creando estudiante:", error);
+    throw new Error(error?.message || "No se pudo crear el estudiante");
+  }
 };
 
 /**
  * Actualizar un estudiante por código
  */
-export const updateStudent = async (code: number, student: IStudent): Promise<IStudent> => {
-    try{
-        console.log("[studentService] Actualizando estudiante:", student.est_codigo, student);
-        const { data } = await axiosInstance.put(`${STUDENT_URL}/${code}/`, student);
-        const updated = transformStudent(data);
-        console.log("[studentService] Estudiante actualizado:", updated);
-        return updated;
-    }
-    catch (error: any) {
-        console.error("[studentService] Error actualizando estudiante:", error);
-        throw new Error(error?.message || "No se pudo actualizar el estudiante");
-    }
+export const updateStudent = async (
+  code: number,
+  student: IStudent
+): Promise<IStudent> => {
+  try {
+    console.log(
+      "[studentService] Actualizando estudiante:",
+      student.est_codigo,
+      student
+    );
+    const { data } = await axiosInstance.put(
+      `${STUDENT_URL}/${code}/`,
+      student
+    );
+    const updated = transformStudent(data);
+    console.log("[studentService] Estudiante actualizado:", updated);
+    return updated;
+  } catch (error: any) {
+    console.error("[studentService] Error actualizando estudiante:", error);
+    throw new Error(error?.message || "No se pudo actualizar el estudiante");
+  }
 };
 
 /**
  * Actualizar estado del estudiante
  */
-export const updateStudentStatus = async (code: number, status: boolean): Promise<IStudent> => {
-    try {
-        console.log("[studentService] Actualizando estado del estudiante: ", code);
-        const { data } = await axiosInstance.patch(`${STUDENT_URL}/${code}/`, status);
-        const updated = transformStudent(data);
-        console.log("[studentService] Estado del estudiante actualizado:", updated);
-        return updated;
-    }
-    catch (error: any) {
-        console.error("[studentService] Error actualizando estado del estudiante:", error);
-        throw new Error(error?.message || "No se pudo actualizar el estado del estudiante");
-    }
+export const updateStudentStatus = async (
+  code: number,
+  status: boolean
+): Promise<IStudent> => {
+  try {
+    console.log("[studentService] Actualizando estado del estudiante: ", code);
+    const { data } = await axiosInstance.patch(
+      `${STUDENT_URL}/${code}/`,
+      status
+    );
+    const updated = transformStudent(data);
+    console.log("[studentService] Estado del estudiante actualizado:", updated);
+    return updated;
+  } catch (error: any) {
+    console.error(
+      "[studentService] Error actualizando estado del estudiante:",
+      error
+    );
+    throw new Error(
+      error?.message || "No se pudo actualizar el estado del estudiante"
+    );
+  }
 };

@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { IOffer } from "../Models/offer";
+import type { IOffer } from "../models/offer";
 import { createBulkOffer, getOffersByProgram } from "../services/offerService";
 
 interface OfferState {
@@ -7,7 +7,11 @@ interface OfferState {
   error: string | null;
 
   createBulkOffer: (offerData: IOffer) => Promise<any>;
-  getOffersByProgram: (programCode: string, year: number, semester: number) => Promise<any>;
+  getOffersByProgram: (
+    programCode: string,
+    year: number,
+    semester: number
+  ) => Promise<any>;
   clearError: () => void;
 }
 
@@ -33,7 +37,11 @@ export const useOfferStore = create<OfferState>((set) => ({
     }
   },
 
-  getOffersByProgram: async (programCode: string, year: number, semester: number): Promise<any> => {
+  getOffersByProgram: async (
+    programCode: string,
+    year: number,
+    semester: number
+  ): Promise<any> => {
     set({ loading: true, error: null });
     try {
       const result = await getOffersByProgram(programCode, year, semester);

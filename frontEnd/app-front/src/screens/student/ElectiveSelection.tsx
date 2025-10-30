@@ -17,8 +17,8 @@ import { useStudentStore } from "../../store/studentStore";
 import { useSelectionStore } from "../../store/selectionStore";
 
 // Models
-import type { ISelectionStudentElective } from "../../Models/selection";
-import type { IElective } from "../../Models/elective";
+import type { ISelectionStudentElective } from "../../models/selection";
+import type { IElective } from "../../models/elective";
 
 const { Option } = Select;
 
@@ -37,7 +37,8 @@ const ElectiveSelection: React.FC = () => {
 
   // Obtener funciones y estados de los stores
   const { loading } = useStudentStore();
-  const { fetchActiveElectives, activeElectives, addSelection } = useSelectionStore() as any;
+  const { fetchActiveElectives, activeElectives, addSelection } =
+    useSelectionStore() as any;
 
   // Datos del estudiante pasados desde la pantalla anterior
   const studentData = location.state as {
@@ -61,11 +62,7 @@ const ElectiveSelection: React.FC = () => {
 
   useEffect(() => {
     if (studentData?.programa) {
-      fetchActiveElectives(
-        studentData.programa,
-        year,
-        semester
-      );
+      fetchActiveElectives(studentData.programa, year, semester);
     } else {
       navigate("/personal-info");
     }
@@ -105,7 +102,7 @@ const ElectiveSelection: React.FC = () => {
   const handleConfirmSubmit = async () => {
     setShowConfirm(false);
 
-    // Construir ISelectionStudentElective 
+    // Construir ISelectionStudentElective
     const selectionsPayload: ISelectionStudentElective = {
       est_codigo: Number(studentData.codigo),
       est_correo: studentData.email || "",
@@ -126,11 +123,11 @@ const ElectiveSelection: React.FC = () => {
     try {
       await addSelection(selectionsPayload);
       setShowSuccess(true);
-    }
-    catch (error) {
+    } catch (error) {
       setWarning({
         open: true,
-        message: "Error al registrar la selección de electivas. Por favor, intenta nuevamente.",
+        message:
+          "Error al registrar la selección de electivas. Por favor, intenta nuevamente.",
       });
     }
   };

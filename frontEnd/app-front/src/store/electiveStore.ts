@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { IElective } from "../Models/elective";
+import type { IElective } from "../models/elective";
 import {
   getElectivesService,
   createElectiveService,
@@ -35,7 +35,9 @@ export const useElectiveStore = create<ElectiveState>((set) => ({
       console.log("[ElectiveStore] Electiva agregada OK");
       set((state) => ({
         electives: [
-          ...state.electives.filter((e) => e.ele_codigo !== newElective.ele_codigo),
+          ...state.electives.filter(
+            (e) => e.ele_codigo !== newElective.ele_codigo
+          ),
           newElective,
         ],
       }));
@@ -78,11 +80,14 @@ export const useElectiveStore = create<ElectiveState>((set) => ({
     }));
   },
 
-  getActiveElectivesForProgram: async (programa: string): Promise<IElective[]> => {
+  getActiveElectivesForProgram: async (
+    programa: string
+  ): Promise<IElective[]> => {
     try {
       const allElectives = await getElectivesService();
       const activeElectives = allElectives.filter(
-        (elective) => elective.ele_estado === true && elective.pro_codigo === programa //Suponiendo que activo se representa con 1
+        (elective) =>
+          elective.ele_estado === true && elective.pro_codigo === programa //Suponiendo que activo se representa con 1
       );
       return activeElectives;
     } catch (error) {

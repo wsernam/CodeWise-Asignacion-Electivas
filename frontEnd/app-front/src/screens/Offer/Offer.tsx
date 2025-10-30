@@ -15,7 +15,7 @@ import SuccessModal from "../../components/shared/SuccessModal/SuccessModal";
 // Stores
 import { useElectiveStore } from "../../store/electiveStore";
 import { useProgramStore } from "../../store/programStore";
-import type { IOffer } from "../../Models/offer";
+import type { IOffer } from "../../models/offer";
 import { useOfferStore } from "../../store/offerStore";
 import { useFormStatusStore } from "../../store/formStatusStore";
 
@@ -207,7 +207,6 @@ const Offer: React.FC = () => {
       await createBulkOffer(bulkData);
 
       setShowSuccess(true);
-      
     } catch (error) {
       console.error("[Offer] Error al guardar oferta:", error);
       setWarning({
@@ -280,12 +279,11 @@ const Offer: React.FC = () => {
                   style={{ width: 320 }}
                   placeholder="Selecciona el programa para el cual se va a crear la oferta"
                 >
-                  {programs
-                    .map((p) => (
-                      <Option key={p.pro_codigo} value={p.pro_codigo.toString()}>
-                        {p.pro_nombre} ({p.pro_codigo})
-                      </Option>
-                    ))}
+                  {programs.map((p) => (
+                    <Option key={p.pro_codigo} value={p.pro_codigo.toString()}>
+                      {p.pro_nombre} ({p.pro_codigo})
+                    </Option>
+                  ))}
                 </Select>
               </div>
             </div>
@@ -311,8 +309,9 @@ const Offer: React.FC = () => {
                         </span>
                       </h3>
                       <span
-                        className={`offer-facultad-arrow ${isExpanded ? "expanded" : ""
-                          }`}
+                        className={`offer-facultad-arrow ${
+                          isExpanded ? "expanded" : ""
+                        }`}
                       >
                         ▼
                       </span>
@@ -364,12 +363,13 @@ const Offer: React.FC = () => {
                                         (elective) => (
                                           <label
                                             key={elective.ele_codigo}
-                                            className={`offer-electiva-item ${selectedElectives[
-                                              programa.pro_nombre
-                                            ]?.includes(elective.ele_codigo)
-                                              ? "selected"
-                                              : ""
-                                              }`}
+                                            className={`offer-electiva-item ${
+                                              selectedElectives[
+                                                programa.pro_nombre
+                                              ]?.includes(elective.ele_codigo)
+                                                ? "selected"
+                                                : ""
+                                            }`}
                                           >
                                             <input
                                               type="checkbox"

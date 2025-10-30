@@ -1,6 +1,6 @@
 import axiosInstance from "../api/axiosInstance";
 import { SELECTION_URL } from "./config/config";
-import type { ISelectionStudentElective } from "../Models/selection";
+import type { ISelectionStudentElective } from "../models/selection";
 
 // ========== HELPERS ==========
 const transformSelection = (data: any): ISelectionStudentElective => ({
@@ -8,11 +8,12 @@ const transformSelection = (data: any): ISelectionStudentElective => ({
   est_correo: data.est_correo || "",
   sel_anio: data.sel_anio,
   sel_num_semestre: data.sel_num_semestre,
-  electivas: data.electivas?.map((item: any) => ({
-    ele_codigo: item.ele_codigo,
-    sel_prioridad: item.sel_prioridad,
-    ele_nombre: item.ele_nombre || "",
-  })) || [],
+  electivas:
+    data.electivas?.map((item: any) => ({
+      ele_codigo: item.ele_codigo,
+      sel_prioridad: item.sel_prioridad,
+      ele_nombre: item.ele_nombre || "",
+    })) || [],
 });
 
 // ========== FUNCIONES DE CONEXIÓN CON BACKEND ==========
@@ -44,7 +45,6 @@ export const getSelectionsByStudent = async (
     throw new Error(error?.message || "No se pudieron cargar las selecciones");
   }
 };
-
 
 // ------------ VERIFICAR URL ------------
 /**

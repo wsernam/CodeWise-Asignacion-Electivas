@@ -1,8 +1,8 @@
 // ---------------------- IMPORTS DE PANTALLAS ----------------------
 import PreLogin from "./screens/PreLogin/PreLogin.tsx";
 import LoginStudent from "./screens/LoginStudent/LoginStudent.tsx";
-import PersonalInfo from "./screens/student/PersonalInfo.tsx";
-import ElectiveSelection from "./screens/student/ElectiveSelection.tsx";
+import PersonalInfo from "./screens/Student/PersonalInfo.tsx";
+import ElectiveSelection from "./screens/Student/ElectiveSelection.tsx";
 import LoginAdmin from "./screens/LoginAdmin/LoginAdmin.tsx";
 import Dashboard from "./screens/Dashboard/Dashboard.tsx";
 import Electives from "./screens/Electives/ListElective.tsx";
@@ -23,7 +23,7 @@ const router = createBrowserRouter([
     path: "/",
     element: <PreLogin />,
   },
-// Estudiante
+  // Estudiante
   {
     path: "/login-student",
     element: <LoginStudent />,
@@ -75,7 +75,7 @@ const router = createBrowserRouter([
     element: <Offer />,
   },
 
-// Asignador
+  // Asignador
   {
     path: "/assignment-module",
     element: <AssignmentModule />,

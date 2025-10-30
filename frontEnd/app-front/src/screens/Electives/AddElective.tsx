@@ -75,8 +75,11 @@ const AddElective: React.FC = () => {
     if (value.length > 100)
       return Promise.reject("El nombre no puede exceder 100 caracteres");
     if (/^\s+|\s+$/.test(value))
-      return Promise.reject("El nombre no puede empezar o terminar con espacios");
-    if (/\d/.test(value)) return Promise.reject("El nombre no puede contener números");
+      return Promise.reject(
+        "El nombre no puede empezar o terminar con espacios"
+      );
+    if (/\d/.test(value))
+      return Promise.reject("El nombre no puede contener números");
     if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]+$/.test(value))
       return Promise.reject("El nombre solo puede contener letras y espacios");
     return Promise.resolve();
@@ -94,7 +97,11 @@ const AddElective: React.FC = () => {
         setIsFormValid(false);
       }
     };
-    if (touchedFields.ele_codigo || touchedFields.ele_nombre || touchedFields.pro_codigo) {
+    if (
+      touchedFields.ele_codigo ||
+      touchedFields.ele_nombre ||
+      touchedFields.pro_codigo
+    ) {
       checkValidity();
     }
   }, [form, formValues, touchedFields]);
@@ -159,7 +166,11 @@ const AddElective: React.FC = () => {
   const handleSuccessClose = () => {
     setSuccess({ open: false, message: "" });
     form.resetFields();
-    setTouchedFields({ ele_codigo: false, ele_nombre: false, pro_codigo: false });
+    setTouchedFields({
+      ele_codigo: false,
+      ele_nombre: false,
+      pro_codigo: false,
+    });
     navigate("/electives");
   };
 
@@ -224,7 +235,9 @@ const AddElective: React.FC = () => {
             <Form.Item
               name="pro_codigo"
               label="Programa Académico"
-              rules={[{ required: true, message: "Por favor selecciona el programa" }]}
+              rules={[
+                { required: true, message: "Por favor selecciona el programa" },
+              ]}
               hasFeedback={touchedFields.pro_codigo}
               validateStatus={touchedFields.pro_codigo ? undefined : ""}
             >
@@ -234,7 +247,10 @@ const AddElective: React.FC = () => {
                 showSearch
                 optionFilterProp="children"
                 filterOption={(input, option) =>
-                  option?.children?.toString().toLowerCase().includes(input.toLowerCase()) ?? false
+                  option?.children
+                    ?.toString()
+                    .toLowerCase()
+                    .includes(input.toLowerCase()) ?? false
                 }
                 notFoundContent="No se encontraron programas"
                 onBlur={() => handleFieldTouch("pro_codigo")}
@@ -249,13 +265,22 @@ const AddElective: React.FC = () => {
             </Form.Item>
 
             <Form.Item>
-              <Button type="submit" variant="primary" size="medium" disabled={!isFormValid}>
+              <Button
+                type="submit"
+                variant="primary"
+                size="medium"
+                disabled={!isFormValid}
+              >
                 Guardar
               </Button>
             </Form.Item>
 
             <Form.Item>
-              <Button variant="ghost" onClick={() => navigate("/electives")} size="medium">
+              <Button
+                variant="ghost"
+                onClick={() => navigate("/electives")}
+                size="medium"
+              >
                 Volver
               </Button>
             </Form.Item>
@@ -266,8 +291,16 @@ const AddElective: React.FC = () => {
       <Footer />
 
       {/* Modales SIEMPRE montados */}
-      <WarningModal open={warning.open} message={warning.message} onClose={handleWarningClose} />
-      <SuccessModal open={success.open} message={success.message} onClose={handleSuccessClose} />
+      <WarningModal
+        open={warning.open}
+        message={warning.message}
+        onClose={handleWarningClose}
+      />
+      <SuccessModal
+        open={success.open}
+        message={success.message}
+        onClose={handleSuccessClose}
+      />
       <ConfirmModal
         open={confirm.open}
         message={`¿Deseas reactivar la electiva "${confirm.ele_nombre}"?`}

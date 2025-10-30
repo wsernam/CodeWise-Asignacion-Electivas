@@ -47,7 +47,6 @@ const EditElective: React.FC = () => {
   }, [fetchElectives, fetchPrograms, electives.length, programs.length]);
 
   useEffect(() => {
-
     if (ele_codigo && electives.length > 0) {
       const elective = electives.find(
         (e) => String(e.ele_codigo) === String(ele_codigo) && e.ele_estado
@@ -69,36 +68,49 @@ const EditElective: React.FC = () => {
   }, [ele_codigo, electives, form]);
 
   const normalizeName = (s: string) =>
-  (s ?? "")
-    .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // quita tildes
-    .trim().replace(/\s+/g, " ")                     // colapsa espacios
-    .toUpperCase();
+    (s ?? "")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "") // quita tildes
+      .trim()
+      .replace(/\s+/g, " ") // colapsa espacios
+      .toUpperCase();
 
-  const isActive = (v: any) => v === true || v === 1 || v === "A" || v === "ACTIVO";
+  const isActive = (v: any) =>
+    v === true || v === 1 || v === "A" || v === "ACTIVO";
 
   const validateNombre = (_: any, value: string) => {
     if (!value) return Promise.reject("Por favor ingresa el nombre");
     const v = value.trim();
 
-    if (v.length < 3) return Promise.reject("El nombre debe tener al menos 3 caracteres");
-    if (v.length > 100) return Promise.reject("El nombre no puede exceder 100 caracteres");
-    if (/^\s+|\s+$/.test(value)) return Promise.reject("El nombre no puede empezar o terminar con espacios");
-    if (/\d/.test(v)) return Promise.reject("El nombre no puede contener números");
-    if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]+$/.test(v)) return Promise.reject("El nombre solo puede contener letras y espacios");
+    if (v.length < 3)
+      return Promise.reject("El nombre debe tener al menos 3 caracteres");
+    if (v.length > 100)
+      return Promise.reject("El nombre no puede exceder 100 caracteres");
+    if (/^\s+|\s+$/.test(value))
+      return Promise.reject(
+        "El nombre no puede empezar o terminar con espacios"
+      );
+    if (/\d/.test(v))
+      return Promise.reject("El nombre no puede contener números");
+    if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]+$/.test(v))
+      return Promise.reject("El nombre solo puede contener letras y espacios");
 
     const target = normalizeName(v);
 
     // 1) Excluir la misma electiva (si no cambió el nombre, permitir)
-    const current = electives.find(e => String(e.ele_codigo) === String(ele_codigo));
+    const current = electives.find(
+      (e) => String(e.ele_codigo) === String(ele_codigo)
+    );
     if (current && normalizeName(current.ele_nombre) === target) {
       return Promise.resolve();
     }
 
     // 2) Chequear duplicados en OTRAS electivas activas
-    const duplicated = electives.some(e =>
-      String(e.ele_codigo) !== String(ele_codigo) &&      // excluye la actual
-      isActive(e.ele_estado) &&                           // solo activas
-      normalizeName(e.ele_nombre) === target              // mismo nombre normalizado
+    const duplicated = electives.some(
+      (e) =>
+        String(e.ele_codigo) !== String(ele_codigo) && // excluye la actual
+        isActive(e.ele_estado) && // solo activas
+        normalizeName(e.ele_nombre) === target // mismo nombre normalizado
     );
 
     return duplicated
@@ -199,7 +211,11 @@ const EditElective: React.FC = () => {
             autoComplete="off"
           >
             <Form.Item name="ele_codigo" label="Código">
-              <Input disabled size="large" style={{ backgroundColor: "#f5f5f5", color: "#666" }} />
+              <Input
+                disabled
+                size="large"
+                style={{ backgroundColor: "#f5f5f5", color: "#666" }}
+              />
             </Form.Item>
 
             <Form.Item
@@ -220,7 +236,9 @@ const EditElective: React.FC = () => {
             <Form.Item
               name="pro_codigo"
               label="Programa Académico"
-              rules={[{ required: true, message: "Por favor selecciona el programa" }]}
+              rules={[
+                { required: true, message: "Por favor selecciona el programa" },
+              ]}
               hasFeedback={touchedFields.pro_codigo}
             >
               <Select
@@ -230,7 +248,9 @@ const EditElective: React.FC = () => {
                 options={programOptions}
                 optionFilterProp="label"
                 filterOption={(input, option) =>
-                  (option?.label as string)?.toLowerCase().includes(input.toLowerCase())
+                  (option?.label as string)
+                    ?.toLowerCase()
+                    .includes(input.toLowerCase())
                 }
                 notFoundContent="No se encontraron programas"
                 onBlur={() => handleFieldTouch("pro_codigo")}
@@ -239,13 +259,22 @@ const EditElective: React.FC = () => {
             </Form.Item>
 
             <Form.Item>
-              <Button type="submit" variant="primary" size="medium" disabled={!isFormValid}>
+              <Button
+                type="submit"
+                variant="primary"
+                size="medium"
+                disabled={!isFormValid}
+              >
                 Guardar
               </Button>
             </Form.Item>
 
             <Form.Item>
-              <Button variant="ghost" onClick={() => navigate("/electives")} size="medium">
+              <Button
+                variant="ghost"
+                onClick={() => navigate("/electives")}
+                size="medium"
+              >
                 Volver
               </Button>
             </Form.Item>
@@ -255,8 +284,16 @@ const EditElective: React.FC = () => {
 
       <Footer />
 
-      <WarningModal open={warning.open} message={warning.message} onClose={handleWarningClose} />
-      <SuccessModal open={success.open} message={success.message} onClose={handleSuccessClose} />
+      <WarningModal
+        open={warning.open}
+        message={warning.message}
+        onClose={handleWarningClose}
+      />
+      <SuccessModal
+        open={success.open}
+        message={success.message}
+        onClose={handleSuccessClose}
+      />
     </div>
   );
 };

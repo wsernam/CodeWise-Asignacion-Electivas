@@ -1,5 +1,5 @@
 import axios from "../api/axiosInstance";
-import type { IOffer } from "../Models/offer";
+import type { IOffer } from "../models/offer";
 import { OFFER_URL } from "./config/config";
 
 export const createBulkOffer = async (offerData: IOffer): Promise<any> => {
@@ -19,14 +19,25 @@ export const createBulkOffer = async (offerData: IOffer): Promise<any> => {
   }
 };
 
-export const getOffersByProgram = async (programCode: string, year: number, semester: number): Promise<any> => {
+export const getOffersByProgram = async (
+  programCode: string,
+  year: number,
+  semester: number
+): Promise<any> => {
   try {
-    const response = await axios.get(`${OFFER_URL}/ofertas/${year}/${semester}/${programCode}/`);
-    console.log("[offerService] Ofertas obtenidas exitosamente: ", response.data);
+    const response = await axios.get(
+      `${OFFER_URL}/ofertas/${year}/${semester}/${programCode}/`
+    );
+    console.log(
+      "[offerService] Ofertas obtenidas exitosamente: ",
+      response.data
+    );
     return response.data;
-  }
-  catch (error: any) {
-    console.log("[offerService] Error obteniendo ofertas:", error.response?.data);
+  } catch (error: any) {
+    console.log(
+      "[offerService] Error obteniendo ofertas:",
+      error.response?.data
+    );
     throw error;
   }
 };
