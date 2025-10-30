@@ -1,4 +1,3 @@
-/* InactivesTable.css */
 .inactives-table-container {
   width: 100%;
   overflow-x: auto;
@@ -29,10 +28,6 @@
   padding: 4px;
   border: 1px solid #e0e0e0;
   vertical-align: middle;
-}
-
-.inactives-table tr:hover {
-  background-color: #f8f9fa;
 }
 
 .inactives-input {
@@ -66,12 +61,6 @@
   color: #666;
   margin-bottom: 16px;
   font-size: 16px;
-}
-
-.inactives-modal-content {
-  max-height: 70vh;
-  overflow-y: auto;
-  padding: 0;
 }
 
 /* Column widths específicas */

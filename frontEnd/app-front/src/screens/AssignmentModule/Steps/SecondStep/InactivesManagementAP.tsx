@@ -1,7 +1,6 @@
-// InactivesManagementAP.tsx - VERSIÓN CON CSS DEDICADO
 import React, { useState } from "react";
 import "../AssignmentProcessSteps.css";
-import "./InactivesTable.css"; // <-- NUEVO CSS
+import "./InactivesTable.css"; // CSS separado
 import { Tag } from "antd";
 import {
   FaUserSlash,
@@ -60,6 +59,160 @@ const cards = [
   },
 ];
 
+// COMPONENTE DE TABLA SEPARADO
+const InactivesTable: React.FC<{
+  rows: InactiveRow[];
+  onRowsChange: (rows: InactiveRow[]) => void;
+}> = ({ rows, onRowsChange }) => {
+  const handleInputChange = (
+    rowId: number,
+    field: keyof InactiveRow,
+    value: string
+  ) => {
+    const updatedRows = rows.map((row) =>
+      row.id === rowId ? { ...row, [field]: value } : row
+    );
+    onRowsChange(updatedRows);
+  };
+
+  const removeRow = (rowId: number) => {
+    const updatedRows = rows.filter((row) => row.id !== rowId);
+    onRowsChange(updatedRows);
+  };
+
+  const isActive = (row: InactiveRow) => {
+    return row.codigo && row.nombre && row.apellido && row.programa;
+  };
+
+  return (
+    <div className="inactives-table-container">
+      <table className="inactives-table">
+        <thead>
+          <tr>
+            <th>Código</th>
+            <th>Nombre</th>
+            <th>Apellido</th>
+            <th>Programa</th>
+            <th>Cr. oblig.</th>
+            <th>Periodos</th>
+            <th>% avance</th>
+            <th>Estado</th>
+            <th>Acción</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row) => (
+            <tr key={row.id}>
+              <td>
+                <input
+                  type="text"
+                  defaultValue={row.codigo}
+                  onBlur={(e) =>
+                    handleInputChange(row.id, "codigo", e.target.value)
+                  }
+                  className="inactives-input"
+                  placeholder="Código"
+                />
+              </td>
+              <td>
+                <input
+                  type="text"
+                  defaultValue={row.nombre}
+                  onBlur={(e) =>
+                    handleInputChange(row.id, "nombre", e.target.value)
+                  }
+                  className="inactives-input"
+                  placeholder="Nombre"
+                />
+              </td>
+              <td>
+                <input
+                  type="text"
+                  defaultValue={row.apellido}
+                  onBlur={(e) =>
+                    handleInputChange(row.id, "apellido", e.target.value)
+                  }
+                  className="inactives-input"
+                  placeholder="Apellido"
+                />
+              </td>
+              <td>
+                <input
+                  type="text"
+                  defaultValue={row.programa}
+                  onBlur={(e) =>
+                    handleInputChange(row.id, "programa", e.target.value)
+                  }
+                  className="inactives-input"
+                  placeholder="Programa"
+                />
+              </td>
+              <td>
+                <input
+                  type="text"
+                  defaultValue={row.creditosObligatorios}
+                  onBlur={(e) =>
+                    handleInputChange(
+                      row.id,
+                      "creditosObligatorios",
+                      e.target.value
+                    )
+                  }
+                  className="inactives-input"
+                  placeholder="0"
+                />
+              </td>
+              <td>
+                <input
+                  type="text"
+                  defaultValue={row.periodosMatriculados}
+                  onBlur={(e) =>
+                    handleInputChange(
+                      row.id,
+                      "periodosMatriculados",
+                      e.target.value
+                    )
+                  }
+                  className="inactives-input"
+                  placeholder="0"
+                />
+              </td>
+              <td>
+                <input
+                  type="text"
+                  defaultValue={row.porcentajeAvance}
+                  onBlur={(e) =>
+                    handleInputChange(
+                      row.id,
+                      "porcentajeAvance",
+                      e.target.value
+                    )
+                  }
+                  className="inactives-input"
+                  placeholder="0%"
+                />
+              </td>
+              <td>
+                {isActive(row) ? (
+                  <Tag color="green">Activo</Tag>
+                ) : (
+                  <Tag color="default">Incompleto</Tag>
+                )}
+              </td>
+              <td>
+                <Button variant="secondary" onClick={() => removeRow(row.id)}>
+                  Eliminar
+                </Button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+};
+
+// COMPONENTE PRINCIPAL
 const InactivesManagementAP: React.FC<AssignmentProcessProps> = ({
   onNext,
   onCancel,
@@ -99,8 +252,8 @@ const InactivesManagementAP: React.FC<AssignmentProcessProps> = ({
       periodosMatriculados: "",
       porcentajeAvance: "",
     };
-    setInactiveRows([...inactiveRows, newRow]);
-    setNextId(nextId + 1);
+    setInactiveRows((prev) => [...prev, newRow]);
+    setNextId((prev) => prev + 1);
   };
 
   const detectInactives = () => {
@@ -129,24 +282,6 @@ const InactivesManagementAP: React.FC<AssignmentProcessProps> = ({
     setNextId(3);
   };
 
-  const handleChangeField = (
-    id: number,
-    field: keyof InactiveRow,
-    value: string
-  ) => {
-    setInactiveRows((prev) =>
-      prev.map((row) => (row.id === id ? { ...row, [field]: value } : row))
-    );
-  };
-
-  const removeRow = (id: number) => {
-    setInactiveRows((prev) => prev.filter((row) => row.id !== id));
-  };
-
-  const isActive = (row: InactiveRow) => {
-    return row.codigo && row.nombre && row.apellido && row.programa;
-  };
-
   return (
     <div className="aps-wrapper">
       <div className="aps-grid">
@@ -173,7 +308,7 @@ const InactivesManagementAP: React.FC<AssignmentProcessProps> = ({
           title="Gestión de potenciales inactivos"
           onClose={() => setShowModal(false)}
         >
-          <div className="inactives-modal-content">
+          <div style={{ maxHeight: "70vh", overflowY: "auto" }}>
             {inactiveRows.length === 0 ? (
               <div className="inactives-empty">
                 <p>No se han identificado posibles estudiantes inactivos</p>
@@ -200,149 +335,10 @@ const InactivesManagementAP: React.FC<AssignmentProcessProps> = ({
                   </Button>
                 </div>
 
-                <div className="inactives-table-container">
-                  <table className="inactives-table">
-                    <thead>
-                      <tr>
-                        <th>Código</th>
-                        <th>Nombre</th>
-                        <th>Apellido</th>
-                        <th>Programa</th>
-                        <th>Cr. oblig.</th>
-                        <th>Periodos</th>
-                        <th>% avance</th>
-                        <th>Estado</th>
-                        <th>Acción</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {inactiveRows.map((row) => (
-                        <tr key={row.id}>
-                          <td>
-                            <input
-                              type="text"
-                              value={row.codigo}
-                              onChange={(e) =>
-                                handleChangeField(
-                                  row.id,
-                                  "codigo",
-                                  e.target.value
-                                )
-                              }
-                              className="inactives-input"
-                              placeholder="Código"
-                            />
-                          </td>
-                          <td>
-                            <input
-                              type="text"
-                              value={row.nombre}
-                              onChange={(e) =>
-                                handleChangeField(
-                                  row.id,
-                                  "nombre",
-                                  e.target.value
-                                )
-                              }
-                              className="inactives-input"
-                              placeholder="Nombre"
-                            />
-                          </td>
-                          <td>
-                            <input
-                              type="text"
-                              value={row.apellido}
-                              onChange={(e) =>
-                                handleChangeField(
-                                  row.id,
-                                  "apellido",
-                                  e.target.value
-                                )
-                              }
-                              className="inactives-input"
-                              placeholder="Apellido"
-                            />
-                          </td>
-                          <td>
-                            <input
-                              type="text"
-                              value={row.programa}
-                              onChange={(e) =>
-                                handleChangeField(
-                                  row.id,
-                                  "programa",
-                                  e.target.value
-                                )
-                              }
-                              className="inactives-input"
-                              placeholder="Programa"
-                            />
-                          </td>
-                          <td>
-                            <input
-                              type="text"
-                              value={row.creditosObligatorios}
-                              onChange={(e) =>
-                                handleChangeField(
-                                  row.id,
-                                  "creditosObligatorios",
-                                  e.target.value
-                                )
-                              }
-                              className="inactives-input"
-                              placeholder="0"
-                            />
-                          </td>
-                          <td>
-                            <input
-                              type="text"
-                              value={row.periodosMatriculados}
-                              onChange={(e) =>
-                                handleChangeField(
-                                  row.id,
-                                  "periodosMatriculados",
-                                  e.target.value
-                                )
-                              }
-                              className="inactives-input"
-                              placeholder="0"
-                            />
-                          </td>
-                          <td>
-                            <input
-                              type="text"
-                              value={row.porcentajeAvance}
-                              onChange={(e) =>
-                                handleChangeField(
-                                  row.id,
-                                  "porcentajeAvance",
-                                  e.target.value
-                                )
-                              }
-                              className="inactives-input"
-                              placeholder="0%"
-                            />
-                          </td>
-                          <td>
-                            {isActive(row) ? (
-                              <Tag color="green">Activo</Tag>
-                            ) : (
-                              <Tag color="default">Incompleto</Tag>
-                            )}
-                          </td>
-                          <td>
-                            <Button
-                              variant="secondary"
-                              onClick={() => removeRow(row.id)}
-                            >
-                              Eliminar
-                            </Button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                <InactivesTable
+                  rows={inactiveRows}
+                  onRowsChange={setInactiveRows}
+                />
 
                 <div
                   style={{
