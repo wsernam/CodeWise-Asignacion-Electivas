@@ -1,121 +1,190 @@
-import React, { useState, useEffect } from "react";
-
-// Styles
+import React, { useState } from "react";
 import "./AssignmentModule.css";
-
-// UI Components
 import DashboardLayout from "../../components/layout/DashboardLayout/DashboardLayout";
 import Card from "../../components/ui/Card/Card";
 import Button from "../../components/ui/Button/Button";
-
-// Components
-import UploadFilesAP from "./Steps/FirstStep/UploadFilesAP";
 import SimpleModal from "../../components/shared/SimpleModal/SimpleModal";
-import ResumeAssignmetProcess from "./Steps/ResumeAssignmetProcessStep";
+import CreateAssignmentProcess from "./Steps/CreateProcess/CreateAssignmentProcess";
+import UploadFilesAP from "./Steps/FirstStep/UploadFilesAP";
 import InactivesManagementAP from "./Steps/SecondStep/InactivesManagementAP";
 import LevelsManagementAP from "./Steps/ThirdStep/LevelsManagementAP";
+import AssignmentManagementAP from "./Steps/FourStep/AssignmentManagementAP";
 
-// Stores
-
-//Models
+type ProcessData = {
+  year: number;
+  semester: 1 | 2;
+};
 
 const AssignmentModule: React.FC = () => {
+  const [showCreateModal, setShowCreateModal] = useState<boolean>(false);
   const [hasActiveProcess, setHasActiveProcess] = useState<boolean>(false);
-  const [currentStep, setCurrentStep] = useState<number | null>(null); // null = summary
-  const [showModal, setShowModal] = useState<boolean>(false);
+  const [currentStep, setCurrentStep] = useState<number | null>(null);
+  const [completedSteps, setCompletedSteps] = useState<number[]>([]);
+  const [processData, setProcessData] = useState<ProcessData | null>(null);
 
-  // ========== EFECTOS ==========
-  useEffect(() => {
-    if (hasActiveProcess === false) {
-      handleShowSummary();
-    }
-  }, [hasActiveProcess]);
-
-  // ========== MANEJADORES ==========
-
-  const handleShowSummary = () => setCurrentStep(0);
-  const handleStartProcess = () => setCurrentStep(1);
-  const handleNextStep = () => setCurrentStep((prev) => (prev ? prev + 1 : 1));
-
-  // Si se cancela el proceso, se mantiene en el estado pero cierra el modal
-  const handleCancelProcess = () => {
-    setShowModal(false);
+  const handleProcessCreated = (year: number, semester: 1 | 2) => {
+    setShowCreateModal(false);
+    setHasActiveProcess(true);
+    setCurrentStep(1);
+    setCompletedSteps([]);
+    setProcessData({ year, semester });
   };
 
-  // ========== RENDERIZADO ==========
+  const handleCancelProcess = () => {
+    setHasActiveProcess(false);
+    setCurrentStep(null);
+    setCompletedSteps([]);
+    setProcessData(null);
+  };
+
+  const handleUndoLastStep = () => {
+    if (currentStep && currentStep > 1) {
+      const previousStep = currentStep - 1;
+      setCurrentStep(previousStep);
+      setCompletedSteps((prev) =>
+        prev.filter((step) => step !== currentStep - 1)
+      );
+    } else if (currentStep === 1) {
+      handleCancelProcess();
+    }
+  };
+
+  const handleNextStep = () => {
+    const nextStep = currentStep ? currentStep + 1 : 1;
+    setCurrentStep(nextStep);
+
+    if (currentStep) {
+      setCompletedSteps((prev) => [...prev, currentStep]);
+    }
+  };
+
+  const handleStepClick = (stepNumber: number) => {
+    if (completedSteps.includes(stepNumber - 1) || stepNumber === 1) {
+      setCurrentStep(stepNumber);
+    }
+  };
+
+  const getStepBorderClass = (stepNumber: number) => {
+    return completedSteps.includes(stepNumber) ? "green" : "red";
+  };
+
+  // Estado simple del proceso - SOLO EL NOMBRE
+  const getProcessStatus = () => {
+    const statusMap = {
+      1: "Creado",
+      2: "Archivo Cargado",
+      3: "Archivo Guardado",
+      4: "Nivelados Gestionados",
+      5: "Asignaciones Completadas",
+    };
+    return statusMap[currentStep as keyof typeof statusMap] || "Creado";
+  };
 
   return (
     <>
       <div className="assignment-page-container">
         <DashboardLayout>
           <div className="form-page-content">
-            <Card className="main-card">
-              <h2 className="form-title">Módulo de Asignación de Electivas</h2>
-
-              <div className="divider">
-                <Card className="steps-card">
-                  {/* Control de pasos */}
-                  {currentStep === null && (
-                    <div>
-                      {hasActiveProcess ? (
-                        <div>
-                          <p>Hay un proceso activo.</p>
-                          <Button onClick={() => setCurrentStep(1)}>
-                            {" "}
-                            Ver pasos{" "}
-                          </Button>
-                        </div>
-                      ) : (
-                        <div>
-                          <Button
-                            variant="primary"
-                            onClick={handleStartProcess}
-                          >
-                            Crear Proceso
-                          </Button>
-                        </div>
-                      )}
+            <Card className="main-card assignment-card">
+              {!hasActiveProcess ? (
+                <div className="no-process-container">
+                  <div className="info-icon">⚠️</div>
+                  <h3>No hay procesos de asignación activos</h3>
+                  <Button
+                    variant="primary"
+                    onClick={() => setShowCreateModal(true)}
+                    className="create-btn"
+                  >
+                    Crear
+                  </Button>
+                </div>
+              ) : (
+                <>
+                  <div className="simple-process-header">
+                    <div className="process-title-section">
+                      <h3>
+                        Proceso de asignación {processData?.year}-
+                        {processData?.semester}
+                      </h3>
+                      <span className="process-status">
+                        {getProcessStatus()}
+                      </span>
                     </div>
-                  )}
+                    <Button
+                      variant="secondary"
+                      onClick={handleUndoLastStep}
+                      disabled={currentStep === 1}
+                    >
+                      Deshacer
+                    </Button>
+                  </div>
 
-                  {/* Resumen del proceso */}
-                  {currentStep === 0 && (
-                    <ResumeAssignmetProcess
-                      onNext={handleNextStep}
-                      onCancel={handleCancelProcess}
-                    />
-                  )}
-
-                  {/* Proceso de creación */}
                   {currentStep === 1 && (
                     <UploadFilesAP
                       onNext={handleNextStep}
                       onCancel={handleCancelProcess}
+                      onStepClick={handleStepClick}
+                      currentStep={1}
+                      completedSteps={completedSteps}
+                      getStepBorderClass={getStepBorderClass}
                     />
                   )}
 
-                  {/* Proceso de lectura de archivos*/}
                   {currentStep === 2 && (
                     <InactivesManagementAP
                       onNext={handleNextStep}
                       onCancel={handleCancelProcess}
+                      onStepClick={handleStepClick}
+                      currentStep={2}
+                      completedSteps={completedSteps}
+                      getStepBorderClass={getStepBorderClass}
                     />
                   )}
 
-                  {/* Proceso confirmacion de nivelados*/}
                   {currentStep === 3 && (
                     <LevelsManagementAP
                       onNext={handleNextStep}
                       onCancel={handleCancelProcess}
+                      onStepClick={handleStepClick}
+                      currentStep={3}
+                      completedSteps={completedSteps}
+                      getStepBorderClass={getStepBorderClass}
                     />
                   )}
-                </Card>
-              </div>
 
-              <div className="divider">
-                <Card className="processes-card">
-                  <h3>Últimos procesos de Asignación</h3>
-                </Card>
+                  {currentStep === 4 && (
+                    <AssignmentManagementAP
+                      onNext={handleNextStep}
+                      onCancel={handleCancelProcess}
+                      onStepClick={handleStepClick}
+                      currentStep={4}
+                      completedSteps={completedSteps}
+                      getStepBorderClass={getStepBorderClass}
+                    />
+                  )}
+
+                  {currentStep === 5 && (
+                    <div className="final-step-actions">
+                      <p>Los datos fueron guardados correctamente.</p>
+                      <Button variant="primary" className="view-assignment-btn">
+                        Ver asignación
+                      </Button>
+                    </div>
+                  )}
+                </>
+              )}
+            </Card>
+
+            <div className="divider"></div>
+
+            <Card className="main-card history-card">
+              <h3 className="history-title">Últimos procesos de Asignación</h3>
+              <div className="process-history-item">
+                <div className="process-period">2024-2</div>
+                <div className="process-details">
+                  <div className="process-date">Finalizado en: DD-MM-YYYY</div>
+                  <span className="status-finished">Finalizado</span>
+                </div>
               </div>
             </Card>
           </div>
@@ -123,27 +192,14 @@ const AssignmentModule: React.FC = () => {
       </div>
 
       <SimpleModal
-        open={showModal}
-        onClose={() => setShowModal(false)}
-        title="Cancelar Paso de Asignación"
+        open={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        title="Crear Proceso de Asignación"
       >
-        <p>
-          ¿Estás seguro de que deseas cancelar el paso actual de asignación?
-        </p>
-        <div className="modal-actions">
-          <Button variant="primary" onClick={() => setShowModal(false)}>
-            No, continuar
-          </Button>
-          <Button
-            variant="secondary"
-            onClick={() => {
-              setShowModal(false);
-              setCurrentStep(null); // Regresa al resumen
-            }}
-          >
-            Sí, cancelar
-          </Button>
-        </div>
+        <CreateAssignmentProcess
+          onCancel={() => setShowCreateModal(false)}
+          onNext={handleProcessCreated}
+        />
       </SimpleModal>
     </>
   );
