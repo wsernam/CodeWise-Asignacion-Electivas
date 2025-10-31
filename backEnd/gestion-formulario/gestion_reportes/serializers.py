@@ -5,6 +5,7 @@ from gestion_estudiantes.models import Estudiante
 from gestion_oferta_electiva.models import Oferta_electiva
 from gestion_electivas.models import Electiva
 from gestion_electivas.serializers import ElectivaSerializer
+
 class EstudianteSerializer(serializers.ModelSerializer):
     pro_nombre = serializers.CharField(source='pro_codigo.pro_nombre', read_only=True)
     class Meta:

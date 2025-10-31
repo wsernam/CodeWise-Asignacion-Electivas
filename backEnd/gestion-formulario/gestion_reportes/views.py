@@ -5,9 +5,9 @@ from rest_framework.decorators import action
 from seleccion_electivas.models import SeleccionEstudianteElectiva
 from gestion_estudiantes.models import Estudiante
 from .serializers import ReporteSeleccionElectivasSerializer, ReporteOfertaElectivasSerializer
-from .generador_contenido import GeneradorContenidoReporteSeleccion, GenerardorContenidoReporteOferta
+from .generador_contenido import GeneradorContenidoReporteSeleccion, GenerardorContenidoReporteOferta, GeneradorContenidoReporteGeneralSeleccion
 from .generador_pdf import crear_pdf
-from seleccion_electivas.serializers import ConsultaElectivaEstudianteDTO
+from seleccion_electivas.serializers import ConsultaElectivaEstudianteDTO, SeleccionEstudianteElectivaSerializer
 from gestion_oferta_electiva.models import Oferta_electiva
 from collections import defaultdict
 from gestion_electivas.serializers import ElectivaSerializer
@@ -50,6 +50,47 @@ class ReporteSeleccionElectivasEstudianteViewSet(viewsets.ViewSet):
        
         self.generador_contenido = GeneradorContenidoReporteSeleccion(reporte_data)
         nombre_archivo = f"R_seleccion_{est_codigo}_{sel_anio}_{sel_num_semestre}.pdf"
+        elementos = self.generador_contenido.generar_contenido()
+        pdf_data = crear_pdf(self.nombre_informe,elementos)
+        
+        response = HttpResponse(content_type='application/pdf')
+        response['Content-Disposition'] = f'inline; filename="{nombre_archivo}.pdf"'
+        response.write(pdf_data)
+        return response
+class ReporteSeleccionGeneralViewSet(viewsets.ViewSet):
+    serializer_class =  SeleccionEstudianteElectivaSerializer
+    generador_contenido: GeneradorContenidoReporteGeneralSeleccion
+    nombre_informe = "Reporte general proceso de seleccion de electivas"
+    @action(
+        detail=False,
+        methods=["get"],
+        url_path=r"(?P<sel_anio>\d+)/(?P<sel_num_semestre>\d+)"
+    )
+    def reporte_general_seleccion(self, request, sel_anio=None, sel_num_semestre=None):
+        queryset_oferta = Oferta_electiva.objects.filter(
+            ofe_anio = sel_anio,
+            ofe_num_semestre = sel_num_semestre
+        )
+        queryset_seleccion = SeleccionEstudianteElectiva.objects.filter(
+            sel_anio=sel_anio,
+            sel_num_semestre=sel_num_semestre
+        )
+        if not queryset_oferta.exists():
+            return Response(
+                {"detail": f"No se encontro las ofertas para el periodo {sel_anio}-{sel_num_semestre}."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        if not queryset_seleccion.exists():
+            return Response(
+                {"detail": f"No se encontro las selecciones para el periodo {sel_anio}-{sel_num_semestre}."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        
+
+        reporte_data = SeleccionEstudianteElectivaSerializer(queryset_seleccion, many=True)
+
+        self.generador_contenido = GeneradorContenidoReporteGeneralSeleccion(queryset_seleccion)
+        nombre_archivo = f"R_seleccion_General__{sel_anio}_{sel_num_semestre}.pdf"
         elementos = self.generador_contenido.generar_contenido()
         pdf_data = crear_pdf(self.nombre_informe,elementos)
         

@@ -21,7 +21,7 @@ from gestion_electivas.views import ElectivaViewSet
 from gestion_programas.views import ProgramaViewSet
 from gestion_estudiantes.views import EstudianteViewSet
 from seleccion_electivas.views import SeleccionEstudianteElectivaViewSet
-from gestion_reportes.views import ReporteSeleccionElectivasEstudianteViewSet, ReporteOfertaElectivasViewSet
+from gestion_reportes.views import ReporteSeleccionElectivasEstudianteViewSet, ReporteOfertaElectivasViewSet, ReporteSeleccionGeneralViewSet
 router = DefaultRouter()
 router.register(r'electivas', ElectivaViewSet, basename='electiva')
 router.register(r'programas', ProgramaViewSet, basename='programa')
@@ -29,6 +29,7 @@ router.register(r'estudiantes', EstudianteViewSet, basename='estudiante')
 router.register(r'seleccion-electivas', SeleccionEstudianteElectivaViewSet, basename='seleccion-electivas')
 router.register(r'reporte-seleccion', ReporteSeleccionElectivasEstudianteViewSet, basename='reporte-seleccion-electivas')
 router.register(r'reporte-oferta', ReporteOfertaElectivasViewSet, basename='reporte-oferta')
+router.register(r'reporte-seleccion-general', ReporteSeleccionGeneralViewSet, basename='reporte-seleccion-general-electivas')
 urlpatterns = [
     path('admin/', admin.site.urls),
     # URLs para la gestión del estado del formulario
