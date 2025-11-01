@@ -13,6 +13,8 @@ import ListProgram from "./screens/Program/ListProgram.tsx";
 import EditProgram from "./screens/Program/EditProgram.tsx";
 import Offer from "./screens/Offer/Offer.tsx";
 import AssignmentModule from "./screens/AssignmentModule/AssignmentModule.tsx";
+import ReportsAssignment from "./screens/Reports/ReportsAssignment.tsx";
+import ReportsForm from "./screens/Reports/ReportsForm.tsx";
 
 // ---------------------- IMPORTS DE ROUTER ----------------------
 import { createBrowserRouter } from "react-router";
@@ -79,6 +81,14 @@ const router = createBrowserRouter([
   {
     path: "/assignment-module",
     element: <AssignmentModule />,
+  },
+  {
+    path: "/reports-assignment",
+    element: <ReportsAssignment />,
+  },
+  {
+    path: "/reports-form",
+    element: <ReportsForm />,
   },
 ]);
 

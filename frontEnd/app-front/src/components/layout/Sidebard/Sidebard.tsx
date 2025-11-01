@@ -5,7 +5,9 @@ import {
   FaUserGraduate,
   FaBook,
   FaBookOpen,
-  FaFileAlt
+  FaFileAlt,
+  FaClipboardList,
+  FaFileSignature,
 } from "react-icons/fa";
 import type { IconType } from "react-icons";
 import "./Sidebard.css";
@@ -22,12 +24,50 @@ interface MenuItem {
   roles: Array<"admin" | "asignador">;
 }
 
+// CORRECCIÓN: Ambos roles tienen dashboard como inicio
 const menuItems: MenuItem[] = [
-  { label: "Dashboard", path: "/dashboard", icon: FaHome, roles: ["admin"] },
-  { label: "Oferta", path: "/offer", icon: FaUserGraduate, roles: ["admin", "asignador"] },
-  { label: "Electivas", path: "/electives", icon: FaBook, roles: ["admin", "asignador"] },
-  { label: "Programas", path: "/programs", icon: FaBookOpen, roles: ["admin"] },
-  { label: "Reportes", path: "/reportes", icon: FaFileAlt, roles: ["admin"] },
+  {
+    label: "Inicio",
+    path: "/dashboard",
+    icon: FaHome,
+    roles: ["admin", "asignador"],
+  },
+  {
+    label: "Oferta",
+    path: "/offer",
+    icon: FaUserGraduate,
+    roles: ["admin", "asignador"],
+  },
+  {
+    label: "Electivas",
+    path: "/electives",
+    icon: FaBook,
+    roles: ["admin", "asignador"],
+  },
+  {
+    label: "Programas",
+    path: "/programs",
+    icon: FaBookOpen,
+    roles: ["admin"],
+  },
+  {
+    label: "Reportes Asignación",
+    path: "/reportes-asignacion",
+    icon: FaClipboardList,
+    roles: ["asignador"],
+  },
+  {
+    label: "Reportes Formulario",
+    path: "/reportes-formularios",
+    icon: FaFileSignature,
+    roles: ["admin"],
+  },
+  {
+    label: "Proceso Asignación",
+    path: "/assignment-module",
+    icon: FaClipboardList,
+    roles: ["asignador"],
+  },
 ];
 
 const Sidebar: React.FC<SidebardProps> = ({ onRoleChange, currentRole }) => {
@@ -36,7 +76,8 @@ const Sidebar: React.FC<SidebardProps> = ({ onRoleChange, currentRole }) => {
 
   const handleRoleClick = (role: "admin" | "asignador") => {
     onRoleChange(role);
-    navigate(role === "admin" ? "/dashboard" : "/assignment-module");
+    // CORRECCIÓN: Ambos roles van al dashboard al cambiar
+    navigate("/dashboard");
   };
 
   return (
@@ -45,14 +86,16 @@ const Sidebar: React.FC<SidebardProps> = ({ onRoleChange, currentRole }) => {
         {/* Menú lateral */}
         <nav className="sidebard-links">
           {menuItems
-            .filter(item => item.roles.includes(currentRole))
-            .map(item => {
+            .filter((item) => item.roles.includes(currentRole))
+            .map((item) => {
               const Icon = item.icon;
               return (
                 <Link
                   key={item.path}
                   to={item.path}
-                  className={location.pathname.startsWith(item.path) ? "active" : ""}
+                  className={
+                    location.pathname.startsWith(item.path) ? "active" : ""
+                  }
                 >
                   <Icon className="sidebard-icon" /> {item.label}
                 </Link>
@@ -62,13 +105,15 @@ const Sidebar: React.FC<SidebardProps> = ({ onRoleChange, currentRole }) => {
 
         {/* Selector de rol */}
         <div className="sidebard-roles">
-          {["admin", "asignador"].map(role => (
+          {["admin", "asignador"].map((role) => (
             <button
               key={role}
-              className={`sidebard-role-btn${currentRole === role ? " active" : ""}`}
+              className={`sidebard-role-btn${
+                currentRole === role ? " active" : ""
+              }`}
               onClick={() => handleRoleClick(role as "admin" | "asignador")}
             >
-              {role === "admin" ? "Módulo de administración" : "Módulo de asignación"}
+              {role === "admin" ? "Módulo formulario" : "Módulo asignación"}
             </button>
           ))}
         </div>
@@ -82,9 +127,11 @@ const Sidebar: React.FC<SidebardProps> = ({ onRoleChange, currentRole }) => {
           className="sidebard-profile-img"
         />
         <div>
-          <div className="sidebard-profile-name">Prof. Juan Pérez</div>
+          <div className="sidebard-profile-name">Username</div>
           <div className="sidebard-profile-role">
-            {currentRole === "admin" ? "Administrador" : "Asignador"}
+            {currentRole === "admin"
+              ? "Modulo formulario"
+              : "Modulo asignacion"}
           </div>
         </div>
       </div>
