@@ -63,7 +63,7 @@ class GestionNiveladosViewSet(viewsets.ViewSet):
     
     @action(detail=False,
              methods=['put'],
-             url_path='confirmar-nivelados/(?P<anio>\d{4})/(?P<semestre>\d+)')
+             url_path=r'confirmar-nivelados/(?P<anio>\d{4})/(?P<semestre>\d+)')
     def confirmar_nivelados(self, request,anio, semestre):
         """
         Recibe el periodo 

@@ -82,9 +82,6 @@ __pycache__/
 # Archivos de base de datos SQLite
 db.sqlite3
 
-# Migraciones (puedes ignorarlas si quieres generarlas desde cero en cada entorno)
-*/migrations/__pycache__/
-*/migrations/*.py
 
 # Archivos de configuración de IDEs/editores
 .vscode/
