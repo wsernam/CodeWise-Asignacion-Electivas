@@ -38,9 +38,6 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-<<<<<<< HEAD:backEnd/servicio_envio_notificaciones/core/settings.py
-    'notificacion'
-=======
     'referencias',
     'gestion_hojas_de_calculo',
     'proceso_asignacion',
@@ -51,7 +48,6 @@ INSTALLED_APPS = [
     # Apps de terceros requeridas
     'rest_framework',        
     'import_export',
->>>>>>> feature/gestion-electivas:backEnd/gestion-asignacion/core/settings.py
 ]
 
 MIDDLEWARE = [
@@ -136,22 +132,6 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-<<<<<<< HEAD:backEnd/servicio_envio_notificaciones/core/settings.py
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = config('EMAIL_HOST', default='smtp.example.com')
-EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
-EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='user@example.com')
-EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='password')
-EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
-EMAIL_USE_SSL = config('EMAIL_USE_SSL', default=False, cast=bool)
-
-RABBITMQ_HOST = config("RABBITMQ_HOST")
-RABBITMQ_PORT = config("RABBITMQ_PORT", cast=int)
-RABBITMQ_USER = config("RABBITMQ_USER")
-RABBITMQ_PASS = config("RABBITMQ_PASSWORD")
-RABBITMQ_QUEUE = config("RABBITMQ_QUEUE")
-RABBITMQ_EXCHANGE = config("RABBITMQ_EXCHANGE")
-=======
 # --- CONFIGURACIÓN DE LOGGING ---
 # Esto asegura que los mensajes de logger.info(), logger.warning(), etc.,
 # se impriman en la consola del servidor, lo cual es crucial para la depuración.
@@ -168,4 +148,3 @@ LOGGING = {
         'level': 'INFO', # Cambia a 'DEBUG' para ver aún más detalles (ej: consultas SQL)
     },
 }
->>>>>>> feature/gestion-electivas:backEnd/gestion-asignacion/core/settings.py

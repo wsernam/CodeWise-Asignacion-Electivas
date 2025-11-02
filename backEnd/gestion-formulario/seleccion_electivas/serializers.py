@@ -3,14 +3,9 @@ from rest_framework import serializers
 from .models import SeleccionEstudianteElectiva
 from gestion_electivas.models import Electiva
 from collections import Counter
-<<<<<<< HEAD
-from gestion_electivas.models import Oferta_electiva
-from gestion_estudiantes.models import Estudiante
-=======
 from gestion_estudiantes.models import Estudiante
 from gestion_oferta_electiva.models import Oferta_electiva
 
->>>>>>> feature/gestion-electivas
 class ElectivaPrioridadDTO(serializers.Serializer):
     sel_prioridad = serializers.IntegerField()
     ele_codigo = serializers.CharField(max_length=225)
@@ -53,10 +48,7 @@ class CrearSeleccionElectivaDTO(serializers.Serializer):
             raise serializers.ValidationError(errores)
         
         return electivas
-<<<<<<< HEAD
-=======
     
->>>>>>> feature/gestion-electivas
     def validate_oferta(selft, data):
         anio = data['sel_anio']
         semestre = data['sel_num_semestre']
@@ -91,16 +83,10 @@ class CrearSeleccionElectivaDTO(serializers.Serializer):
         electivas_existentes_db = set(Electiva.objects.filter(ele_codigo__in=codigos_nuevos).values_list('ele_codigo', flat=True))
         if codigos_nuevos != electivas_existentes_db:
             raise serializers.ValidationError(f"Las siguientes electivas no existen: {list(codigos_nuevos - electivas_existentes_db)}")
-<<<<<<< HEAD
-        # 2. Validar que las electivas esten disponibles en la oferta
-        self.validate_oferta(data)
-        
-=======
 
         # 2. Validar que las electivas esten ofertadas para el periodo y programa del estudiante
         self.validate_oferta(data)
 
->>>>>>> feature/gestion-electivas
         est_codigo = data["est_codigo"]
         sel_anio = data["sel_anio"]
         sel_num_semestre = data["sel_num_semestre"]

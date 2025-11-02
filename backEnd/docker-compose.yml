@@ -14,12 +14,21 @@ services:
       MYSQL_PASSWORD: ${AUTH_DB_PASSWORD} # Contraseña del usuario (definida en .env)
       MYSQL_ROOT_PASSWORD: ${AUTH_DB_PASSWORD} # Contraseña del root (requerida por MySQL)
     volumes:
-      - volumen_db_usuarios:/var/lib/mysql # Monta un volumen persistente en /var/lib/mysql TODOS USAR TAMBIEN /var/lib/mysql POR CONVENCIÓN 
+      - volumen_db_usuarios:/var/lib/mysql # Monta un volumen persistente en /var/lib/mysql TODOS USAR TAMBIEN /var/lib/mysql POR CONVENCIÓN
     ports:
       - "3306:3306" # Expone el puerto 3306 (MySQL) para acceso desde fuera del contenedor
     # IMPORTANTE Healthcheck para asegurarse de que MySQL esté listo antes de que Django intente conectarse
     healthcheck:
-      test: [ "CMD", "mysqladmin", "ping", "-h", "db_usuarios", "-u${AUTH_DB_USER}", "-p${AUTH_DB_PASSWORD}" ]
+      test:
+        [
+          "CMD",
+          "mysqladmin",
+          "ping",
+          "-h",
+          "db_usuarios",
+          "-u${AUTH_DB_USER}",
+          "-p${AUTH_DB_PASSWORD}",
+        ]
       interval: 5s
       timeout: 10s
       retries: 5
@@ -45,7 +54,16 @@ services:
     ports:
       - "3307:3306"
     healthcheck:
-      test: [ "CMD", "mysqladmin", "ping", "-h", "db_formulario", "-u${FORM_DB_USER}", "-p${FORM_DB_PASSWORD}" ]
+      test:
+        [
+          "CMD",
+          "mysqladmin",
+          "ping",
+          "-h",
+          "db_formulario",
+          "-u${FORM_DB_USER}",
+          "-p${FORM_DB_PASSWORD}",
+        ]
       interval: 5s
       timeout: 10s
       retries: 5
@@ -54,8 +72,6 @@ services:
   # -------------------------------
   # Servicio para la base de datos ASIGNACION
   # -------------------------------
-
-
 
   # -------------------------------
   # Microservicio de seguridad (JWT)
@@ -117,37 +133,23 @@ services:
         condition: service_healthy
 
     command: >
-<<<<<<< HEAD
-      sh -c " python manage.py migrate && sh datosBase.sh && python manage.py runserver 0.0.0.0:8000 "
-  servicio_envio_notificaciones:
-    # 👈 tu micro Django
-    build:
-      context: ./servicio_envio_notificaciones # 👈 carpeta donde está el Dockerfile de Django
-      dockerfile: Dockerfile
-    container_name: servicio_notificaciones
-    depends_on:
-      - rabbitmq
-    command: >
-      sh -c " python -u ./notificacion/config_rabbit.py &  python -u manage.py migrate && python -u manage.py runserver 0.0.0.0:8002 "
-=======
       sh -c "
       python manage.py migrate && 
       sh datosBase.sh &&
       python manage.py runserver 0.0.0.0:8000
       "
 
-# -------------------------------
-#MICROSERVICIO GESTION DE ASIGNACION
-# -------------------------------
-  gestion-asignacion:                 
+  # -------------------------------
+  #MICROSERVICIO GESTION DE ASIGNACION
+  # -------------------------------
+  gestion-asignacion:
     build:
       context: ./gestion-asignacion
-      dockerfile: Dockerfile    
+      dockerfile: Dockerfile
     container_name: gestion-asignacion
     volumes:
-      - ./gestion-asignacion:/app   # Monta todo el proyecto en /app dentro del contenedor
-                 # IMPORTANTE: usar la misma convención en todos los microservicios
->>>>>>> feature/gestion-electivas
+      - ./gestion-asignacion:/app # Monta todo el proyecto en /app dentro del contenedor
+        # IMPORTANTE: usar la misma convención en todos los microservicios
     ports:
       - "8002:8002"
     restart: unless-stopped
@@ -164,11 +166,6 @@ services:
       RABBITMQ_DLX: ${RABBITMQ_DLX}
       #__________________________________
 
-<<<<<<< HEAD
-  # -------------------------------
-  # RABBITMQ
-  # -------------------------------
-=======
     depends_on:
       db_asignacion:
         condition: service_healthy
@@ -187,10 +184,9 @@ services:
       python manage.py runserver 0.0.0.0:8000
       "
 
-# -------------------------------
-# RABBITMQ
-# -------------------------------
->>>>>>> feature/gestion-electivas
+  # -------------------------------
+  # RABBITMQ
+  # -------------------------------
   rabbitmq:
     image: "rabbitmq:3-management" # Imagen oficial de RabbitMQ con plugin de gestión
     container_name: rabbitmq # Nombre del contenedor
@@ -203,7 +199,7 @@ services:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guest} # Usuario por defecto (definido en .env o 'guest')
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-guest} # Contraseña por defecto (definida en .env o 'guest')
     healthcheck:
-      test: [ "CMD-SHELL", "rabbitmq-diagnostics -q ping" ]
+      test: ["CMD-SHELL", "rabbitmq-diagnostics -q ping"]
       interval: 10s
       timeout: 10s
       retries: 5

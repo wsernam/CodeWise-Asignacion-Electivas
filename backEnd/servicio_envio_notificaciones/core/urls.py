@@ -15,12 +15,6 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-<<<<<<< HEAD:backEnd/servicio_envio_notificaciones/core/urls.py
-from django.urls import path
-
-urlpatterns = [
-    path('admin/', admin.site.urls),
-=======
 from django.urls import path, include
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -32,5 +26,4 @@ urlpatterns = [
     path("api/", include("gestion_nivelados.urls")),
     path('api/', include('asignacion.urls')),
     path('api/reporte-asignacion/', include('reporte_asignacion.urls')),
->>>>>>> feature/gestion-electivas:backEnd/gestion-asignacion/core/urls.py
 ]
