@@ -7,7 +7,6 @@ export ANIO="${ANIO:-2025}"
 export SEM="${SEM:-2}"
 
 echo "Ejecutando migraciones..."
-
 python manage.py makemigrations
 python manage.py migrate
 
@@ -45,8 +44,6 @@ def ofertar(ele, prog):
     Oferta_electiva.objects.get_or_create(
         ofe_anio=ANIO, ofe_num_semestre=SEM,
         ele_codigo=ele, pro_codigo=prog
-
-
     )
 
 ofertar(E["ELEC001"], PIS)
@@ -82,8 +79,7 @@ DEMO = {
     200000000018: ("RAFAEL",     "YELA",        "rafael.yela@unicauca.edu.co",         "PIAI"),
     200000000019: ("SANDRA",     "ZAMBRANO",    "sandra.zambrano@unicauca.edu.co",     "PIET"),
     200000000020: ("TOMAS",      "ZUNIGA",      "tomas.zuniga@unicauca.edu.co",        "PIS"),
-
-     # Nuevos estudiantes
+    
     104621011351: ("ESTUDIANTE", "UNO",   "104621011351@unicauca.edu.co", "PIS"),
     100621021344: ("ESTUDIANTE", "DOS",   "100621021344@unicauca.edu.co", "PIS"),
     104621011382: ("ESTUDIANTE", "TRES",  "104621011382@unicauca.edu.co", "PIS"),
@@ -93,8 +89,7 @@ DEMO = {
     104621011376: ("ESTUDIANTE", "SIETE", "104621011376@unicauca.edu.co", "PIS"),
     104621011383: ("ESTUDIANTE", "OCHO",  "104621011383@unicauca.edu.co", "PIS"),
     104621021199: ("ESTUDIANTE", "NUEVE", "104621021199@unicauca.edu.co", "PIS"),
-
-
+    
 }
 P_MAP = {"PIS": PIS, "PIAI": PIAI, "PIET": PIET}
 
@@ -118,7 +113,7 @@ with transaction.atomic():
         if c: cre_est += 1
 
         prefs = preferencias_para(pc)
-        for i, ele_key in enumerate(prefs[:3], start=1):  # P1..P3
+        for i, ele_key in enumerate(prefs[:5], start=1):  # P1..P5
             ele = E[ele_key]
             _, cs = Seleccion.objects.get_or_create(
                 est_codigo=est,
@@ -126,39 +121,14 @@ with transaction.atomic():
                 sel_num_semestre=SEM,
                 sel_prioridad=i,
                 defaults={"ele_codigo": ele}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
             )
             if cs: cre_sel += 1
-
-
 
 print(f"Estudiantes creados: {cre_est}")
 print(f"Selecciones creadas: {cre_sel} (periodo {ANIO}-{SEM})")
 PYCODE
 
 echo "==> OK (FORMULARIO)."
-
-
 
 
 # Arranca el servidor

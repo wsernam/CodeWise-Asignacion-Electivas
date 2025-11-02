@@ -1,17 +1,20 @@
 from typing import Iterable, List
 from .contracts import StudentRow, PriorityStrategy
+from asignacion.variables import (
+    ADVANCE_MIN_NO_NIV,
+    # opcional: NIVELADO_FIJO
+)
 
 class Protocol2025Strategy(PriorityStrategy):
-    UMBRAL = 60.0  # avance mínimo del protocolo
 
     def rank(self, rows: Iterable[StudentRow]) -> List[StudentRow]:
-        # 1) Filtros: activo y avance >=60 (nivelado => 100)
+        # 1) Filtros: activo y avance >=65 (nivelado => 100)
         elegibles: list[tuple[StudentRow, float]] = []
         for r in rows:
             if not r.estado_activo:
                 continue
             avance = 100.0 if r.nivelado else float(r.porcentaje_avance or 0.0)
-            if avance < self.UMBRAL:
+            if avance < ADVANCE_MIN_NO_NIV:
                 continue
             elegibles.append((r, avance))
 

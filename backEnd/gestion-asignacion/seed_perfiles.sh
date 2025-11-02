@@ -64,8 +64,6 @@ SCEN = [
     (104621011376, True,  Decimal("100.0"),Decimal("4.80"),10, 4, 160),
     (104621011383, False, Decimal("87.0"), Decimal("3.40"), 6, 2, 120),
     (104621021199, False, Decimal("93.0"), Decimal("4.00"), 9, 3, 140),
-
-
 ]
 
 creados, actualizados, omitidos = 0, 0, 0

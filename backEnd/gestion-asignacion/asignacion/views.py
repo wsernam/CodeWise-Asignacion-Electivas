@@ -4,7 +4,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from .services.priority_service import construir_lista_prioridad
 from asignacion.services.asignador_Service import AsignadorService
-from asignacion.ranking_builder import build_ranking_dtos
+
 from referencias.models import SeleccionEstudianteElectiva as Sel, Oferta as Oferta
 from gestion_hojas_de_calculo.models import PerfilAcademico
 from asignacion.models import Asignacion
