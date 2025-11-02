@@ -54,6 +54,18 @@ SCEN = [
     (200000000018, True,  Decimal("100.0"), Decimal("4.33"),10, 4, 160),
     (200000000019, False, Decimal("90.0"),  Decimal("3.50"), 7, 1, 120),
     (200000000020, False, Decimal("99.5"),  Decimal("4.80"), 9, 4, 160),
+    
+    (104621011351, True,  Decimal("98.5"), Decimal("4.20"), 9, 3, 140),
+    (100621021344, False, Decimal("85.0"), Decimal("3.30"), 6, 2, 120),
+    (104621011382, False, Decimal("92.0"), Decimal("3.80"), 8, 3, 130),
+    (104621011377, True,  Decimal("99.0"), Decimal("4.50"),10, 4, 160),
+    (100621021365, False, Decimal("88.0"), Decimal("3.60"), 7, 2, 125),
+    (100621021349, False, Decimal("91.5"), Decimal("3.90"), 8, 3, 135),
+    (104621011376, True,  Decimal("100.0"),Decimal("4.80"),10, 4, 160),
+    (104621011383, False, Decimal("87.0"), Decimal("3.40"), 6, 2, 120),
+    (104621021199, False, Decimal("93.0"), Decimal("4.00"), 9, 3, 140),
+
+
 ]
 
 creados, actualizados, omitidos = 0, 0, 0

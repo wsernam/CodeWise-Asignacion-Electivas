@@ -1,152 +1,165 @@
 #!/bin/bash
+set -e
 sed -i 's/\r$//' "$0"
 
+# Puedes sobreescribir con ANIO=2025 SEM=2 ./datosBase.sh
+export ANIO="${ANIO:-2025}"
+export SEM="${SEM:-2}"
+
 echo "Ejecutando migraciones..."
-# Asegurarse de que las migraciones se creen y apliquen correctamente
+
 python manage.py makemigrations
 python manage.py migrate
 
-echo "Insertando datos iniciales en la base de datos..."
+echo "Insertando datos iniciales en la base de datos (FORMULARIO) para periodo ${ANIO}-${SEM}..."
 
-# Usamos el bloque shell para ejecutar código Python
-python manage.py shell <<EOF
+python manage.py shell <<'PYCODE'
+import os
+from django.db import transaction
 from gestion_electivas.models import Programa, Facultad, Electiva
 from gestion_estudiantes.models import Estudiante
 from gestion_oferta_electiva.models import Oferta_electiva
-from seleccion_electivas.models import SeleccionEstudianteElectiva
-from datetime import date
+from seleccion_electivas.models import SeleccionEstudianteElectiva as Seleccion
 
-print("--- 1. CREANDO FACULTAD ---")
-# --- 1. CREACIÓN DE FACULTAD ---
+ANIO = int(os.environ.get("ANIO", "2025"))
+SEM  = int(os.environ.get("SEM",  "2"))
 
-# Creamos o recuperamos la facultad por nombre
-facultad, created_fac = Facultad.objects.get_or_create(
-    fac_nombre="Facultad de Ingeniería"
-)
-print(f"Facultad creada: {created_fac}, código asignado: {facultad.fac_codigo}")
+# 1) Facultad y programas
+fac, _ = Facultad.objects.get_or_create(fac_nombre="Facultad de Ingeniería")
+PIS, _  = Programa.objects.get_or_create(pro_codigo="PIS",  defaults={"pro_nombre":"Ingeniería de Sistemas", "fac_codigo":fac})
+PIAI, _ = Programa.objects.get_or_create(pro_codigo="PIAI", defaults={"pro_nombre":"Ingeniería Automática",  "fac_codigo":fac})
+PIET, _ = Programa.objects.get_or_create(pro_codigo="PIET", defaults={"pro_nombre":"Ingeniería Electrónica", "fac_codigo":fac})
 
-print("\n--- 2. CREANDO PROGRAMAS ---")
-# --- 2. CREACIÓN DE PROGRAMAS ---
+# 2) Electivas (incluye compartidas)
+E = {}
+E["ELEC001"], _ = Electiva.objects.get_or_create(ele_codigo="ELEC001", defaults={"ele_nombre":"Arquitectura de SW",       "pro_codigo":PIS})
+E["ELEC002"], _ = Electiva.objects.get_or_create(ele_codigo="ELEC002", defaults={"ele_nombre":"Microservicios",           "pro_codigo":PIS})
+E["ELEC003"], _ = Electiva.objects.get_or_create(ele_codigo="ELEC003", defaults={"ele_nombre":"Inteligencia de Datos",    "pro_codigo":PIS})
+E["ELEC101"], _ = Electiva.objects.get_or_create(ele_codigo="ELEC101", defaults={"ele_nombre":"Aplicaciones IoT",        "pro_codigo":PIAI})
+E["ELEC201"], _ = Electiva.objects.get_or_create(ele_codigo="ELEC201", defaults={"ele_nombre":"Comunicaciones y Datos",  "pro_codigo":PIET})
+E["COM001"],  _ = Electiva.objects.get_or_create(ele_codigo="COM001",  defaults={"ele_nombre":"Aprendizaje Colaborativo", "pro_codigo":PIS})
+E["COM002"],  _ = Electiva.objects.get_or_create(ele_codigo="COM002",  defaults={"ele_nombre":"Apps Móviles",             "pro_codigo":PIS})
 
-# Creamos programas asociados a la facultad
-programa_sistemas, _ = Programa.objects.get_or_create(
-    pro_codigo="PIS",
-    defaults={'pro_nombre': "Ingenieria en Sistemas", 'fac_codigo': facultad}
-)
+# 3) Oferta del periodo (global: basta con que esté ofertada por algún programa)
+def ofertar(ele, prog):
+    Oferta_electiva.objects.get_or_create(
+        ofe_anio=ANIO, ofe_num_semestre=SEM,
+        ele_codigo=ele, pro_codigo=prog
 
-Programa.objects.get_or_create(
-    pro_codigo="PIA",
-    defaults={'pro_nombre': "Ingenieria Automatica", 'fac_codigo': facultad}
-)
 
-Programa.objects.get_or_create(
-    pro_codigo="PIE",
-    defaults={'pro_nombre': "Ingenieria Electronica", 'fac_codigo': facultad}
-)
-
-print("3 programas creados o actualizados.")
-
-print("\n--- 3. CREANDO ELECTIVAS ---")
-electiva1, _ = Electiva.objects.get_or_create(
-    ele_codigo="ELEC001",
-    defaults={'ele_nombre': "Inteligencia Artificial", 'pro_codigo': programa_sistemas}
-)
-electiva2, _ = Electiva.objects.get_or_create(
-    ele_codigo="ELEC002",
-    defaults={'ele_nombre': "Desarrollo Web Avanzado", 'pro_codigo': programa_sistemas}
-)
-electiva3, _ = Electiva.objects.get_or_create(
-    ele_codigo="ELEC003",
-    defaults={'ele_nombre': "Computación en la Nube", 'pro_codigo': programa_sistemas}
-)
-print("3 electivas creadas o actualizadas.")
-
-print("\n--- 4. CREANDO OFERTA DE ELECTIVAS ---")
-anio_actual = date.today().year
-semestre_actual = 1
-electivas_ofertadas = [electiva1, electiva2, electiva3]
-ofertas_creadas = 0
-
-for electiva in electivas_ofertadas:
-    _, created = Oferta_electiva.objects.get_or_create(
-        ofe_anio=anio_actual,
-        ofe_num_semestre=semestre_actual,
-        ele_codigo=electiva,
-        pro_codigo=programa_sistemas
     )
-    if created:
-        ofertas_creadas += 1
 
-print(f"{ofertas_creadas} nuevas ofertas creadas para el periodo {anio_actual}-{semestre_actual}.")
+ofertar(E["ELEC001"], PIS)
+ofertar(E["ELEC002"], PIS)
+ofertar(E["ELEC003"], PIS)
+ofertar(E["ELEC101"], PIAI)
+ofertar(E["ELEC201"], PIET)
+ofertar(E["COM001"],  PIS)
+ofertar(E["COM002"],  PIS)
 
-print("\n--- 5. CREANDO ESTUDIANTES Y SU SELECCIÓN DE ELECTIVAS ---")
+# 4) 20 estudiantes
+DEMO = {
+    200000000001: ("ANA",        "QUINTERO",    "ana.quintero@unicauca.edu.co",        "PIS"),
+    200000000002: ("BRAYAN",     "SUAREZ",      "brayan.suarez@unicauca.edu.co",       "PIS"),
+    200000000003: ("CAROLINA",   "BOLAÑOS",     "carolina.bolanos@unicauca.edu.co",    "PIS"),
+    200000000004: ("DIEGO",      "MARTINEZ",    "diego.martinez@unicauca.edu.co",      "PIS"),
+    200000000005: ("ESTEFANIA",  "MORALES",     "estefania.morales@unicauca.edu.co",   "PIS"),
 
-# --- 5. CREACIÓN DE ESTUDIANTES Y SU SELECCIÓN ---
+    200000000006: ("FELIPE",     "CASTRO",      "felipe.castro@unicauca.edu.co",       "PIAI"),
+    200000000007: ("GABRIELA",   "RUIZ",        "gabriela.ruiz@unicauca.edu.co",       "PIAI"),
+    200000000008: ("HECTOR",     "GOMEZ",       "hector.gomez@unicauca.edu.co",        "PIAI"),
+    200000000009: ("IVONNE",     "SANCHEZ",     "ivonne.sanchez@unicauca.edu.co",      "PIAI"),
+    200000000010: ("JULIAN",     "TASCON",      "julian.tascon@unicauca.edu.co",       "PIAI"),
 
-# Lista de códigos de estudiantes
-codigos = [
-    104621011351, 100621021344, 104621011382, 104621011377, 
-    100621021365, 100621021349, 104621011376, 104621011383, 
-    104621021199
-]
+    200000000011: ("KAREN",      "ARBOLEDA",    "karen.arboleda@unicauca.edu.co",      "PIET"),
+    200000000012: ("LEONARDO",   "MELO",        "leonardo.melo@unicauca.edu.co",       "PIET"),
+    200000000013: ("MONICA",     "OROZCO",      "monica.orozco@unicauca.edu.co",       "PIET"),
+    200000000014: ("NICOLAS",    "PAZ",         "nicolas.paz@unicauca.edu.co",         "PIET"),
+    200000000015: ("OSCAR",      "RIVERA",      "oscar.rivera@unicauca.edu.co",        "PIET"),
 
-estudiantes_creados = 0
-selecciones_creadas = 0
-for codigo in codigos:
-    # Usamos get_or_create para manejar los estudiantes.
-    # Usamos el pro_codigo_id para asignar la clave foránea por ID, 
-    # asumiendo que el programa creado (programa_sistemas) tiene el ID 1.
-    estudiante, created_est = Estudiante.objects.get_or_create(
-        est_codigo=codigo,
-        defaults={
-            'est_nombre': f"Nombre{codigo}", 
-            'est_apellido': f"Apellido{codigo}", 
-            'est_correo': f"correo{codigo}@unicauca.edu.co",
-            'pro_codigo_id': programa_sistemas.pro_codigo # Usamos el ID del objeto creado
-        }
-    )
-    if created_est:
-        estudiantes_creados += 1
+    200000000016: ("PAOLA",      "SERNA",       "paola.serna@unicauca.edu.co",         "PIS"),
+    200000000017: ("QUEEN",      "VALENCIA",    "queen.valencia@unicauca.edu.co",      "PIS"),
+    200000000018: ("RAFAEL",     "YELA",        "rafael.yela@unicauca.edu.co",         "PIAI"),
+    200000000019: ("SANDRA",     "ZAMBRANO",    "sandra.zambrano@unicauca.edu.co",     "PIET"),
+    200000000020: ("TOMAS",      "ZUNIGA",      "tomas.zuniga@unicauca.edu.co",        "PIS"),
 
-    # Por cada estudiante, creamos su selección de electivas para el periodo actual
-    # Seleccionará la electiva 1 como prioridad 1 y la electiva 2 como prioridad 2
-    # --- AJUSTE PARA ROBUSTEZ ---
-    # Usamos get_or_create con todos los campos que definen la unicidad para evitar errores.
-    # Esto asegura que no se intente crear una selección si ya existe una con la misma
-    # electiva o la misma prioridad para ese estudiante en ese periodo.
-
-    # Selección para Prioridad 1
-    obj, created = SeleccionEstudianteElectiva.objects.get_or_create(
-        est_codigo=estudiante,
-        sel_anio=anio_actual,
-        sel_num_semestre=semestre_actual,
-        sel_prioridad=1,
-        defaults={
-            'ele_codigo': electiva1
-        }
-    )
-    if created:
-        selecciones_creadas += 1
-
-    # Selección para Prioridad 2
-    obj, created = SeleccionEstudianteElectiva.objects.get_or_create(
-        est_codigo=estudiante,
-        sel_anio=anio_actual,
-        sel_num_semestre=semestre_actual,
-        sel_prioridad=2,
-        defaults={
-            'ele_codigo': electiva2
-        }
-    )
-    if created:
-        selecciones_creadas += 1
+     # Nuevos estudiantes
+    104621011351: ("ESTUDIANTE", "UNO",   "104621011351@unicauca.edu.co", "PIS"),
+    100621021344: ("ESTUDIANTE", "DOS",   "100621021344@unicauca.edu.co", "PIS"),
+    104621011382: ("ESTUDIANTE", "TRES",  "104621011382@unicauca.edu.co", "PIS"),
+    104621011377: ("ESTUDIANTE", "CUATRO","104621011377@unicauca.edu.co", "PIS"),
+    100621021365: ("ESTUDIANTE", "CINCO", "100621021365@unicauca.edu.co", "PIS"),
+    100621021349: ("ESTUDIANTE", "SEIS",  "100621021349@unicauca.edu.co", "PIS"),
+    104621011376: ("ESTUDIANTE", "SIETE", "104621011376@unicauca.edu.co", "PIS"),
+    104621011383: ("ESTUDIANTE", "OCHO",  "104621011383@unicauca.edu.co", "PIS"),
+    104621021199: ("ESTUDIANTE", "NUEVE", "104621021199@unicauca.edu.co", "PIS"),
 
 
+}
+P_MAP = {"PIS": PIS, "PIAI": PIAI, "PIET": PIET}
 
-print(f"{estudiantes_creados} nuevos estudiantes creados.")
-print(f"{selecciones_creadas} nuevas selecciones de electivas creadas.")
+def preferencias_para(prog_code):
+    if prog_code == "PIS":
+        return ["ELEC001", "ELEC002", "COM001", "COM002", "ELEC003"]
+    if prog_code == "PIAI":
+        return ["ELEC101", "COM001", "COM002", "ELEC001"]
+    if prog_code == "PIET":
+        return ["ELEC201", "COM001", "COM002", "ELEC001"]
+    return ["COM001", "COM002"]
 
-EOF
+cre_est, cre_sel = 0, 0
+with transaction.atomic():
+    for est_cod, (nom, ape, email, pc) in DEMO.items():
+        prog = P_MAP[pc]
+        est, c = Estudiante.objects.get_or_create(
+            est_codigo=est_cod,
+            defaults={"est_nombre":nom, "est_apellido":ape, "est_correo":email, "pro_codigo":prog}
+        )
+        if c: cre_est += 1
 
-# Ejecuta el servidor de Django
+        prefs = preferencias_para(pc)
+        for i, ele_key in enumerate(prefs[:3], start=1):  # P1..P3
+            ele = E[ele_key]
+            _, cs = Seleccion.objects.get_or_create(
+                est_codigo=est,
+                sel_anio=ANIO,
+                sel_num_semestre=SEM,
+                sel_prioridad=i,
+                defaults={"ele_codigo": ele}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            )
+            if cs: cre_sel += 1
+
+
+
+print(f"Estudiantes creados: {cre_est}")
+print(f"Selecciones creadas: {cre_sel} (periodo {ANIO}-{SEM})")
+PYCODE
+
+echo "==> OK (FORMULARIO)."
+
+
+
+
+# Arranca el servidor
 exec "$@"
