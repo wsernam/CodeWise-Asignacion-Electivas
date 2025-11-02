@@ -1,6 +1,6 @@
 #!/bin/bash
 set -e
-sed -i 's/\r$//' "$0"
+
 
 # Puedes sobreescribir con ANIO=2025 SEM=2 ./datosBase.sh
 export ANIO="${ANIO:-2025}"
