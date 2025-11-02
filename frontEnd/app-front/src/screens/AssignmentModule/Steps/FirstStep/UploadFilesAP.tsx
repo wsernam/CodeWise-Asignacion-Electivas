@@ -49,10 +49,8 @@ const cards = [
 
 const UploadFilesAP: React.FC<AssignmentProcessProps> = ({
   onNext,
-  onCancel,
   onStepClick,
   currentStep,
-  completedSteps,
   getStepBorderClass,
 }) => {
   const [showModal, setShowModal] = React.useState(false);

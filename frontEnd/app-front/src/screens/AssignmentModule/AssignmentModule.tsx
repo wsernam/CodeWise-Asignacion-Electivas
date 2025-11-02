@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import "./AssignmentModule.css";
-import DashboardLayout from "../../components/layout/DashboardLayout/DashboardLayout";
 import Card from "../../components/ui/Card/Card";
 import Button from "../../components/ui/Button/Button";
 import SimpleModal from "../../components/shared/SimpleModal/SimpleModal";
@@ -83,112 +82,108 @@ const AssignmentModule: React.FC = () => {
   return (
     <>
       <div className="assignment-page-container">
-        <DashboardLayout>
-          <div className="form-page-content">
-            <Card className="main-card assignment-card">
-              {!hasActiveProcess ? (
-                <div className="no-process-container">
-                  <div className="info-icon">⚠️</div>
-                  <h3>No hay procesos de asignación activos</h3>
+        <div className="form-page-content">
+          <Card className="main-card assignment-card">
+            {!hasActiveProcess ? (
+              <div className="no-process-container">
+                <div className="info-icon">⚠️</div>
+                <h3>No hay procesos de asignación activos</h3>
+                <Button
+                  variant="primary"
+                  onClick={() => setShowCreateModal(true)}
+                  className="create-btn"
+                >
+                  Crear
+                </Button>
+              </div>
+            ) : (
+              <>
+                <div className="simple-process-header">
+                  <div className="process-title-section">
+                    <h3>
+                      Proceso de asignación {processData?.year}-
+                      {processData?.semester}
+                    </h3>
+                    <span className="process-status">{getProcessStatus()}</span>
+                  </div>
                   <Button
-                    variant="primary"
-                    onClick={() => setShowCreateModal(true)}
-                    className="create-btn"
+                    variant="secondary"
+                    onClick={handleUndoLastStep}
+                    disabled={currentStep === 1}
                   >
-                    Crear
+                    Deshacer
                   </Button>
                 </div>
-              ) : (
-                <>
-                  <div className="simple-process-header">
-                    <div className="process-title-section">
-                      <h3>
-                        Proceso de asignación {processData?.year}-
-                        {processData?.semester}
-                      </h3>
-                      <span className="process-status">
-                        {getProcessStatus()}
-                      </span>
-                    </div>
-                    <Button
-                      variant="secondary"
-                      onClick={handleUndoLastStep}
-                      disabled={currentStep === 1}
-                    >
-                      Deshacer
+
+                {currentStep === 1 && (
+                  <UploadFilesAP
+                    onNext={handleNextStep}
+                    onCancel={handleCancelProcess}
+                    onStepClick={handleStepClick}
+                    currentStep={1}
+                    completedSteps={completedSteps}
+                    getStepBorderClass={getStepBorderClass}
+                  />
+                )}
+
+                {currentStep === 2 && (
+                  <InactivesManagementAP
+                    onNext={handleNextStep}
+                    onCancel={handleCancelProcess}
+                    onStepClick={handleStepClick}
+                    currentStep={2}
+                    completedSteps={completedSteps}
+                    getStepBorderClass={getStepBorderClass}
+                  />
+                )}
+
+                {currentStep === 3 && (
+                  <LevelsManagementAP
+                    onNext={handleNextStep}
+                    onCancel={handleCancelProcess}
+                    onStepClick={handleStepClick}
+                    currentStep={3}
+                    completedSteps={completedSteps}
+                    getStepBorderClass={getStepBorderClass}
+                  />
+                )}
+
+                {currentStep === 4 && (
+                  <AssignmentManagementAP
+                    onNext={handleNextStep}
+                    onCancel={handleCancelProcess}
+                    onStepClick={handleStepClick}
+                    currentStep={4}
+                    completedSteps={completedSteps}
+                    getStepBorderClass={getStepBorderClass}
+                  />
+                )}
+
+                {currentStep === 5 && (
+                  <div className="final-step-actions">
+                    <p>Los datos fueron guardados correctamente.</p>
+                    <Button variant="primary" className="view-assignment-btn">
+                      Ver asignación
                     </Button>
                   </div>
+                )}
+              </>
+            )}
+          </Card>
 
-                  {currentStep === 1 && (
-                    <UploadFilesAP
-                      onNext={handleNextStep}
-                      onCancel={handleCancelProcess}
-                      onStepClick={handleStepClick}
-                      currentStep={1}
-                      completedSteps={completedSteps}
-                      getStepBorderClass={getStepBorderClass}
-                    />
-                  )}
+          <div className="divider"></div>
 
-                  {currentStep === 2 && (
-                    <InactivesManagementAP
-                      onNext={handleNextStep}
-                      onCancel={handleCancelProcess}
-                      onStepClick={handleStepClick}
-                      currentStep={2}
-                      completedSteps={completedSteps}
-                      getStepBorderClass={getStepBorderClass}
-                    />
-                  )}
-
-                  {currentStep === 3 && (
-                    <LevelsManagementAP
-                      onNext={handleNextStep}
-                      onCancel={handleCancelProcess}
-                      onStepClick={handleStepClick}
-                      currentStep={3}
-                      completedSteps={completedSteps}
-                      getStepBorderClass={getStepBorderClass}
-                    />
-                  )}
-
-                  {currentStep === 4 && (
-                    <AssignmentManagementAP
-                      onNext={handleNextStep}
-                      onCancel={handleCancelProcess}
-                      onStepClick={handleStepClick}
-                      currentStep={4}
-                      completedSteps={completedSteps}
-                      getStepBorderClass={getStepBorderClass}
-                    />
-                  )}
-
-                  {currentStep === 5 && (
-                    <div className="final-step-actions">
-                      <p>Los datos fueron guardados correctamente.</p>
-                      <Button variant="primary" className="view-assignment-btn">
-                        Ver asignación
-                      </Button>
-                    </div>
-                  )}
-                </>
-              )}
-            </Card>
-
-            <div className="divider"></div>
-
-            <Card className="main-card history-card">
-              <h3 className="history-title">Últimos procesos de Asignación</h3>
-              <div className="process-history-item">
-                <div className="process-period">2024-2</div>
-                <div className="process-details">
-                  <div className="process-date">Finalizado en: DD-MM-YYYY</div>
-                  <span className="status-finished">Finalizado</span>
-                </div>
+          <Card className="main-card history-card">
+            <h3 className="history-title">Últimos procesos de Asignación</h3>
+            <div className="process-history-item">
+              <div className="process-period">2024-2</div>
+              <div className="process-details">
+                <div className="process-date">Finalizado en: DD-MM-YYYY</div>
+                <span className="status-finished">Finalizado</span>
               </div>
-            </Card>
-          </div>
-        </DashboardLayout>
+            </div>
+          </Card>
+        </div>
       </div>
 
       <SimpleModal

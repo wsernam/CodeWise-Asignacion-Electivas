@@ -1,8 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Form, Input, Select } from "antd";
-import Header from "../../components/layout/Header/Header";
-import Footer from "../../components/layout/Footer/Footer";
-import Navbar from "../../components/layout/Navbar/Navbar";
 import Card from "../../components/ui/Card/Card";
 import Button from "../../components/ui/Button/Button";
 import { useNavigate, useParams } from "react-router";
@@ -178,8 +175,6 @@ const EditElective: React.FC = () => {
   if (!electiveFound && electives.length > 0) {
     return (
       <div className="form-page-container">
-        <Header />
-        <Navbar />
         <div className="form-page-content">
           <Card className="form-card" padding="xl">
             <h2 className="form-title">Electiva no encontrada</h2>
@@ -189,16 +184,12 @@ const EditElective: React.FC = () => {
             </Button>
           </Card>
         </div>
-        <Footer />
       </div>
     );
   }
 
   return (
     <div className="form-page-container">
-      <Header />
-      <Navbar />
-
       <div className="form-page-content">
         <Card className="form-card" padding="xl">
           <h2 className="form-title">Editar Electiva</h2>
@@ -281,9 +272,6 @@ const EditElective: React.FC = () => {
           </Form>
         </Card>
       </div>
-
-      <Footer />
-
       <WarningModal
         open={warning.open}
         message={warning.message}

@@ -1,8 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { Form, Input, Select } from "antd";
-import Header from "../../components/layout/Header/Header";
-import Footer from "../../components/layout/Footer/Footer";
-import Navbar from "../../components/layout/Navbar/Navbar";
 import Card from "../../components/ui/Card/Card";
 import Button from "../../components/ui/Button/Button";
 import { useNavigate, useParams } from "react-router";
@@ -159,8 +156,6 @@ const EditProgram: React.FC = () => {
   if (!programFound && programs.length > 0) {
     return (
       <div className="auth-page">
-        <Header />
-        <Navbar />
         <div className="auth-page-content">
           <Card padding="xl">
             <h2>Programa no encontrado</h2>
@@ -170,16 +165,12 @@ const EditProgram: React.FC = () => {
             </Button>
           </Card>
         </div>
-        <Footer />
       </div>
     );
   }
 
   return (
     <div className="auth-page">
-      <Header />
-      <Navbar />
-
       <div className="auth-page-content">
         <Card padding="xl">
           <h2>Editar Programa</h2>
@@ -269,9 +260,6 @@ const EditProgram: React.FC = () => {
           </Form>
         </Card>
       </div>
-
-      <Footer />
-
       <SuccessModal
         open={success.open}
         message={success.message}

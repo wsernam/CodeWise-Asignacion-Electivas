@@ -3,9 +3,6 @@ import { Select } from "antd";
 import "./Offer.css";
 
 // Components
-import Header from "../../components/layout/Header/Header";
-import Footer from "../../components/layout/Footer/Footer";
-import Navbar from "../../components/layout/Navbar/Navbar";
 import Card from "../../components/ui/Card/Card";
 import Button from "../../components/ui/Button/Button";
 import WarningModal from "../../components/shared/WarningModal/WarningModal";
@@ -219,9 +216,6 @@ const Offer: React.FC = () => {
   // ========== RENDERIZADO ==========
   return (
     <div className="offer-container">
-      <Header />
-      <Navbar />
-
       <div className="offer-content">
         <div style={{ maxWidth: "1000px", width: "100%" }}>
           <Card className="offer-card" padding="xl">
@@ -426,8 +420,6 @@ const Offer: React.FC = () => {
           </Card>
         </div>
       </div>
-
-      <Footer />
 
       <ConfirmModal
         open={showConfirm}

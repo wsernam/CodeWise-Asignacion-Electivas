@@ -18,14 +18,25 @@ import ReportsForm from "./screens/Reports/ReportsForm.tsx";
 
 // ---------------------- IMPORTS DE ROUTER ----------------------
 import { createBrowserRouter } from "react-router";
+import DashboardLayout from "./components/layout/DashboardLayout/DashboardLayout.tsx";
 
 // ---------------------- CONFIGURACIÓN DEL ROUTER ----------------------
+
+// Componente wrapper para aplicar DashboardLayout
+const withDashboardLayout = (Component: React.ComponentType) => {
+  return (
+    <DashboardLayout>
+      <Component />
+    </DashboardLayout>
+  );
+};
+
 const router = createBrowserRouter([
+  // Estudiantes y Login sin Layout
   {
     path: "/",
     element: <PreLogin />,
   },
-  // Estudiante
   {
     path: "/login-student",
     element: <LoginStudent />,
@@ -38,57 +49,54 @@ const router = createBrowserRouter([
     path: "/elective-selection",
     element: <ElectiveSelection />,
   },
-
-  // Administrador
   {
     path: "/login-admin",
     element: <LoginAdmin />,
   },
+  // Con Dashboard Layout (admin y asignador)
+  {
+    path: "/dashboard",
+    element: withDashboardLayout(Dashboard),
+  },
   {
     path: "/electives",
-    element: <Electives />,
+    element: withDashboardLayout(Electives),
   },
   {
     path: "/electives/add",
-    element: <AddElective />,
+    element: withDashboardLayout(AddElective),
   },
   {
     path: "/electives/edit/:ele_codigo",
-    element: <EditElective />,
+    element: withDashboardLayout(EditElective),
   },
   {
     path: "/programs",
-    element: <ListProgram />,
+    element: withDashboardLayout(ListProgram),
   },
   {
     path: "/programs/create",
-    element: <CreateProgram />,
+    element: withDashboardLayout(CreateProgram),
   },
   {
     path: "/programs/edit/:codigo",
-    element: <EditProgram />,
-  },
-  {
-    path: "/dashboard",
-    element: <Dashboard />,
+    element: withDashboardLayout(EditProgram),
   },
   {
     path: "/offer",
-    element: <Offer />,
+    element: withDashboardLayout(Offer),
   },
-
-  // Asignador
   {
     path: "/assignment-module",
-    element: <AssignmentModule />,
+    element: withDashboardLayout(AssignmentModule),
   },
   {
     path: "/reports-assignment",
-    element: <ReportsAssignment />,
+    element: withDashboardLayout(ReportsAssignment),
   },
   {
     path: "/reports-form",
-    element: <ReportsForm />,
+    element: withDashboardLayout(ReportsForm),
   },
 ]);
 

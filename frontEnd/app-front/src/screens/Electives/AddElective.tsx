@@ -1,12 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { Form, Input, Select } from "antd";
-import Header from "../../components/layout/Header/Header";
-import Footer from "../../components/layout/Footer/Footer";
 import { useNavigate } from "react-router";
 import WarningModal from "../../components/shared/WarningModal/WarningModal";
 import ConfirmModal from "../../components/shared/ConfirmModal/ConfirmModal";
 import SuccessModal from "../../components/shared/SuccessModal/SuccessModal";
-import Navbar from "../../components/layout/Navbar/Navbar";
 import Card from "../../components/ui/Card/Card";
 import Button from "../../components/ui/Button/Button";
 import { useElectiveStore } from "../../store/electiveStore";
@@ -182,9 +179,6 @@ const AddElective: React.FC = () => {
 
   return (
     <div className="form-page-container">
-      <Header />
-      <Navbar />
-
       <div className="form-page-content">
         <Card className="form-card" padding="xl">
           <h2 className="form-title">Agregar Nueva Electiva</h2>
@@ -287,8 +281,6 @@ const AddElective: React.FC = () => {
           </Form>
         </Card>
       </div>
-
-      <Footer />
 
       {/* Modales SIEMPRE montados */}
       <WarningModal

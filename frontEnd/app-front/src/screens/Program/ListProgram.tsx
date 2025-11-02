@@ -1,8 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { useProgramStore } from "../../store/programStore";
-import Header from "../../components/layout/Header/Header";
-import Footer from "../../components/layout/Footer/Footer";
-import Navbar from "../../components/layout/Navbar/Navbar";
 import Card from "../../components/ui/Card/Card";
 import Button from "../../components/ui/Button/Button";
 import { useNavigate } from "react-router";
@@ -31,9 +28,6 @@ const ListProgram: React.FC = () => {
 
   return (
     <div className="auth-page">
-      <Header />
-      <Navbar />
-
       <div className="auth-page-content">
         <Card padding="xl" className="programs-card">
           <h2>Sistema de Gestión de Programas</h2>
@@ -101,8 +95,6 @@ const ListProgram: React.FC = () => {
           </div>
         </Card>
       </div>
-
-      <Footer />
     </div>
   );
 };

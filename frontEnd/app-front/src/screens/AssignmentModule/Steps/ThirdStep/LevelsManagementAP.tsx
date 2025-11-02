@@ -59,10 +59,8 @@ const cards = [
 
 const LevelsManagementAP: React.FC<AssignmentProcessProps> = ({
   onNext,
-  onCancel,
   onStepClick,
   currentStep,
-  completedSteps,
   getStepBorderClass,
 }) => {
   const [showModal, setShowModal] = useState(false);

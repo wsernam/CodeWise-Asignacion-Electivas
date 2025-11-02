@@ -5,9 +5,9 @@ import {
   FaUserGraduate,
   FaBook,
   FaBookOpen,
-  FaFileAlt,
   FaClipboardList,
   FaFileSignature,
+  FaTimes,
 } from "react-icons/fa";
 import type { IconType } from "react-icons";
 import "./Sidebard.css";
@@ -15,6 +15,7 @@ import "./Sidebard.css";
 interface SidebardProps {
   onRoleChange: (role: "admin" | "asignador") => void;
   currentRole: "admin" | "asignador";
+  onClose?: () => void;
 }
 
 interface MenuItem {
@@ -24,25 +25,24 @@ interface MenuItem {
   roles: Array<"admin" | "asignador">;
 }
 
-// CORRECCIÓN: Ambos roles tienen dashboard como inicio
 const menuItems: MenuItem[] = [
   {
     label: "Inicio",
     path: "/dashboard",
     icon: FaHome,
-    roles: ["admin", "asignador"],
+    roles: ["admin"],
   },
   {
     label: "Oferta",
     path: "/offer",
     icon: FaUserGraduate,
-    roles: ["admin", "asignador"],
+    roles: ["admin"],
   },
   {
     label: "Electivas",
     path: "/electives",
     icon: FaBook,
-    roles: ["admin", "asignador"],
+    roles: ["admin"],
   },
   {
     label: "Programas",
@@ -51,38 +51,54 @@ const menuItems: MenuItem[] = [
     roles: ["admin"],
   },
   {
-    label: "Reportes Asignación",
-    path: "/reportes-asignacion",
-    icon: FaClipboardList,
-    roles: ["asignador"],
-  },
-  {
-    label: "Reportes Formulario",
-    path: "/reportes-formularios",
-    icon: FaFileSignature,
-    roles: ["admin"],
-  },
-  {
     label: "Proceso Asignación",
     path: "/assignment-module",
     icon: FaClipboardList,
     roles: ["asignador"],
   },
+  {
+    label: "Reportes Asignación",
+    path: "/reports-assignment",
+    icon: FaClipboardList,
+    roles: ["asignador"],
+  },
+  {
+    label: "Reportes Formulario",
+    path: "/reports-form",
+    icon: FaFileSignature,
+    roles: ["admin"],
+  },
 ];
 
-const Sidebar: React.FC<SidebardProps> = ({ onRoleChange, currentRole }) => {
+const Sidebar: React.FC<SidebardProps> = ({
+  onRoleChange,
+  currentRole,
+  onClose,
+}) => {
   const navigate = useNavigate();
   const location = useLocation();
 
   const handleRoleClick = (role: "admin" | "asignador") => {
     onRoleChange(role);
-    // CORRECCIÓN: Ambos roles van al dashboard al cambiar
     navigate("/dashboard");
   };
 
   return (
     <aside className="sidebard-container">
       <div>
+        {/* Botón de cerrar - NUEVO */}
+        {onClose && (
+          <div className="sidebar-close-header">
+            <button
+              className="sidebar-close-btn"
+              onClick={onClose}
+              aria-label="Cerrar menú"
+            >
+              <FaTimes />
+            </button>
+          </div>
+        )}
+
         {/* Menú lateral */}
         <nav className="sidebard-links">
           {menuItems

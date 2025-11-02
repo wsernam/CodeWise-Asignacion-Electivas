@@ -215,10 +215,8 @@ const InactivesTable: React.FC<{
 // COMPONENTE PRINCIPAL
 const InactivesManagementAP: React.FC<AssignmentProcessProps> = ({
   onNext,
-  onCancel,
   onStepClick,
   currentStep,
-  completedSteps,
   getStepBorderClass,
 }) => {
   const [showModal, setShowModal] = useState(false);

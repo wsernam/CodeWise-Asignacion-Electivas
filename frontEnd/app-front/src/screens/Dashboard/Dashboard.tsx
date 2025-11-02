@@ -1,7 +1,4 @@
 import React, { useEffect, useMemo, useState } from "react";
-import Header from "../../components/layout/Header/Header";
-import Footer from "../../components/layout/Footer/Footer";
-import Navbar from "../../components/layout/Navbar/Navbar";
 import Card from "../../components/ui/Card/Card";
 import ConfirmModal from "../../components/shared/ConfirmModal/ConfirmModal";
 import SuccessModal from "../../components/shared/SuccessModal/SuccessModal";
@@ -240,9 +237,6 @@ const Dashboard: React.FC = () => {
   // ====== Render ======
   return (
     <div className="auth-page">
-      <Header />
-      <Navbar />
-
       <div className="auth-page-content">
         <div className="dashboard-main">
           {/* Filtro y Estado del Formulario en la misma fila */}
@@ -434,8 +428,6 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
       </div>
-
-      <Footer />
 
       {/* Modales */}
       <ConfirmModal
