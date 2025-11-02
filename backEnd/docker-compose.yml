@@ -117,6 +117,7 @@ services:
         condition: service_healthy
 
     command: >
+<<<<<<< HEAD
       sh -c " python manage.py migrate && sh datosBase.sh && python manage.py runserver 0.0.0.0:8000 "
   servicio_envio_notificaciones:
     # 👈 tu micro Django
@@ -128,6 +129,25 @@ services:
       - rabbitmq
     command: >
       sh -c " python -u ./notificacion/config_rabbit.py &  python -u manage.py migrate && python -u manage.py runserver 0.0.0.0:8002 "
+=======
+      sh -c "
+      python manage.py migrate && 
+      sh datosBase.sh &&
+      python manage.py runserver 0.0.0.0:8000
+      "
+
+# -------------------------------
+#MICROSERVICIO GESTION DE ASIGNACION
+# -------------------------------
+  gestion-asignacion:                 
+    build:
+      context: ./gestion-asignacion
+      dockerfile: Dockerfile    
+    container_name: gestion-asignacion
+    volumes:
+      - ./gestion-asignacion:/app   # Monta todo el proyecto en /app dentro del contenedor
+                 # IMPORTANTE: usar la misma convención en todos los microservicios
+>>>>>>> feature/gestion-electivas
     ports:
       - "8002:8002"
     restart: unless-stopped
@@ -144,9 +164,33 @@ services:
       RABBITMQ_DLX: ${RABBITMQ_DLX}
       #__________________________________
 
+<<<<<<< HEAD
   # -------------------------------
   # RABBITMQ
   # -------------------------------
+=======
+    depends_on:
+      db_asignacion:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+    command: >
+      sh -c "
+      echo 'Esperando a que el servicio de formulario inicialice los datos...' &&
+      sleep 15 &&
+      echo 'Ejecutando migraciones y sincronización de datos...' &&
+      python manage.py migrate && 
+      python manage.py sync_databases &&
+      echo 'Iniciando consumidor de RabbitMQ en segundo plano...' &&
+      python manage.py run_consumer & 
+      python manage.py runserver 0.0.0.0:8000
+      "
+
+# -------------------------------
+# RABBITMQ
+# -------------------------------
+>>>>>>> feature/gestion-electivas
   rabbitmq:
     image: "rabbitmq:3-management" # Imagen oficial de RabbitMQ con plugin de gestión
     container_name: rabbitmq # Nombre del contenedor

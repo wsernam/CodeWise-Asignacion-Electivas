@@ -9,6 +9,7 @@ class Facultad(models.Model):
 
 
 
+
 class Programa(models.Model):
     pro_codigo = models.CharField(max_length=225, primary_key=True)
     pro_nombre = models.CharField(max_length=150, unique=True)

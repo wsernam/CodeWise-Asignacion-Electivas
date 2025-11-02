@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-51a94n(4zdumuck0+7i9$-92sjmt$$okj5o0v&*3xg$!el&bb5
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["localhost", "127.0.0.1", "gestion-asignacion"]
 
 
 # Application definition
@@ -38,7 +38,20 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+<<<<<<< HEAD:backEnd/servicio_envio_notificaciones/core/settings.py
     'notificacion'
+=======
+    'referencias',
+    'gestion_hojas_de_calculo',
+    'proceso_asignacion',
+    'worker.apps.WorkerConfig', 
+    'gestion_nivelados',
+    'asignacion',
+    'reporte_asignacion',
+    # Apps de terceros requeridas
+    'rest_framework',        
+    'import_export',
+>>>>>>> feature/gestion-electivas:backEnd/gestion-asignacion/core/settings.py
 ]
 
 MIDDLEWARE = [
@@ -123,6 +136,7 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+<<<<<<< HEAD:backEnd/servicio_envio_notificaciones/core/settings.py
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = config('EMAIL_HOST', default='smtp.example.com')
 EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
@@ -137,3 +151,21 @@ RABBITMQ_USER = config("RABBITMQ_USER")
 RABBITMQ_PASS = config("RABBITMQ_PASSWORD")
 RABBITMQ_QUEUE = config("RABBITMQ_QUEUE")
 RABBITMQ_EXCHANGE = config("RABBITMQ_EXCHANGE")
+=======
+# --- CONFIGURACIÓN DE LOGGING ---
+# Esto asegura que los mensajes de logger.info(), logger.warning(), etc.,
+# se impriman en la consola del servidor, lo cual es crucial para la depuración.
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'INFO', # Cambia a 'DEBUG' para ver aún más detalles (ej: consultas SQL)
+    },
+}
+>>>>>>> feature/gestion-electivas:backEnd/gestion-asignacion/core/settings.py

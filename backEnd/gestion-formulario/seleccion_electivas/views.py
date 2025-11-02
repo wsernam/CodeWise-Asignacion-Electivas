@@ -74,8 +74,11 @@ class SeleccionEstudianteElectivaViewSet(mixins.CreateModelMixin,
 
             # Publicamos un evento por cada selección creada
             transaction.on_commit(lambda: publish_seleccion_creada(request.data))
+<<<<<<< HEAD
             #for instance in created_instances:
                 #transaction.on_commit(lambda: publish_seleccion_creada(_serialize_seleccion(instance)))
+=======
+>>>>>>> feature/gestion-electivas
 
         codigos_creados = [instance.sel_codigo for instance in created_instances]
 
