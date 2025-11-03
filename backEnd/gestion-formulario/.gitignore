@@ -1,7 +1,5 @@
 
 #Python
-**/migrations/
-!**/migrations/__init__.py
 _pycache_/
 *.py[cod]
 *$py.class

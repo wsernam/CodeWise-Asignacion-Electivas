@@ -247,3 +247,228 @@ class ReporteElectivaPDFView(APIView):
         response = HttpResponse(pdf_data, content_type='application/pdf')
         response['Content-Disposition'] = f'attachment; filename="{nombre_informe}.pdf"'
         return response
+
+class ReporteEstudiantePDFView(APIView):
+    """
+    Reporte PDF por estudiante para un período (anio, semestre).
+    Muestra: datos básicos del estudiante, métricas académicas,
+    electivas asignadas con cupo, electivas en lista de espera y las selecciones (si se proveen).
+    """
+    def get(self, request, est_id, *args, **kwargs):
+        # --- Parámetros requeridos ---
+        try:
+            anio = int(request.query_params["anio"])
+            semestre = int(request.query_params["semestre"])
+        except (KeyError, ValueError):
+            return Response(
+                {"detail": "Parámetros requeridos: anio (int), semestre (int)."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # --- Carga de datos desde Asignacion para el período ---
+        # Relaciona con electiva y estudiante (mismo approach que los otros reportes)
+        asignaciones_qs = Asignacion.objects.filter(
+            anio=anio,
+            asi_num_semestre=semestre,
+            est_codigo_id=est_id
+        ).select_related('ele_codigo', 'est_codigo')
+
+        # Si no hay registros de asignación/espera en ese período, igual generamos reporte con cabecera
+        # (por ejemplo si el estudiante solo tiene "selecciones" o no fue asignado)
+        asignadas_firmes = []
+        asignadas_espera = []
+        estudiante = None
+
+        for a in asignaciones_qs:
+            estudiante = a.est_codigo  # tenemos objeto Estudiante
+            fila = {
+                "ele_codigo": a.ele_codigo.ele_codigo,
+                "ele_nombre": a.ele_codigo.ele_nombre,
+            }
+            if a.en_lista_espera:
+                asignadas_espera.append(fila)
+            else:
+                asignadas_firmes.append(fila)
+
+        # --- Opcional: permitir que el cliente nos pase el JSON “completo” (como el que ya tienes) ---
+        # Si te llaman con ?usar_payload=true y envían el JSON en el body o como param, preferimos ese.
+        usar_payload = request.query_params.get("usar_payload") == "true"
+        payload = None
+        if usar_payload:
+            # Se acepta body JSON como el ejemplo que enviaste (lista con un objeto)
+            # Nota: si usas API Gateway, asegúrate de pasar Content-Type: application/json
+            try:
+                payload = request.data
+                if isinstance(payload, list) and payload:
+                    payload = payload[0]
+            except Exception:
+                payload = None
+
+        # --- Construcción de datos base del estudiante ---
+        # Si vino payload, úsalo para completar ficha y selecciones:
+        est_header = {}
+        selecciones = []
+        if payload:
+            est_header = {
+                "est_id": payload.get("est_id", est_id),
+                "nombres": payload.get("nombres") or "",
+                "apellidos": payload.get("apellidos") or "",
+                "programa": payload.get("programa") or "",
+                "programa_nombre": payload.get("programa_nombre") or "",
+                "porcentaje_avance": payload.get("porcentaje_avance"),
+                "promedio": payload.get("promedio"),
+                "nivelado": payload.get("nivelado"),
+                "creditos_aprob_total": payload.get("creditos_aprob_total"),
+                "num_periodos_matriculados": payload.get("num_periodos_matriculados"),
+                "electivas_debe_ver": payload.get("electivas_debe_ver"),
+                "num_electivas_cursadas": payload.get("num_electivas_cursadas"),
+                "electivas_faltantes": payload.get("electivas_faltantes"),
+            }
+            selecciones = payload.get("selecciones") or []
+            # si el payload también trae asignadas_firmes/espera, respétalas
+            asignadas_firmes = payload.get("asignadas_firmes") or asignadas_firmes
+            asignadas_espera = payload.get("asignadas_espera") or asignadas_espera
+        else:
+            # Sin payload: arma cabecera con lo que tengamos
+            if estudiante:
+                est_header = {
+                    "est_id": est_id,
+                    "nombres": getattr(estudiante, "est_nombre", "") or "",
+                    "apellidos": getattr(estudiante, "est_apellido", "") or "",
+                    "programa": getattr(getattr(estudiante, "pro_codigo", None), "pro_codigo", "") or "",
+                    "programa_nombre": getattr(getattr(estudiante, "pro_codigo", None), "pro_nombre", "") or "",
+                }
+            else:
+                est_header = {"est_id": est_id}
+
+        # --- Elementos ReportLab (reutilizamos estilos/estructura del reporte general) ---
+        styles = getSampleStyleSheet()
+        estilo_h2 = ParagraphStyle(name='h2_grande', parent=styles['h2'], fontSize=16)
+        estilo_h3_center = ParagraphStyle(name='h3_center', parent=styles['h3'], alignment=TA_CENTER, fontSize=14)
+        estilo_norm = ParagraphStyle(name='norm', parent=styles['Normal'], fontSize=11)
+        estilo_italic = ParagraphStyle(name='italic', parent=styles['Italic'], fontSize=11)
+        estilo_italic_center = ParagraphStyle(
+            name='italic_center',
+            parent=styles['Italic'],
+            fontSize=11,
+            alignment=TA_CENTER
+        )
+
+        estilo_tabla_verde = TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#38761d")),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 12),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+            ('FONTSIZE', (0, 1), (-1, -1), 11),
+        ])
+        estilo_tabla_azul = TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#4F81BD")),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 12),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+            ('FONTSIZE', (0, 1), (-1, -1), 11),
+        ])
+
+        elementos = []
+
+        # Título
+        elementos.append(Paragraph(f"<b>Reporte de Electivas – Estudiante</b>", estilo_h2))
+        elementos.append(Spacer(1, 0.2 * cm))
+        elementos.append(Paragraph(f"<b>Período:</b> {anio}-{semestre}", estilo_norm))
+        elementos.append(Spacer(1, 0.2 * cm))
+
+        # Ficha del estudiante
+        nom = f"{est_header.get('apellidos','')} {est_header.get('nombres','')}".strip()
+        prog = est_header.get("programa_nombre") or est_header.get("programa") or ""
+        elementos.append(Paragraph(f"<b>Estudiante:</b> {nom} <br/>"
+                                   f"<b>Código:</b> {est_header.get('est_id')} <br/>"
+                                   f"<b>Programa:</b> {prog}", estilo_norm))
+        # Métricas (si hay)
+        metas = []
+        def _fmt(v, suf=""):
+            return f"{v}{suf}" if v is not None else "—"
+        if any(k in est_header for k in ("porcentaje_avance","promedio","nivelado","electivas_debe_ver","num_electivas_cursadas","electivas_faltantes","creditos_aprob_total","num_periodos_matriculados")):
+            elementos.append(Spacer(1, 0.2 * cm))
+            metas = [
+                ["Porcentaje avance", _fmt(est_header.get("porcentaje_avance"), "%")],
+                ["Promedio", _fmt(est_header.get("promedio"))],
+                ["Nivelado", "Sí" if est_header.get("nivelado") else ("No" if est_header.get("nivelado") is not None else "—")],
+                ["Créditos aprob. (totales)", _fmt(est_header.get("creditos_aprob_total"))],
+                ["Períodos matriculados", _fmt(est_header.get("num_periodos_matriculados"))],
+                ["Electivas que debe ver", _fmt(est_header.get("electivas_debe_ver"))],
+                ["Electivas cursadas", _fmt(est_header.get("num_electivas_cursadas"))],
+                ["Electivas faltantes", _fmt(est_header.get("electivas_faltantes"))],
+            ]
+            t_meta = Table([["Indicador", "Valor"], *metas], colWidths=[7*cm, None])
+            t_meta.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('GRID', (0, 0), (-1, -1), 1, colors.black),
+                ('FONTSIZE', (0, 0), (-1, -1), 10),
+            ]))
+            elementos.append(t_meta)
+
+        elementos.append(Spacer(1, 0.5 * cm))
+
+        # Tabla: Asignadas con cupo
+        elementos.append(Paragraph("<b>Electivas Asignadas con Cupo</b>", estilo_h3_center))
+        if asignadas_firmes:
+            data = [["#", "Código", "Electiva"]]
+            for i, e in enumerate(asignadas_firmes, 1):
+                data.append([str(i), e["ele_codigo"], e["ele_nombre"]])
+            t = Table(data, colWidths=[1.5*cm, 3*cm, None], rowHeights=len(data)*[0.8*cm])
+            t.setStyle(estilo_tabla_verde)
+            elementos.append(t)
+        else:
+            elementos.append(Paragraph("<i>No tiene electivas asignadas con cupo.</i>", estilo_italic))
+
+        elementos.append(Spacer(1, 0.5 * cm))
+
+        # Tabla: Lista de espera
+        elementos.append(Paragraph("<b>Electivas en Lista de Espera</b>", estilo_h3_center))
+        if asignadas_espera:
+            data = [["#", "Código", "Electiva"]]
+            for i, e in enumerate(asignadas_espera, 1):
+                data.append([str(i), e["ele_codigo"], e["ele_nombre"]])
+            t = Table(data, colWidths=[1.5*cm, 3*cm, None], rowHeights=len(data)*[0.8*cm])
+            t.setStyle(estilo_tabla_azul)
+            elementos.append(t)
+        else:
+            elementos.append(Paragraph("<i>No tiene electivas en lista de espera.</i>", estilo_italic_center))
+
+        # Tabla: Selecciones (si el payload las trae)
+        if selecciones:
+            elementos.append(Spacer(1, 0.5 * cm))
+            elementos.append(Paragraph("<b>Selecciones del Estudiante</b>", estilo_h3_center))
+            data = [["Prioridad", "Código", "Electiva"]]
+            for s in selecciones:
+                data.append([str(s.get("prioridad")), s.get("ele_codigo",""), s.get("ele_nombre","")])
+            t = Table(data, colWidths=[2.5*cm, 3*cm, None], rowHeights=len(data)*[0.8*cm])
+            t.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.darkgrey),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, 0), 12),
+                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+                ('GRID', (0, 0), (-1, -1), 1, colors.black),
+                ('FONTSIZE', (0, 1), (-1, -1), 11),
+            ]))
+            elementos.append(t)
+
+        elementos.append(Spacer(1, 1 * cm))
+
+        # --- Generar PDF con la misma utilidad de la app ---
+        nombre_informe = f"Reporte_estudiante_{est_id}_{anio}-{semestre}"
+        pdf_data = crear_pdf(nombre_informe, elementos)  # usa encabezado/pie ya definidos en generador_pdf.py
+        # (Encabezado y pie se dibujan dentro de crear_pdf: logo, título, fecha/paginación.)  # :contentReference[oaicite:1]{index=1}
+
+        response = HttpResponse(pdf_data, content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="{nombre_informe}.pdf"'
+        return response
