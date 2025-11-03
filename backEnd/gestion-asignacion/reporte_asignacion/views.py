@@ -426,7 +426,7 @@ class ReporteEstudiantePDFView(APIView):
             t.setStyle(estilo_tabla_verde)
             elementos.append(t)
         else:
-            elementos.append(Paragraph("<i>No tiene electivas asignadas con cupo.</i>", estilo_italic))
+            elementos.append(Paragraph("<i>No tiene electivas asignadas con cupo.</i>", estilo_italic_center))
 
         elementos.append(Spacer(1, 0.5 * cm))
 
