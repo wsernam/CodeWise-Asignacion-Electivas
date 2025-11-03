@@ -1,0 +1,10 @@
+
+Pasos para verificar que la información de las hojas de calculo se importó correctamente.
+1. Entra a la base de datos de asignacion en docker en consola, desde la carpeta backend
+
+docker-compose exec db_asignacion mysql -u admin -p
+
+contraseña: admin
+2. introduce los siguientes comandos sql:
+ USE db_asignacion;
+ SELECT * FROM gestion_hojas_de_calculo_perfilacademico ;
