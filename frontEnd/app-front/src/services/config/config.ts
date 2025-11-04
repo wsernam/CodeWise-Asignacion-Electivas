@@ -10,6 +10,14 @@ export const FORM_STATUS_URL = `${API_BASE_URL}estado`;
 export const OFFER_URL = `${API_BASE_URL}ofertaElectiva`;
 export const SELECTION_URL = `${API_BASE_URL}/api/seleccion-electivas`;
 
+// Endpoints para el servicio de asignación
+export const ASSIGNMENT_API_BASE_URL = "http://localhost:8002/api/";
+
+// Endpoints para el servicio de asignación (puerto 8002)
+export const ASSIGNMENT_BASE_URL = `${ASSIGNMENT_API_BASE_URL}asignacion`;
+export const EXCEL_PROCESSING_URL = `${ASSIGNMENT_API_BASE_URL}excel`;
+export const NIVELADOS_URL = `${ASSIGNMENT_API_BASE_URL}nivelados`;
+
 // Luego vemos
 export const LOGIN_URL = `${API_BASE_URL}login`;
 //export const STUDENT_DATA_URL = `${API_BASE_URL}api/student`;

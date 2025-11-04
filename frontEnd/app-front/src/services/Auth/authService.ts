@@ -1,4 +1,4 @@
-import { LOGIN_URL } from "./config/config";
+import { LOGIN_URL } from "../config/config";
 /**
  * @brief Servicio de autenticacion del administrador y asignador.
  *

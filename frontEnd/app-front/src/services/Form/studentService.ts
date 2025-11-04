@@ -1,7 +1,7 @@
-import axiosInstance from "../api/axiosInstance";
+import axiosInstance from "../../api/axiosInstance";
 import axios from "axios";
-import { STUDENT_URL } from "./config/config";
-import type { IStudent } from "../models/student";
+import { STUDENT_URL } from "../config/config";
+import type { IStudent } from "../../models/Form/student";
 
 // ========== HELPERS ==========
 const transformStudent = (item: any): IStudent => ({

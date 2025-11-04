@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { IProgram as Program } from "../models/program";
+import type { IProgram as Program } from "../models/Form/program";
 import {
   getPrograms,
   createProgram,
@@ -8,7 +8,7 @@ import {
   searchPrograms,
   getProgramStats,
   getFacultiesFromPrograms,
-} from "../services/programService";
+} from "../services/Form/programService";
 
 interface ProgramState {
   programs: Program[];

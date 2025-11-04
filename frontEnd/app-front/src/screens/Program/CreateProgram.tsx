@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { Form, Input, Select } from "antd";
 import { useNavigate } from "react-router";
-import { useProgramStore } from "../../store/programStore";
-import type { IProgram as Program } from "../../models/program";
+import { useProgramStore } from "../../store/Form/programStore";
+import type { IProgram as Program } from "../../models/Form/program";
 import WarningModal from "../../components/shared/WarningModal/WarningModal";
 import ConfirmModal from "../../components/shared/ConfirmModal/ConfirmModal";
 import SuccessModal from "../../components/shared/SuccessModal/SuccessModal";

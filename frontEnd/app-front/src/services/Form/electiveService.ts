@@ -1,16 +1,14 @@
 // src/services/electiveService.ts
-import type { IElective } from "../models/elective";
-import { ELECTIVES_URL } from "./config/config"; // ej: "/electivas"
-import axiosInstance from "../api/axiosInstance"; // tu instancia configurada
+import type { IElective } from "../../models/Form/elective";
+import { ELECTIVES_URL } from "../config/config";
+import axiosInstance from "../../api/axiosInstance";
 
 // ========== HELPERS ==========
-/** Ajusta aquí si tu backend devuelve otros nombres de campo */
 const transformElective = (item: any): IElective => ({
   ele_codigo: item.ele_codigo,
   ele_nombre: item.ele_nombre,
-  ele_estado: item.ele_estado, // boolean (activa/inactiva)
-  pro_codigo: item.pro_codigo, // opcional según tu interfaz           // opcional según tu interfaz
-  // ...agrega/ajusta más campos si IElective los define
+  ele_estado: item.ele_estado,
+  pro_codigo: item.pro_codigo,
 });
 
 // ========== FUNCIONES DE CONEXIÓN CON BACKEND ==========
@@ -103,7 +101,7 @@ export const reactivateElectiveService = async (
       `${ELECTIVES_URL}/${codigo}/reactivar/`
     );
     const reactivated = transformElective(data);
-    console.log("✅ [electiveService] Electiva reactivada:", reactivated);
+    console.log("[electiveService] Electiva reactivada:", reactivated);
     return reactivated;
   } catch (error: any) {
     console.error("[electiveService] Error reactivando electiva:", error);
@@ -118,7 +116,7 @@ export const getElectiveByCodeService = async (
   codigo: string
 ): Promise<IElective | null> => {
   try {
-    console.log(`🔎 [electiveService] Buscando electiva: ${codigo}`);
+    console.log(`[electiveService] Buscando electiva: ${codigo}`);
     const { data } = await axiosInstance.get(`${ELECTIVES_URL}/${codigo}/`);
     return transformElective(data);
   } catch (error: any) {

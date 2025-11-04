@@ -4,9 +4,9 @@ import ConfirmModal from "../../components/shared/ConfirmModal/ConfirmModal";
 import SuccessModal from "../../components/shared/SuccessModal/SuccessModal";
 import WarningModal from "../../components/shared/WarningModal/WarningModal";
 
-import { useFormStatusStore } from "../../store/formStatusStore";
-import { useElectiveStore } from "../../store/electiveStore";
-import { useProgramStore } from "../../store/programStore";
+import { useFormStatusStore } from "../../store/Form/formStatusStore";
+import { useElectiveStore } from "../../store/Form/electiveStore";
+import { useProgramStore } from "../../store/Form/programStore";
 import "./Dashboard.css";
 
 // Librería de gráficas

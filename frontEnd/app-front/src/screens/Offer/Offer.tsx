@@ -10,11 +10,11 @@ import ConfirmModal from "../../components/shared/ConfirmModal/ConfirmModal";
 import SuccessModal from "../../components/shared/SuccessModal/SuccessModal";
 
 // Stores
-import { useElectiveStore } from "../../store/electiveStore";
-import { useProgramStore } from "../../store/programStore";
-import type { IOffer } from "../../models/offer";
-import { useOfferStore } from "../../store/offerStore";
-import { useFormStatusStore } from "../../store/formStatusStore";
+import { useElectiveStore } from "../../store/Form/electiveStore";
+import { useProgramStore } from "../../store/Form/programStore";
+import type { IOffer } from "../../models/Form/offer";
+import { useOfferStore } from "../../store/Form/offerStore";
+import { useFormStatusStore } from "../../store/Form/formStatusStore";
 
 const { Option } = Select;
 
@@ -90,30 +90,36 @@ const Offer: React.FC = () => {
   });
 
   // Agrupar programas por facultad
-  const programasPorFacultad = facultades.reduce((acc, facultad) => {
-    const programasDeFacultad = programs
-      .filter(
-        (program) =>
-          program.pro_activo &&
-          program.fac_nombre === facultad &&
-          programasConElectivasActivas.some(
-            (p) => p.pro_codigo === program.pro_codigo
-          )
-      )
-      .sort((a, b) => a.pro_nombre.localeCompare(b.pro_nombre));
-    acc[facultad] = programasDeFacultad;
-    return acc;
-  }, {} as { [facultad: string]: any[] });
+  const programasPorFacultad = facultades.reduce(
+    (acc: { [facultad: string]: any[] }, facultad) => {
+      const programasDeFacultad = programs
+        .filter(
+          (program) =>
+            program.pro_activo &&
+            program.fac_nombre === facultad &&
+            programasConElectivasActivas.some(
+              (p) => p.pro_codigo === program.pro_codigo
+            )
+        )
+        .sort((a, b) => a.pro_nombre.localeCompare(b.pro_nombre));
+      acc[facultad] = programasDeFacultad;
+      return acc;
+    },
+    {}
+  );
 
-  const electivasPorPrograma = programs.reduce((acc, program) => {
-    const electivasDelPrograma = electives.filter(
-      (elective) =>
-        elective.ele_estado &&
-        elective.pro_codigo.toString() === program.pro_codigo.toString()
-    );
-    acc[program.pro_nombre] = electivasDelPrograma;
-    return acc;
-  }, {} as { [programa: string]: any[] });
+  const electivasPorPrograma = programs.reduce(
+    (acc: { [programa: string]: any[] }, program) => {
+      const electivasDelPrograma = electives.filter(
+        (elective) =>
+          elective.ele_estado &&
+          elective.pro_codigo.toString() === program.pro_codigo.toString()
+      );
+      acc[program.pro_nombre] = electivasDelPrograma;
+      return acc;
+    },
+    {}
+  );
 
   // ========== MANEJADORES ==========
 

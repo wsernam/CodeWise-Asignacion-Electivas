@@ -1,5 +1,5 @@
-import type { IProgram as Program } from "../models/program";
-import { PROGRAMS_URL } from "./config/config";
+import type { IProgram as Program } from "../../models/Form/program";
+import { PROGRAMS_URL } from "../config/config";
 
 // ========== FUNCIONES DE CONEXIÓN CON BACKEND ==========
 

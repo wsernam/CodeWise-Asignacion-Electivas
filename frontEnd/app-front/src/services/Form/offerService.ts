@@ -1,6 +1,6 @@
-import axios from "../api/axiosInstance";
-import type { IOffer } from "../models/offer";
-import { OFFER_URL } from "./config/config";
+import axios from "../../api/axiosInstance";
+import type { IOffer } from "../../models/Form/offer";
+import { OFFER_URL } from "../config/config";
 
 export const createBulkOffer = async (offerData: IOffer): Promise<any> => {
   console.log("[offerService] Creando ofertas en lote: ", offerData);

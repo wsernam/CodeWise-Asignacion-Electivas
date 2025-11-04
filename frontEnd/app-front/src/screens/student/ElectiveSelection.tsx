@@ -13,12 +13,12 @@ import ConfirmModal from "../../components/shared/ConfirmModal/ConfirmModal";
 import SuccessModal from "../../components/shared/SuccessModal/SuccessModal";
 
 // Stores
-import { useStudentStore } from "../../store/studentStore";
-import { useSelectionStore } from "../../store/selectionStore";
+import { useStudentStore } from "../../store/Form/studentStore";
+import { useSelectionStore } from "../../store/Form/selectionStore";
 
 // Models
-import type { ISelectionStudentElective } from "../../models/selection";
-import type { IElective } from "../../models/elective";
+import type { ISelectionStudentElective } from "../../models/Form/selection";
+import type { IElective } from "../../models/Form/elective";
 
 const { Option } = Select;
 

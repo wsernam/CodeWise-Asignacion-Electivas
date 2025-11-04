@@ -1,5 +1,5 @@
-import axios from "../api/axiosInstance";
-import { FORM_STATUS_URL } from "./config/config";
+import axios from "../../api/axiosInstance";
+import { FORM_STATUS_URL } from "../config/config";
 
 export const getFormStatus = async (): Promise<boolean> => {
   console.log("[formStatusService] Obteniendo estado del formulario...");

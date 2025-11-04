@@ -11,7 +11,7 @@ import Button from "../../components/ui/Button/Button";
 import BackButton from "../../components/ui/BackButton/BackButton";
 
 // Servicio de autenticación
-import { loginAdminService } from "../../services/authService";
+import { loginAdminService } from "../../services/Auth/authService";
 
 /**
  * COMPONENTE: Login (Administrativo)

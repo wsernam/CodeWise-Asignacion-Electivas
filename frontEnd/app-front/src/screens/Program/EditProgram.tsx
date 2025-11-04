@@ -3,8 +3,8 @@ import { Form, Input, Select } from "antd";
 import Card from "../../components/ui/Card/Card";
 import Button from "../../components/ui/Button/Button";
 import { useNavigate, useParams } from "react-router";
-import { useProgramStore } from "../../store/programStore";
-import type { IProgram as Program } from "../../models/program";
+import { useProgramStore } from "../../store/Form/programStore";
+import type { IProgram as Program } from "../../models/Form/program";
 import SuccessModal from "../../components/shared/SuccessModal/SuccessModal";
 import WarningModal from "../../components/shared/WarningModal/WarningModal";
 

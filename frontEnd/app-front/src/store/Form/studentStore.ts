@@ -1,10 +1,10 @@
 import { create } from "zustand";
-import type { IStudent } from "../models/student";
+import type { IStudent } from "../../models/Form/student";
 import {
   getStudentsService,
   getStudentById,
   createStudent,
-} from "../services/studentService";
+} from "../../services/Form/studentService";
 
 // Importación para futura implementación de login
 // import { loginStudentService } from "../services/authService";

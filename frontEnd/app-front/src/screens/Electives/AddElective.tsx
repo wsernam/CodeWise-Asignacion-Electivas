@@ -6,9 +6,9 @@ import ConfirmModal from "../../components/shared/ConfirmModal/ConfirmModal";
 import SuccessModal from "../../components/shared/SuccessModal/SuccessModal";
 import Card from "../../components/ui/Card/Card";
 import Button from "../../components/ui/Button/Button";
-import { useElectiveStore } from "../../store/electiveStore";
-import { useProgramStore } from "../../store/programStore";
-import type { IElective } from "../../models/elective";
+import { useElectiveStore } from "../../store/Form/electiveStore";
+import { useProgramStore } from "../../store/Form/programStore";
+import type { IElective } from "../../models/Form/elective";
 
 const { Option } = Select;
 

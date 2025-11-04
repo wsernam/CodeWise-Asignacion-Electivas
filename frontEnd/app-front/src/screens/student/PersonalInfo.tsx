@@ -10,7 +10,7 @@ import Card from "../../components/ui/Card/Card";
 import Button from "../../components/ui/Button/Button";
 import WarningModal from "../../components/shared/WarningModal/WarningModal";
 // Stores
-import { useStudentStore } from "../../store/studentStore";
+import { useStudentStore } from "../../store/Form/studentStore";
 import { useProgramStore } from "../../store/programStore";
 import { getStudentById } from "../../services/studentService";
 import { useLocation } from "react-router";
@@ -33,7 +33,6 @@ const PersonalInfo: React.FC = () => {
     apellido: "",
     programa: "",
   });
-
 
   const [warning, setWarning] = useState<{ open: boolean; message: string }>({
     open: false,
@@ -113,17 +112,16 @@ const PersonalInfo: React.FC = () => {
 
     // Guardar los datos del estudiante
     try {
-
       const student = await getStudentById(parseInt(formData.codigo));
 
-      if (student) { // Verificar si el estudiante ya se encuentra registrado
+      if (student) {
+        // Verificar si el estudiante ya se encuentra registrado
         setWarning({
           open: true,
           message: "Ya existe un estudiante con este código",
         });
         navigate("/login-student");
-      }
-      else {
+      } else {
         await addStudent({
           est_codigo: parseInt(formData.codigo),
           est_correo: formData.email.toLocaleLowerCase(),
@@ -138,7 +136,7 @@ const PersonalInfo: React.FC = () => {
     } catch (error: any) {
       console.log("[student Screen] Error al agregar estudiante:", error);
     }
-  }
+  };
 
   return (
     <div className="form-page-container">
@@ -172,8 +170,11 @@ const PersonalInfo: React.FC = () => {
                   placeholder="123456789012 (12 dígitos)"
                   value={formData.codigo}
                   onChange={(e) => {
-                    if (!prefilledCode) { // ← solo permite escribir si NO viene del login
-                      const value = e.target.value.replace(/\D/g, "").slice(0, 12);
+                    if (!prefilledCode) {
+                      // ← solo permite escribir si NO viene del login
+                      const value = e.target.value
+                        .replace(/\D/g, "")
+                        .slice(0, 12);
                       handleInputChange("codigo", value);
                     }
                   }}
@@ -183,16 +184,24 @@ const PersonalInfo: React.FC = () => {
                     padding: "var(--space-md)",
                     border: "1px solid var(--gray-medium)",
                     borderRadius: "4px",
-                    backgroundColor: prefilledCode ? "var(--gray-light)" : "white",
+                    backgroundColor: prefilledCode
+                      ? "var(--gray-light)"
+                      : "white",
                     cursor: prefilledCode ? "not-allowed" : "text",
                   }}
                 />
-                {!prefilledCode && formData.codigo && validateCodigo(formData.codigo) && (
-                  <span style={{ color: "var(--primary-red)", fontSize: "0.8rem" }}>
-                    {validateCodigo(formData.codigo)}
-                  </span>
-                )}
-
+                {!prefilledCode &&
+                  formData.codigo &&
+                  validateCodigo(formData.codigo) && (
+                    <span
+                      style={{
+                        color: "var(--primary-red)",
+                        fontSize: "0.8rem",
+                      }}
+                    >
+                      {validateCodigo(formData.codigo)}
+                    </span>
+                  )}
               </div>
 
               {/* Email - Solo @unicauca.edu.co */}
@@ -385,11 +394,8 @@ const PersonalInfo: React.FC = () => {
             </div>
             {/* Sección del botón volver */}
             <div className="back-button-section">
-              <Button onClick={handleBack}>
-                Volver
-              </Button>
+              <Button onClick={handleBack}>Volver</Button>
             </div>
-
           </Card>
         </div>
       </div>

@@ -1,9 +1,9 @@
 import { create } from "zustand";
-import type { ISelectionStudentElective } from "../models/selection";
-import { createSelectionService } from "../services/selectionService";
-import type { IElective } from "../models/elective";
-import type { IStudent } from "../models/student";
-import { getStudentById } from "../services/studentService";
+import type { ISelectionStudentElective } from "../../models/Form/selection";
+import { createSelectionService } from "../../services/Form/selectionService";
+import type { IElective } from "../../models/Form/elective";
+import type { IStudent } from "../../models/Form/student";
+import { getStudentById } from "../../services/Form/studentService";
 import { useOfferStore } from "./offerStore";
 
 interface SelectionState {

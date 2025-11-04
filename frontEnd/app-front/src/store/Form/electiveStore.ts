@@ -1,12 +1,12 @@
 import { create } from "zustand";
-import type { IElective } from "../models/elective";
+import type { IElective } from "../../models/Form/elective";
 import {
   getElectivesService,
   createElectiveService,
   updateElectiveService,
   deleteElectiveService,
   reactivateElectiveService,
-} from "../services/electiveService";
+} from "../../services/Form/electiveService";
 
 interface ElectiveState {
   electives: IElective[];

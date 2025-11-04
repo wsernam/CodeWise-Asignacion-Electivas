@@ -11,7 +11,7 @@ import Button from "../../components/ui/Button/Button";
 import BackButton from "../../components/ui/BackButton/BackButton";
 
 // Servicio de autenticación
-import { useStudentStore } from "../../store/studentStore";
+import { useStudentStore } from "../../store/Form/studentStore";
 // import { useAuthStore } from "../../store/authStore";
 
 const LoginStudent: React.FC = () => {
@@ -21,8 +21,8 @@ const LoginStudent: React.FC = () => {
 
   /**
    * Valida si el código del estudiante es correcto
-   * @param value 
-   * @returns 
+   * @param value
+   * @returns
    */
   const validateCodigo = (value: string) => {
     if (!value) return "Por favor ingresa el código";
@@ -46,8 +46,6 @@ const LoginStudent: React.FC = () => {
    * @param values - Objeto con los valores del formulario { username }
    */
   const handleLogin = async (values: { code: string }) => {
-
-
     /* Realiza el login del estudiante usando consulta, más no autorización */
     try {
       const code = parseInt(values.code);
@@ -65,8 +63,7 @@ const LoginStudent: React.FC = () => {
       } else {
         navigate("/personal-info", { state: { codigo: code } });
       }
-    }
-    catch (err) {
+    } catch (err) {
       message.error("Error en el inicio de sesión del estudiante");
       console.error("[LoginStudent] Error en loginStudent: ", err);
     }
@@ -107,7 +104,9 @@ const LoginStudent: React.FC = () => {
                 {
                   validator: (_, value) => {
                     const error = validateCodigo(value);
-                    return error ? Promise.reject(new Error(error)) : Promise.resolve();
+                    return error
+                      ? Promise.reject(new Error(error))
+                      : Promise.resolve();
                   },
                 },
               ]}
@@ -119,7 +118,6 @@ const LoginStudent: React.FC = () => {
                 maxLength={12} // <-- opcional para prevenir que escriba más
               />
             </Form.Item>
-
 
             {/* Botón de envío */}
             <Form.Item style={{ marginBottom: "1rem" }}>

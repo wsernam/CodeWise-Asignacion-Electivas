@@ -1,6 +1,6 @@
-import axiosInstance from "../api/axiosInstance";
-import { SELECTION_URL } from "./config/config";
-import type { ISelectionStudentElective } from "../models/selection";
+import axiosInstance from "../../api/axiosInstance";
+import { SELECTION_URL } from "../config/config";
+import type { ISelectionStudentElective } from "../../models/Form/selection";
 
 // ========== HELPERS ==========
 const transformSelection = (data: any): ISelectionStudentElective => ({
