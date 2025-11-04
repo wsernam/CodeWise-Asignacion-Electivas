@@ -49,9 +49,11 @@ INSTALLED_APPS = [
     # Apps de terceros requeridas
     'rest_framework',        
     'import_export',
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -167,3 +169,36 @@ LOGGING = {
         'level': 'INFO', # Cambia a 'DEBUG' para ver aún más detalles (ej: consultas SQL)
     },
 }
+
+# Configuración CORS
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",   # Vite dev server
+    "http://127.0.0.1:5173",   # Vite dev server alternativo
+    "http://localhost:8002",  
+]
+
+# Para desarrollo
+CORS_ALLOW_ALL_ORIGINS = True
+# Permitir credenciales (cookies, headers de autenticación)
+CORS_ALLOW_CREDENTIALS = True
+# Headers permitidos
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]
+# Métodos HTTP permitidos
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+]

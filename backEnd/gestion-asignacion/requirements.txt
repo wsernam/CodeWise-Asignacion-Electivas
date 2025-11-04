@@ -24,3 +24,4 @@ openpyxl # Para leer archivos .xlsx
 xlrd # Para leer archivos .xls antiguos
 reportlab==4.4.4
 requests
+django-cors-headers>=4.3.0

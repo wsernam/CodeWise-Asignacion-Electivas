@@ -11,8 +11,8 @@ import Button from "../../components/ui/Button/Button";
 import WarningModal from "../../components/shared/WarningModal/WarningModal";
 // Stores
 import { useStudentStore } from "../../store/Form/studentStore";
-import { useProgramStore } from "../../store/programStore";
-import { getStudentById } from "../../services/studentService";
+import { useProgramStore } from "../../store/Form/programStore";
+import { getStudentById } from "../../services/Form/studentService";
 import { useLocation } from "react-router";
 
 const { Option } = Select;

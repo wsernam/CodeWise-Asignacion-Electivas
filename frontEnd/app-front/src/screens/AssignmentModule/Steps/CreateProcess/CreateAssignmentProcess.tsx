@@ -6,6 +6,9 @@ import ConfirmModal from "../../../../components/shared/ConfirmModal/ConfirmModa
 import SuccessModal from "../../../../components/shared/SuccessModal/SuccessModal";
 import Button from "../../../../components/ui/Button/Button";
 
+import { useAssignmentProcessStore } from "../../../../store/Assignment";
+import { useAssignmentFlowStore } from "../../../../store/Assignment";
+
 type AssignmentProcessProps = {
   onNext: (year: number, semester: 1 | 2) => void;
   onCancel: () => void;
@@ -26,10 +29,18 @@ const CreateAssignmentProcess: React.FC<AssignmentProcessProps> = ({
     message: "",
   });
 
+  const { crearProceso, loading, error, clearError } =
+    useAssignmentProcessStore();
+  const { setCurrentStep, addCompletedStep } = useAssignmentFlowStore();
+
   useEffect(() => {
     const isValid = !!year && !!semester;
     setIsFormValid(isValid);
   }, [year, semester]);
+
+  useEffect(() => {
+    clearError();
+  }, [clearError]);
 
   const getYearOptions = (): number[] => {
     const currentYear = new Date().getFullYear();
@@ -50,17 +61,29 @@ const CreateAssignmentProcess: React.FC<AssignmentProcessProps> = ({
 
   const handleConfirmSave = async () => {
     setShowConfirm(false);
+
+    if (!year || !semester) return;
+
     try {
+      console.log(`[CreateProcess] Creando proceso ${year}-${semester}...`);
+      const proceso = await crearProceso(year, semester);
+      console.log("[CreateProcess] Proceso creado exitosamente:", proceso);
+
+      // Actualizar estado de flujo
+      setCurrentStep(1);
+      addCompletedStep(0);
       setShowSuccess(true);
-      // Pasar los datos del proceso creado
-      if (onNext && year && semester) {
+
+      // Notifica al componente padre
+      if (onNext) {
         onNext(year, semester);
       }
-    } catch (error) {
-      console.error("Error al crear el proceso de asignación:", error);
+    } catch (error: any) {
+      console.error("[CreateProcess] Error creando proceso:", error);
       setWarning({
         open: true,
         message:
+          error.message ||
           "Ocurrió un error al crear el proceso de asignación. Por favor, intente nuevamente.",
       });
     }
@@ -121,18 +144,32 @@ const CreateAssignmentProcess: React.FC<AssignmentProcessProps> = ({
             </Row>
           </Form>
         </div>
+
+        {/* Mostrar estado de carga y error */}
+        {loading && <p>Creando proceso de asignación...</p>}
+        {error && (
+          <div
+            className="error-message"
+            style={{ color: "red", marginBottom: "16px" }}
+          >
+            Error: {error}
+          </div>
+        )}
+
         <div className="form-create-actions">
           <Button
             variant="primary"
             onClick={handleSave}
             className="btn-save-assignment-process"
+            disabled={loading}
           >
-            Guardar
+            {loading ? "Creando..." : "Guardar"}
           </Button>
           <Button
             variant="secondary"
             onClick={onCancel}
             className="btn-cancel-assignment-process"
+            disabled={loading}
           >
             Cancelar
           </Button>
