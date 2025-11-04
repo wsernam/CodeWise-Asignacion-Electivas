@@ -3,6 +3,7 @@ export const API_BASE_URL = "http://localhost:8001/";
 
 // Endpoints para el servicio de formularios (puerto 8001)
 export const PROGRAMS_URL = `${API_BASE_URL}api/programas`;
+export const FACULTIES_URL = `${API_BASE_URL}api/facultades`;
 export const ELECTIVES_URL = `${API_BASE_URL}api/electivas`;
 export const STUDENT_URL = `${API_BASE_URL}api/estudiantes`;
 export const FORM_STATUS_URL = `${API_BASE_URL}estado`;

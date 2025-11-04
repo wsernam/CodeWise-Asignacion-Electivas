@@ -18,13 +18,14 @@ from django.contrib import admin
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from gestion_electivas.views import ElectivaViewSet
-from gestion_programas.views import ProgramaViewSet
+from gestion_programas.views import ProgramaViewSet, FacultadViewSet
 from gestion_estudiantes.views import EstudianteViewSet
 from seleccion_electivas.views import SeleccionEstudianteElectivaViewSet
 from gestion_reportes.views import ReporteSeleccionElectivasEstudianteViewSet, ReporteOfertaElectivasViewSet
 router = DefaultRouter()
 router.register(r'electivas', ElectivaViewSet, basename='electiva')
 router.register(r'programas', ProgramaViewSet, basename='programa')
+router.register(r'facultades', FacultadViewSet, basename='facultad')
 router.register(r'estudiantes', EstudianteViewSet, basename='estudiante')
 router.register(r'seleccion-electivas', SeleccionEstudianteElectivaViewSet, basename='seleccion-electivas')
 router.register(r'reporte-seleccion', ReporteSeleccionElectivasEstudianteViewSet, basename='reporte-seleccion-electivas')

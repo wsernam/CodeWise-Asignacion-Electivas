@@ -1,8 +1,8 @@
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
-from gestion_electivas.models import Programa
-from .serializers import ProgramaSerializer
+from gestion_electivas.models import Programa, Facultad
+from .serializers import ProgramaSerializer, FacultadSerializer
 import logging
 from django.db import transaction
 from events.programa_publisher import publish_programa_creado, publish_programa_actualizado, publish_programa_eliminado
@@ -61,3 +61,17 @@ def _serialize_programa(p: Programa) -> dict:
         "fac_nombre": getattr(p.fac_codigo, "fac_nombre", None),
         "pro_activo": p.pro_activo
     }
+
+class FacultadViewSet(viewsets.ModelViewSet): 
+    """
+    CRUD para Facultades
+    """
+    queryset = Facultad.objects.all()
+    serializer_class = FacultadSerializer
+
+    @action(detail=False, methods=['get'])
+    def activas(self, request):
+        """Obtiene facultades que tienen programas activos"""
+        facultades = Facultad.objects.filter(programas__pro_activo=True).distinct()
+        serializer = self.get_serializer(facultades, many=True)
+        return Response(serializer.data)

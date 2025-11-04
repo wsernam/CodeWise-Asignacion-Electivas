@@ -1,6 +1,11 @@
 from rest_framework import serializers
 from gestion_electivas.models import Programa, Facultad
 
+class FacultadSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Facultad
+        fields = ['fac_codigo', 'fac_nombre']
+        
 class ProgramaSerializer(serializers.ModelSerializer):
     pro_codigo = serializers.CharField(required=True, min_length=1, max_length=100)
     fac_codigo = serializers.PrimaryKeyRelatedField(queryset=Facultad.objects.all())

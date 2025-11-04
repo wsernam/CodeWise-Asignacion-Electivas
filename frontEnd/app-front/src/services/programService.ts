@@ -136,7 +136,7 @@ export const searchPrograms = async (
   searchTerm: string
 ): Promise<Program[]> => {
   try {
-    console.log(`🔍 [programService] Buscando: "${searchTerm}"`);
+    console.log(`[programService] Buscando: "${searchTerm}"`);
 
     // TODO: Implementar endpoint de búsqueda en backend
     // Por ahora usamos filtrado client-side como temporal
