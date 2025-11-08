@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from gestion_electivas.models import Programa, Facultad
+import re
 
 class ProgramaSerializer(serializers.ModelSerializer):
     fac_codigo = serializers.PrimaryKeyRelatedField(queryset=Facultad.objects.all())
@@ -9,6 +10,25 @@ class ProgramaSerializer(serializers.ModelSerializer):
         model = Programa
         fields = ['pro_codigo', 'pro_nombre', 'fac_codigo', 'fac_nombre', 'pro_activo']
         read_only_fields = ['pro_codigo', 'fac_nombre']
+
+    # --- Validación de campo: no permitir números ni caracteres raros ---
+    def validate_pro_nombre(self, value: str) -> str:
+        # Normaliza espacios (sin aún guardar en attrs)
+        nombre = ' '.join((value or '').strip().split())
+
+        # 1) Prohibir dígitos
+        if re.search(r'\d', nombre):
+            raise serializers.ValidationError("El nombre del programa no debe contener números.")
+
+        # 2) Permitir solo letras (incluye acentos y Ñ), espacios, guiones y apóstrofes
+        #    Ajusta el set si tu institución permite otros signos.
+        patron = r"^[A-Za-zÁÉÍÓÚáéíóúÑñÜü\s\-']{3,}$"
+        if not re.match(patron, nombre):
+            raise serializers.ValidationError(
+                "Use solo letras, espacios, guiones o apóstrofes (mínimo 3 caracteres)."
+            )
+
+        return nombre  # retornamos ya normalizado
 
     def validate(self, attrs):
         pro_nombre = attrs.get('pro_nombre') or (self.instance and self.instance.pro_nombre)
