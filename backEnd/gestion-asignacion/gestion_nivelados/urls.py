@@ -4,11 +4,11 @@ from rest_framework.routers import DefaultRouter
 
 
 gestion_view = GestionNiveladosViewSet.as_view({
-    'post': 'gestionar_nivelados'
+    'put': 'gestionar_nivelados'
 })
 
 confirmar_view = GestionNiveladosViewSet.as_view({
-    'post': 'confirmar_nivelados'
+    'put': 'confirmar_nivelados'
 })
 
 listar_view = GestionNiveladosViewSet.as_view({
