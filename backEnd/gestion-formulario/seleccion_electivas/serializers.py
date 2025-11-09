@@ -1,4 +1,4 @@
-
+from datetime import date
 from rest_framework import serializers
 from .models import SeleccionEstudianteElectiva
 from gestion_electivas.models import Electiva
@@ -11,6 +11,11 @@ class ElectivaPrioridadDTO(serializers.Serializer):
     ele_codigo = serializers.CharField(max_length=225)
     ele_nombre = serializers.CharField(max_length=100)
 
+    def validate_sel_prioridad(self, value):
+        """Restricción 2: sel_prioridad debe ser mayor a 0"""
+        if value <= 0:
+            raise serializers.ValidationError("La prioridad debe ser mayor a 0.")
+        return value
 
 class ConsultaElectivaEstudianteDTO(serializers.Serializer):
     ele_codigo = serializers.CharField(source='ele_codigo.ele_codigo', max_length=225)
@@ -23,6 +28,7 @@ class CrearSeleccionElectivaDTO(serializers.Serializer):
     sel_anio = serializers.IntegerField()
     sel_num_semestre = serializers.ChoiceField(choices=[1, 2])
     electivas = ElectivaPrioridadDTO(many=True)
+    VALID_SEMESTRES = [1, 2]
 
     def validate_electivas(self, electivas):
         """
@@ -70,6 +76,32 @@ class CrearSeleccionElectivaDTO(serializers.Serializer):
                 f"Las siguientes electivas no hacen parte de la oferta para el año {anio}, semestre {semestre} y programa {pro_codigo}: {list(electivas_sin_oferta)}."
             )
             raise serializers.ValidationError(errores)
+        
+    def validate_sel_num_semestre(self, value):
+        """Valida que sel_num_semestre tenga un valor permitido"""
+        if value not in self.VALID_SEMESTRES:
+            valid_values = ', '.join(map(str, self.VALID_SEMESTRES))
+            raise serializers.ValidationError(
+                f"Valor inválido para 'sel_num_semestre': {value}. "
+                f"Los valores permitidos son: {valid_values}."
+            )
+        return value
+    
+
+    def validate_sel_anio(self, value):
+        """Restricción 1: sel_anio no puede ser inferior al año presente"""
+        current_year = date.today().year
+        if value < current_year:
+            raise serializers.ValidationError(
+                f"El año no puede ser inferior al año actual ({current_year})."
+            )
+        return value
+    
+    def validate_est_codigo(self, value):
+        estudiante = Estudiante.objects.filter(est_codigo=value)
+        if not estudiante:
+            raise serializers.ValidationError(f"El estudiante con codigo {value} no esta registrado")
+        return value
     def validate(self, data):
         """
         Validación optimizada para verificar:
