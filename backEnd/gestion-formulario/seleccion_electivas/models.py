@@ -1,3 +1,4 @@
+from datetime import date
 from django.db import models
 
 class SeleccionEstudianteElectiva(models.Model):
@@ -32,6 +33,18 @@ class SeleccionEstudianteElectiva(models.Model):
             ('sel_anio', 'sel_num_semestre', 'est_codigo', 'sel_prioridad'),
         ]
 
+        constraints = [
+            # sel_anio no puede ser inferior al año actual
+            models.CheckConstraint(
+                check=models.Q(sel_anio__gte=date.today().year),
+                name='sel_anio_no_inferior_anio_actual'
+            ),
+            # sel_prioridad debe ser mayor a 0
+            models.CheckConstraint(
+                check=models.Q(sel_prioridad__gt=0),
+                name='sel_prioridad_mayor_que_cero'
+            ),
+        ]
 
     def __str__(self):
         # Usamos self.est_codigo y self.ele_codigo que son los objetos relacionados
