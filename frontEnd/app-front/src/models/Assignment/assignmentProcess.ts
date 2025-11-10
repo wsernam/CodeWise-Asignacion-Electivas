@@ -3,6 +3,7 @@ export interface AssignmentProcess {
   pa_anio: number;
   pa_num_semestre: 1 | 2;
   pa_activo: boolean;
+  fechaFinalizacion?: string;
 }
 
 export interface ValidationResult {

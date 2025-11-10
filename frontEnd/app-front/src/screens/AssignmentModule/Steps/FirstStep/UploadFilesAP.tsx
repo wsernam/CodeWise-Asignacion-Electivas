@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import "../AssignmentProcessSteps.css";
 import {
   FaUserSlash,
@@ -10,6 +10,10 @@ import Button from "../../../../components/ui/Button/Button";
 import SimpleModal from "../../../../components/shared/SimpleModal/SimpleModal";
 import MultipleFileUploader from "../../../../components/fileUploader/MultipleFileUploader";
 import ConfirmModal from "../../../../components/shared/ConfirmModal/ConfirmModal";
+import {
+  useExcelProcessingStore,
+  useAssignmentFlowStore,
+} from "../../../../store/Assignment";
 
 type AssignmentProcessProps = {
   onNext: () => void;
@@ -53,26 +57,51 @@ const UploadFilesAP: React.FC<AssignmentProcessProps> = ({
   currentStep,
   getStepBorderClass,
 }) => {
-  const [showModal, setShowModal] = React.useState(false);
-  const [showConfirm, setShowConfirm] = React.useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
 
-  // Manejar clic en los cuadritos
-  const handleCardClick = (stepNumber: number) => {
-    if (stepNumber === currentStep) {
-      // Si es el paso actual, abrir el modal
-      setShowModal(true);
-    } else {
-      // Si es otro paso, navegar a ese paso
-      onStepClick(stepNumber);
+  // Conectar con los stores
+  const { validarExcel, loading, error, clearError } =
+    useExcelProcessingStore();
+  const { addCompletedStep } = useAssignmentFlowStore();
+
+  // Manejar archivos subidos desde MultipleFileUploader
+  const handleFilesUploaded = (files: File[]) => {
+    setUploadedFiles(files);
+    clearError();
+  };
+
+  const handleSave = async () => {
+    if (uploadedFiles.length === 0) {
+      alert("Por favor, sube al menos un archivo Excel");
+      return;
+    }
+
+    try {
+      console.log("Validando archivos Excel...", uploadedFiles);
+      await validarExcel(uploadedFiles);
+      setShowConfirm(true);
+    } catch (error) {
+      console.error("Error validando archivos:", error);
     }
   };
 
-  const handleSave = () => setShowConfirm(true);
   const handleConfirmSave = () => {
     console.log("Confirmando guardado, llamando onNext");
     setShowConfirm(false);
     setShowModal(false);
+    addCompletedStep(1); // Marcar paso 1 como completado
     onNext();
+  };
+
+  const handleCardClick = (stepNumber: number) => {
+    if (stepNumber === currentStep) {
+      setShowModal(true);
+      clearError();
+    } else {
+      onStepClick(stepNumber);
+    }
   };
 
   return (
@@ -100,14 +129,43 @@ const UploadFilesAP: React.FC<AssignmentProcessProps> = ({
         <SimpleModal
           open={showModal}
           title="Seleccionador de archivos Excel"
-          onClose={() => setShowModal(false)}
+          onClose={() => {
+            setShowModal(false);
+            clearError();
+          }}
         >
           <div className="fileUploader">
-            <MultipleFileUploader />
+            <MultipleFileUploader onFilesUploaded={handleFilesUploaded} />
           </div>
-          <div className="aps-step-buttons">
-            <Button variant="primary" onClick={handleSave}>
-              Continuar
+
+          {/* Mostrar estado de carga y error */}
+          {loading && (
+            <div style={{ textAlign: "center", padding: "10px" }}>
+              <p>Validando archivos Excel...</p>
+            </div>
+          )}
+
+          {error && (
+            <div
+              style={{
+                color: "red",
+                margin: "10px 0",
+                padding: "10px",
+                backgroundColor: "#ffe6e6",
+                borderRadius: "4px",
+              }}
+            >
+              <strong>Error:</strong> {error}
+            </div>
+          )}
+
+          <div className="aps-step-buttons" style={{ marginTop: "16px" }}>
+            <Button
+              variant="primary"
+              onClick={handleSave}
+              disabled={loading || uploadedFiles.length === 0}
+            >
+              {loading ? "Validando..." : "Continuar"}
             </Button>
           </div>
         </SimpleModal>

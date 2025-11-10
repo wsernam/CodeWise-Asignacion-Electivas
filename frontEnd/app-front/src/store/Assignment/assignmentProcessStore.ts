@@ -5,12 +5,15 @@ import type { AssignmentProcess } from "../../models/Assignment/assignmentProces
 interface AssignmentProcessState {
   // ========== ESTADO ==========
   currentProcess: AssignmentProcess | null; // Proceso de asignación actual
+  allProcess: AssignmentProcess[]; // Todos los procesos de asignación
   loading: boolean; // Estado de carga para operaciones
   error: string | null; // Mensajes de error
 
   // ========== ACCIONES ==========
   crearProceso: (anio: number, semestre: number) => Promise<AssignmentProcess>;
   obtenerProcesoActivo: () => Promise<AssignmentProcess | null>;
+  obtenerTodosLosProcesos: () => Promise<AssignmentProcess[]>;
+  finalizarProceso: (procesoId: number) => Promise<void>;
   clearError: () => void;
   reset: () => void;
 }
@@ -24,6 +27,7 @@ export const useAssignmentProcessStore = create<AssignmentProcessState>(
   (set) => ({
     // ========== ESTADO INICIAL ==========
     currentProcess: null,
+    allProcess: [],
     loading: false,
     error: null,
 
@@ -84,5 +88,43 @@ export const useAssignmentProcessStore = create<AssignmentProcessState>(
         loading: false,
         error: null,
       }),
+
+    /**
+     * OBTENER TODOS LOS PROCESOS DE ASIGNACIÓN
+     * Se conecta con: assignmentProcessService.obtenerTodosLosProcesos()
+     * @returns Lista completa de procesos
+     */
+    obtenerTodosLosProcesos: async () => {
+      set({ loading: true, error: null });
+      try {
+        const procesos =
+          await assignmentProcessService.obtenerTodosLosProcesos();
+        set({ allProcess: procesos, loading: false });
+        return procesos;
+      } catch (error: any) {
+        set({ loading: false, error: error.message });
+        throw error;
+      }
+    },
+    /**
+     * FINALIZAR PROCESO DE ASIGNACIÓN
+     * @param codigo - Código del proceso a finalizar
+     */
+    finalizarProceso: async (codigo: number) => {
+      set({ loading: true, error: null });
+      try {
+        await assignmentProcessService.finalizarProceso(codigo);
+        set({
+          currentProcess: null,
+          loading: false,
+        });
+      } catch (error: any) {
+        set({
+          loading: false,
+          error: error.message,
+        });
+        throw error;
+      }
+    },
   })
 );
