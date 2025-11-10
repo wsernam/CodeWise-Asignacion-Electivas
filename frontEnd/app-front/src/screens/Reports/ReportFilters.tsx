@@ -37,8 +37,7 @@ const ReportFilters: React.FC<IReportFiltersProps> = ({
     { value: "por-estudiante", label: "Por Estudiante" },
     { value: "por-electiva", label: "Por Electiva" },
     { value: "por-programa", label: "Por Programa Académico" },
-    { value: "listas-espera", label: "Listas de Espera" },
-    { value: "asignacion-final", label: "Asignación Final" },
+    { value: "listas", label: "Lista asignación y espera" },
   ];
 
   const finalReportTypeOptions = reportTypeOptions || defaultReportTypeOptions;

@@ -23,3 +23,4 @@ export const LOGIN_URL = `${API_BASE_URL}login`;
 //export const STUDENT_DATA_URL = `${API_BASE_URL}api/student`;
 //export const PROGRAMS_URL = `${API_BASE_URL}api/programs`;
 //export const FORM_URL = `${API_BASE_URL}api/forms`;
+export const REPORTS_BASE_URL = `${ASSIGNMENT_API_BASE_URL}reporte-asignacion/pdf`;
