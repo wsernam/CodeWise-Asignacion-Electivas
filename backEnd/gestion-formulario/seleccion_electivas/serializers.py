@@ -10,7 +10,6 @@ from gestion_oferta_electiva.models import Oferta_electiva
 class ElectivaPrioridadDTO(serializers.Serializer):
     sel_prioridad = serializers.IntegerField()
     ele_codigo = serializers.CharField(max_length=225)
-    ele_nombre = serializers.CharField(max_length=100)
 
     def validate_sel_prioridad(self, value):
         """Restricción 2: sel_prioridad debe ser mayor a 0"""
@@ -27,7 +26,7 @@ class CrearSeleccionElectivaDTO(serializers.Serializer):
     est_codigo = serializers.CharField(max_length=225)
     est_correo = serializers.CharField(max_length=100)
     sel_anio = serializers.IntegerField()
-    sel_num_semestre = serializers.ChoiceField(choices=[1, 2])
+    sel_num_semestre = serializers.IntegerField()
     electivas = ElectivaPrioridadDTO(many=True)
     VALID_SEMESTRES = [1, 2]
 
@@ -83,7 +82,7 @@ class CrearSeleccionElectivaDTO(serializers.Serializer):
         if value not in self.VALID_SEMESTRES:
             valid_values = ', '.join(map(str, self.VALID_SEMESTRES))
             raise serializers.ValidationError(
-                f"Valor inválido para 'sel_num_semestre': {value}. "
+                f"Valor inválido: {value}. "
                 f"Los valores permitidos son: {valid_values}."
             )
         return value
@@ -92,9 +91,14 @@ class CrearSeleccionElectivaDTO(serializers.Serializer):
     def validate_sel_anio(self, value):
         """Restricción 1: sel_anio no puede ser inferior al año presente"""
         current_year = date.today().year
+        next_year = current_year +1
         if value < current_year:
             raise serializers.ValidationError(
-                f"El año no puede ser inferior al año actual ({current_year})."
+                f"El año no puede ser inferior al año actual: {current_year}."
+            )
+        elif value > next_year:
+             raise serializers.ValidationError(
+                f"El año no puede ser superior al año siguiente: {next_year}."
             )
         return value
     
