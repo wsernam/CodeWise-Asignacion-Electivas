@@ -21,13 +21,38 @@ export const excelProcessingService = {
     const formData = new FormData();
     files.forEach((file) => formData.append("files", file));
 
-    const response = await fetch(`${EXCEL_PROCESSING_URL}/validar/`, {
+    const url = "http://localhost:8002/inventario/api/excel/validar/";
+
+    const response = await fetch(url, {
       method: "POST",
       body: formData,
     });
 
-    if (!response.ok)
-      throw new Error(`Error validando Excel: ${response.statusText}`);
+    // AGREGAR manejo de errores del backend
+    if (!response.ok) {
+      // Intentar obtener el mensaje de error del backend
+      let errorMessage = `Error ${response.status}: ${response.statusText}`;
+
+      try {
+        const errorData = await response.json();
+        if (errorData.error) {
+          errorMessage = errorData.error;
+        } else if (errorData.detail) {
+          errorMessage = errorData.detail;
+        } else if (errorData.non_field_errors) {
+          errorMessage = errorData.non_field_errors[0];
+        }
+      } catch {
+        // Si no se puede parsear JSON, usar el texto plano
+        const errorText = await response.text();
+        if (errorText) {
+          errorMessage = errorText;
+        }
+      }
+
+      throw new Error(errorMessage);
+    }
+
     return (await response.json()) as ValidationResult;
   },
 

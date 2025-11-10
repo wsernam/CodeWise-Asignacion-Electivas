@@ -6,6 +6,7 @@ import {
   FaFileAlt,
   FaClipboardList,
 } from "react-icons/fa";
+import WarningModal from "../../../../components/shared/WarningModal/WarningModal";
 import Button from "../../../../components/ui/Button/Button";
 import SimpleModal from "../../../../components/shared/SimpleModal/SimpleModal";
 import MultipleFileUploader from "../../../../components/fileUploader/MultipleFileUploader";
@@ -59,6 +60,8 @@ const UploadFilesAP: React.FC<AssignmentProcessProps> = ({
 }) => {
   const [showModal, setShowModal] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [showWarningModal, setShowWarningModal] = useState(false);
+  const [warningMessage, setWarningMessage] = useState("");
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
 
   // Conectar con los stores
@@ -79,11 +82,25 @@ const UploadFilesAP: React.FC<AssignmentProcessProps> = ({
     }
 
     try {
-      console.log("Validando archivos Excel...", uploadedFiles);
-      await validarExcel(uploadedFiles);
+      console.log("Validando formato de archivos Excel...", uploadedFiles);
+
+      const resultado = await validarExcel(uploadedFiles);
+      console.log("Resultado del backend:", resultado); // Para depuración
+
+      // Verificar si hay advertencias
+      if (resultado.advertencias && resultado.advertencias.length > 0) {
+        console.warn("Advertencias del backend:", resultado.advertencias);
+
+        const mensajeAdvertencias = resultado.advertencias.join("\n\n");
+        setWarningMessage(mensajeAdvertencias);
+        setShowWarningModal(true);
+        return; // No seguir si hay advertencias
+      }
+
       setShowConfirm(true);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error validando archivos:", error);
+      alert(`Error en validación: ${error.message}`);
     }
   };
 
@@ -103,7 +120,6 @@ const UploadFilesAP: React.FC<AssignmentProcessProps> = ({
       onStepClick(stepNumber);
     }
   };
-
   return (
     <div className="aps-wrapper">
       <div className="aps-grid">
@@ -171,6 +187,14 @@ const UploadFilesAP: React.FC<AssignmentProcessProps> = ({
         </SimpleModal>
       )}
 
+      {/* Modal de advertencia para errores de formato */}
+      <WarningModal
+        open={showWarningModal}
+        message={warningMessage}
+        onClose={() => setShowWarningModal(false)}
+      />
+
+      {/* Modal de confirmación para continuar */}
       <ConfirmModal
         open={showConfirm}
         message="¿Está seguro de guardar este paso y continuar?"
