@@ -63,7 +63,28 @@
   font-size: 16px;
 }
 
-/* Column widths específicas */
+/* Estilos para el estado */
+.status {
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: bold;
+  text-align: center;
+  display: inline-block;
+  min-width: 80px;
+}
+
+.status.active {
+  background: #28a745;
+  color: white;
+}
+
+.status.inactive {
+  background: #6c757d;
+  color: white;
+}
+
+/* Columnas específicas */
 .inactives-table th:nth-child(1),
 .inactives-table td:nth-child(1) {
   width: 120px;
@@ -98,5 +119,5 @@
 } /* Estado */
 .inactives-table th:nth-child(9),
 .inactives-table td:nth-child(9) {
-  width: 100px;
-} /* Acción */
+  display: none;
+}

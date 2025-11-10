@@ -1,7 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "../AssignmentProcessSteps.css";
-import "./InactivesTable.css"; // CSS separado
-import { Tag } from "antd";
+import "./InactivesTable.css";
 import {
   FaUserSlash,
   FaUserCheck,
@@ -11,6 +10,7 @@ import {
 import Button from "../../../../components/ui/Button/Button";
 import SimpleModal from "../../../../components/shared/SimpleModal/SimpleModal";
 import ConfirmModal from "../../../../components/shared/ConfirmModal/ConfirmModal";
+import { useExcelProcessingStore } from "../../../../store/Assignment";
 
 type AssignmentProcessProps = {
   onNext: () => void;
@@ -59,7 +59,7 @@ const cards = [
   },
 ];
 
-// COMPONENTE DE TABLA SEPARADO
+// COMPONENTE DE TABLA SEPARADO - CORREGIDO
 const InactivesTable: React.FC<{
   rows: InactiveRow[];
   onRowsChange: (rows: InactiveRow[]) => void;
@@ -75,13 +75,27 @@ const InactivesTable: React.FC<{
     onRowsChange(updatedRows);
   };
 
-  const removeRow = (rowId: number) => {
-    const updatedRows = rows.filter((row) => row.id !== rowId);
-    onRowsChange(updatedRows);
-  };
-
   const isActive = (row: InactiveRow) => {
-    return row.codigo && row.nombre && row.apellido && row.programa;
+    // Validar que todos los campos obligatorios estén llenos
+    const camposObligatoriosLlenos =
+      row.codigo && row.nombre && row.apellido && row.programa;
+
+    // Validar que los campos numéricos tengan formato correcto
+    const creditosValidos =
+      !isNaN(Number(row.creditosObligatorios)) &&
+      row.creditosObligatorios !== "";
+    const periodosValidos =
+      !isNaN(Number(row.periodosMatriculados)) &&
+      row.periodosMatriculados !== "";
+    const porcentajeValido =
+      !isNaN(Number(row.porcentajeAvance)) && row.porcentajeAvance !== "";
+
+    return (
+      camposObligatoriosLlenos &&
+      creditosValidos &&
+      periodosValidos &&
+      porcentajeValido
+    );
   };
 
   return (
@@ -97,7 +111,6 @@ const InactivesTable: React.FC<{
             <th>Periodos</th>
             <th>% avance</th>
             <th>Estado</th>
-            <th>Acción</th>
           </tr>
         </thead>
         <tbody>
@@ -149,7 +162,7 @@ const InactivesTable: React.FC<{
               </td>
               <td>
                 <input
-                  type="text"
+                  type="number"
                   defaultValue={row.creditosObligatorios}
                   onBlur={(e) =>
                     handleInputChange(
@@ -164,7 +177,7 @@ const InactivesTable: React.FC<{
               </td>
               <td>
                 <input
-                  type="text"
+                  type="number"
                   defaultValue={row.periodosMatriculados}
                   onBlur={(e) =>
                     handleInputChange(
@@ -179,7 +192,7 @@ const InactivesTable: React.FC<{
               </td>
               <td>
                 <input
-                  type="text"
+                  type="number"
                   defaultValue={row.porcentajeAvance}
                   onBlur={(e) =>
                     handleInputChange(
@@ -189,20 +202,16 @@ const InactivesTable: React.FC<{
                     )
                   }
                   className="inactives-input"
-                  placeholder="0%"
+                  placeholder="0"
+                  step="0.1"
                 />
               </td>
               <td>
-                {isActive(row) ? (
-                  <Tag color="green">Activo</Tag>
-                ) : (
-                  <Tag color="default">Incompleto</Tag>
-                )}
-              </td>
-              <td>
-                <Button variant="secondary" onClick={() => removeRow(row.id)}>
-                  Eliminar
-                </Button>
+                <span
+                  className={`status ${isActive(row) ? "active" : "inactive"}`}
+                >
+                  {isActive(row) ? "Activo" : "Inactivo"}
+                </span>
               </td>
             </tr>
           ))}
@@ -211,7 +220,6 @@ const InactivesTable: React.FC<{
     </div>
   );
 };
-
 // COMPONENTE PRINCIPAL
 const InactivesManagementAP: React.FC<AssignmentProcessProps> = ({
   onNext,
@@ -224,60 +232,95 @@ const InactivesManagementAP: React.FC<AssignmentProcessProps> = ({
   const [inactiveRows, setInactiveRows] = useState<InactiveRow[]>([]);
   const [nextId, setNextId] = useState(1);
 
+  // Conectar con store de Excel
+  const {
+    incompleteRows,
+    previsualizarIncompletos,
+    completarYProcesar,
+    uploadedFiles,
+    loading,
+    error,
+    clearError,
+  } = useExcelProcessingStore();
+
+  // Efecto para cargar filas incompletas automáticamente
+  useEffect(() => {
+    if (showModal && uploadedFiles.length > 0) {
+      const cargarIncompletos = async () => {
+        try {
+          await previsualizarIncompletos(uploadedFiles);
+        } catch (error) {
+          console.error("Error cargando estudiantes incompletos:", error);
+        }
+      };
+
+      cargarIncompletos();
+    }
+  }, [showModal, uploadedFiles, previsualizarIncompletos]);
+
+  // Convertir incompleteRows del servicio a inactiveRows del componente
+  useEffect(() => {
+    if (incompleteRows.length > 0) {
+      const convertedRows: InactiveRow[] = incompleteRows.map((row, index) => ({
+        id: index + 1,
+        codigo: row.codigo?.toString() || "",
+        nombre: "",
+        apellido: "",
+        programa: "",
+        creditosObligatorios: "",
+        periodosMatriculados: "",
+        porcentajeAvance: "",
+      }));
+      setInactiveRows(convertedRows);
+      setNextId(convertedRows.length + 1);
+    }
+  }, [incompleteRows]);
+
   const handleCardClick = (stepNumber: number) => {
     if (stepNumber === currentStep) {
       setShowModal(true);
+      clearError();
     } else {
       onStepClick(stepNumber);
     }
   };
 
-  const handleSave = () => setShowConfirm(true);
+  // Envía los datos al backend
+  const handleSave = async () => {
+    try {
+      // Preparar datos para enviar al backend
+      const filasACompletar = inactiveRows
+        .filter((row) => row.codigo) // Solo filas con código (no vacías)
+        .map((row) => ({
+          archivo: "archivo_procesado",
+          fila: row.id,
+          datos: {
+            codigo_estudiante: row.codigo,
+            nombre: row.nombre,
+            apellido: row.apellido,
+            programa: row.programa,
+            creditos_obligatorios: parseInt(row.creditosObligatorios) || 0,
+            periodos_matriculados: parseInt(row.periodosMatriculados) || 0,
+            porcentaje_avance: parseFloat(row.porcentajeAvance) || 0,
+          },
+        }));
+
+      console.log("Enviando datos al backend:", filasACompletar);
+
+      // Enviar al backend para procesamiento final
+      await completarYProcesar(filasACompletar);
+
+      setShowConfirm(true);
+    } catch (error) {
+      console.error("Error guardando cambios:", error);
+      alert("Error al guardar los cambios. Intenta nuevamente.");
+    }
+  };
+
   const handleConfirmSave = () => {
     setShowConfirm(false);
     setShowModal(false);
     onNext();
-  };
-
-  const addEmptyRow = () => {
-    const newRow: InactiveRow = {
-      id: nextId,
-      codigo: "",
-      nombre: "",
-      apellido: "",
-      programa: "",
-      creditosObligatorios: "",
-      periodosMatriculados: "",
-      porcentajeAvance: "",
-    };
-    setInactiveRows((prev) => [...prev, newRow]);
-    setNextId((prev) => prev + 1);
-  };
-
-  const detectInactives = () => {
-    setInactiveRows([
-      {
-        id: 1,
-        codigo: "104622011437",
-        nombre: "Lina",
-        apellido: "Diaz",
-        programa: "Ingeniería de Sistemas",
-        creditosObligatorios: "80",
-        periodosMatriculados: "8",
-        porcentajeAvance: "40%",
-      },
-      {
-        id: 2,
-        codigo: "104622011438",
-        nombre: "Carlos",
-        apellido: "Martinez",
-        programa: "Ingeniería Civil",
-        creditosObligatorios: "75",
-        periodosMatriculados: "7",
-        porcentajeAvance: "35%",
-      },
-    ]);
-    setNextId(3);
   };
 
   return (
@@ -310,29 +353,15 @@ const InactivesManagementAP: React.FC<AssignmentProcessProps> = ({
             {inactiveRows.length === 0 ? (
               <div className="inactives-empty">
                 <p>No se han identificado posibles estudiantes inactivos</p>
-                <div className="inactives-actions">
-                  <Button variant="secondary" onClick={detectInactives}>
-                    Detectar inactivos
-                  </Button>
-                  <Button variant="primary" onClick={addEmptyRow}>
-                    Añadir estudiante
-                  </Button>
-                </div>
+                {loading && <p>Cargando estudiantes incompletos...</p>}
+                {error && (
+                  <div style={{ color: "red", margin: "10px 0" }}>
+                    Error: {error}
+                  </div>
+                )}
               </div>
             ) : (
               <>
-                <div className="inactives-actions">
-                  <Button variant="secondary" onClick={addEmptyRow}>
-                    Añadir estudiante
-                  </Button>
-                  <Button
-                    variant="secondary"
-                    onClick={() => setInactiveRows([])}
-                  >
-                    Limpiar lista
-                  </Button>
-                </div>
-
                 <InactivesTable
                   rows={inactiveRows}
                   onRowsChange={setInactiveRows}
@@ -347,13 +376,11 @@ const InactivesManagementAP: React.FC<AssignmentProcessProps> = ({
                   }}
                 >
                   <Button
-                    variant="secondary"
-                    onClick={() => setShowModal(false)}
+                    variant="primary"
+                    onClick={handleSave}
+                    disabled={loading}
                   >
-                    Cerrar
-                  </Button>
-                  <Button variant="primary" onClick={handleSave}>
-                    Continuar
+                    {loading ? "Guardando..." : "Guardar y Continuar"}
                   </Button>
                 </div>
               </>

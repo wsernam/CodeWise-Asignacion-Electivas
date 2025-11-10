@@ -15,6 +15,15 @@ type ProcessData = {
   semester: 1 | 2;
 };
 
+// Tipo temporal para el historial de procesos
+interface ProcessHistory {
+  pa_codigo: number;
+  pa_anio: number;
+  pa_num_semestre: number;
+  pa_activo: boolean;
+  fechaFinalizacion?: string;
+}
+
 const AssignmentModule: React.FC = () => {
   const [showCreateModal, setShowCreateModal] = useState<boolean>(false);
   const [hasActiveProcess, setHasActiveProcess] = useState<boolean>(false);
@@ -56,17 +65,19 @@ const AssignmentModule: React.FC = () => {
   };
 
   const handleNextStep = () => {
-    const nextStep = currentStepLocal ? currentStepLocal + 1 : 1;
-    setCurrentStepLocal(nextStep);
-
     if (currentStepLocal) {
-      setCompletedSteps((prev) => [...prev, currentStepLocal]);
+      // Marcar actual como completado
+      setCompletedSteps((prev) => [...new Set([...prev, currentStepLocal])]);
+      // Avanzar automáticamente al siguiente
+      const nextStep = currentStepLocal + 1;
+      setCurrentStepLocal(nextStep);
     }
   };
 
   const handleStepClick = (stepNumber: number) => {
-    if (completedSteps.includes(stepNumber - 1) || stepNumber === 1) {
-      setCurrentStepLocal(stepNumber);
+    // SOLO permitir click en el paso actual
+    if (stepNumber === currentStepLocal) {
+      console.log(`Navegando al paso actual: ${stepNumber}`);
     }
   };
 
@@ -129,6 +140,14 @@ const AssignmentModule: React.FC = () => {
       setProcessData(null);
     }
   }, [currentProcess]);
+
+  // Debug del estado actual
+  useEffect(() => {
+    console.log("Debug - Estado actual:");
+    console.log("currentStepLocal:", currentStepLocal);
+    console.log("completedSteps:", completedSteps);
+    console.log("hasActiveProcess:", hasActiveProcess);
+  }, [currentStepLocal, completedSteps, hasActiveProcess]);
 
   return (
     <>
@@ -248,28 +267,29 @@ const AssignmentModule: React.FC = () => {
             )}
 
             {/* Procesos finalizados desde el backend */}
-            {allProcess
-              .filter(
-                (proceso) =>
-                  !proceso.pa_activo &&
-                  proceso.pa_codigo !== currentProcess?.pa_codigo
-              )
-              .map((proceso) => (
-                <div key={proceso.pa_codigo} className="process-history-item">
-                  <div className="process-period">
-                    {proceso.pa_anio}-{proceso.pa_num_semestre}
-                  </div>
-                  <div className="process-details">
-                    <div className="process-date">
-                      Finalizado en:{" "}
-                      {proceso.fechaFinalizacion
-                        ? formatDate(proceso.fechaFinalizacion)
-                        : "Fecha no disponible"}
+            {allProcess &&
+              (allProcess as ProcessHistory[])
+                .filter(
+                  (proceso) =>
+                    !proceso.pa_activo &&
+                    proceso.pa_codigo !== currentProcess?.pa_codigo
+                )
+                .map((proceso) => (
+                  <div key={proceso.pa_codigo} className="process-history-item">
+                    <div className="process-period">
+                      {proceso.pa_anio}-{proceso.pa_num_semestre}
                     </div>
-                    <span className="status-finished">Finalizado</span>
+                    <div className="process-details">
+                      <div className="process-date">
+                        Finalizado en:{" "}
+                        {proceso.fechaFinalizacion
+                          ? formatDate(proceso.fechaFinalizacion)
+                          : "Fecha no disponible"}
+                      </div>
+                      <span className="status-finished">Finalizado</span>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
           </Card>
         </div>
       </div>
