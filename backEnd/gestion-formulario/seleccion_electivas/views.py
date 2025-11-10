@@ -60,27 +60,23 @@ class SeleccionEstudianteElectivaViewSet(mixins.CreateModelMixin,
             ]
 
             # Usamos bulk_create para una inserción eficiente en la base de datos
-            SeleccionEstudianteElectiva.objects.bulk_create(selecciones_a_crear)
-
-            # Después de bulk_create, recuperamos los objetos para obtener sus IDs
-            # y poder publicar los eventos y devolverlos en la respuesta.
-            codigos_electivas = [e["ele_codigo"] for e in electivas_data]
-            created_instances = SeleccionEstudianteElectiva.objects.filter(
-                est_codigo_id=est_codigo,
-                sel_anio=sel_anio,
-                sel_num_semestre=sel_num_semestre,
-                ele_codigo_id__in=codigos_electivas
-            )
-
+            created_instances = SeleccionEstudianteElectiva.objects.bulk_create(selecciones_a_crear)
+            electivas_prioridad_nombre = []
+            for ele in serializer.data.get("electivas", []):
+                electiva_prioridad =ele
+                electiva =  Electiva.objects.filter(ele_codigo = electiva_prioridad["ele_codigo"]).first()
+                electiva_prioridad["ele_nombre"] = electiva.ele_nombre
+                electivas_prioridad_nombre.append(electiva_prioridad)
+            print(electivas_prioridad_nombre,flush=True)
+            datos_correo = request.data
+            datos_correo["electivas"] = electivas_prioridad_nombre
+            print(datos_correo, flush=True)
             # Publicamos un evento por cada selección creada
-            transaction.on_commit(lambda: publish_seleccion_creada(request.data))
-
-        codigos_creados = [instance.sel_codigo for instance in created_instances]
-
+            transaction.on_commit(lambda: publish_seleccion_creada(datos_correo))
+            
         return Response(
             {
-                "detail": f"Se han registrado {len(created_instances)} electivas para el estudiante {est_codigo}.",
-                "selecciones_creadas": codigos_creados
+                "detail": f"Se han registrado {len(created_instances)} electivas para el estudiante {est_codigo}."
             },
             status=status.HTTP_201_CREATED,
         )

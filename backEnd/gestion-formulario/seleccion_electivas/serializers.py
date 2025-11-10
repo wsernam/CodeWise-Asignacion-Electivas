@@ -9,7 +9,6 @@ from gestion_oferta_electiva.models import Oferta_electiva
 class ElectivaPrioridadDTO(serializers.Serializer):
     sel_prioridad = serializers.IntegerField()
     ele_codigo = serializers.CharField(max_length=225)
-    ele_nombre = serializers.CharField(max_length=100)
 
     def validate_sel_prioridad(self, value):
         """Restricción 2: sel_prioridad debe ser mayor a 0"""
