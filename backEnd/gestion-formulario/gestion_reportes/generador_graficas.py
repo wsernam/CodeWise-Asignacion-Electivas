@@ -97,8 +97,8 @@ def generar_grafico_barras(nombre_grafico, datos, ancho=420, alto=280):
     bc.width = ancho - 100      # margen horizontal
     bc.height = alto - 120      # margen vertical
     bc.data = [valores]
-    bc.categoryAxis.categoryNames = programas
-    bc.barLabelFormat = lambda x: ''  # Return empty string for all values
+   
+
     # Estilo de las barras
     bc.barWidth = max(10, (bc.width / len(programas)) * 0.6)
     bc.groupSpacing = 10
@@ -106,20 +106,13 @@ def generar_grafico_barras(nombre_grafico, datos, ancho=420, alto=280):
 
     # Ejes
     bc.valueAxis.valueMin = 0
-    bc.valueAxis.labels.fontSize = 8
-    bc.categoryAxis.labels.angle = 45
+    bc.valueAxis.labels.fontSize = 12
+    bc.categoryAxis.labels.angle = 0
     bc.categoryAxis.labels.fontSize = 8
-    bc.categoryAxis.labels.dy = -20
+    bc.categoryAxis.labels.dy = -10
+    bc.categoryAxis.labels.boxAnchor = 'ne'
+    bc.categoryAxis.categoryNames = programas
     
-    # Título
-    title = Label()
-    title.setOrigin(ancho / 2, alto - 20)
-    title.boxAnchor = 'n'
-    title.fontName = 'Helvetica-Bold'
-    title.fontSize = 12
-    title.text = nombre_grafico
-
     drawing.add(bc)
-    drawing.add(title)
    
     return drawing

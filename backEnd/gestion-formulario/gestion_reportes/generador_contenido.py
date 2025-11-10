@@ -151,11 +151,13 @@ class GeneradorContenidoReporteGeneralSeleccion:
     def __init__(self, datos_reporte: QuerySet[SeleccionEstudianteElectiva]):
         self.datos_reporte = datos_reporte
 
-    def agregar_espacios(self,elementos, mensaje, style, estilo):
-        elementos.append(Spacer(1, 1 * cm))
+    def agregar_subtitulo(self,elementos, mensaje, style, estilo):
         elementos.append(Paragraph(mensaje, style[estilo]))
-        elementos.append(Spacer(1, 1 * cm))
-
+        elementos.append(Spacer(1, 0.5 * cm))
+        return elementos
+    def agregar_texto(self, elementos,mensaje,style,estilo):
+        elementos.append(Spacer(1, 0.5 * cm))
+        elementos.append(Paragraph(mensaje, style[estilo]))
         return elementos
     
     def generar_contenido(self):
@@ -174,7 +176,7 @@ class GeneradorContenidoReporteGeneralSeleccion:
             f"Este informe contiene las metricas del proceso de seleccion correspondiente al periodo academico <b>{anio}-{semestre}</b>"
             f" con corte en el {fecha}."
         )
-        elementos = self.agregar_espacios(elementos,mensaje,styles,"Texto")
+        elementos = self.agregar_texto(elementos,mensaje,styles,"Texto")
         #Consultar la proporcion de programas que realizaron la seleccion
         conteo_programas = (
             self.datos_reporte
@@ -212,7 +214,7 @@ class GeneradorContenidoReporteGeneralSeleccion:
         for programa in conteo_programas:
             nombre_programa = programa["nombre_programa"]
             codigo_programa = programa["codigo_programa"]
-            elementos = self.agregar_espacios(elementos,nombre_programa,styles,"Heading2")
+            elementos = self.agregar_subtitulo(elementos,nombre_programa,styles,"Heading2")
             selecciones_programa = self.datos_reporte.filter(ele_codigo__pro_codigo=codigo_programa)
 
             electivas = (
@@ -226,7 +228,7 @@ class GeneradorContenidoReporteGeneralSeleccion:
 
             for ele in electivas:
                 nombre_electiva = ele["nombre"]
-                elementos = self.agregar_espacios(elementos,nombre_electiva,styles,"Heading3")
+                elementos = self.agregar_subtitulo(elementos,nombre_electiva,styles,"Heading3")
                 selecciones_electivas = selecciones_programa.filter(ele_codigo=ele["codigo"])
                 conteo_electivas = (
                     selecciones_electivas
