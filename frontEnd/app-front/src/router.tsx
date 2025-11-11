@@ -1,9 +1,9 @@
 // ---------------------- IMPORTS DE PANTALLAS ----------------------
-import PreLogin from "./screens/LoginModule/PreLogin/PreLogin.tsx";
-import LoginStudent from "./screens/LoginModule/LoginStudent/LoginStudent.tsx";
+import PreLogin from "./screens/LoginModule/PreLogin.tsx";
+import LoginStudent from "./screens/LoginModule/LoginStudent.tsx";
 import PersonalInfo from "./screens/StudentModule/PersonalInfo.tsx";
 import ElectiveSelection from "./screens/StudentModule/ElectiveSelection.tsx";
-import LoginAdmin from "./screens/LoginModule/LoginAdmin/LoginAdmin.tsx";
+import LoginAdmin from "./screens/LoginModule/LoginAdmin.tsx";
 import Dashboard from "./screens/FormModule/Dashboard/Dashboard.tsx";
 import Electives from "./screens/FormModule/Electives/ListElective.tsx";
 import AddElective from "./screens/FormModule/Electives/AddElective.tsx";
@@ -15,7 +15,6 @@ import Offer from "./screens/FormModule/Offer/Offer.tsx";
 import AssignmentModule from "./screens/AssignmentModule/AssignmentModule.tsx";
 import ReportsAssignment from "./screens/FormModule/Reports/ReportsAssignment.tsx";
 import ReportsForm from "./screens/FormModule/Reports/ReportsForm.tsx";
-
 // ---------------------- IMPORTS DE ROUTER ----------------------
 import { createBrowserRouter } from "react-router";
 import DashboardLayout from "./components/layout/DashboardLayout/DashboardLayout.tsx";

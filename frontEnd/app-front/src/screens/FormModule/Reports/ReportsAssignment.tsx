@@ -1,4 +1,3 @@
-// src/screens/Reports/ReportsAssignment.tsx
 import React, { useEffect, useState } from "react";
 import Card from "../../../components/ui/Card/Card";
 import ReportFilters from "./ReportFilters";
@@ -81,6 +80,7 @@ const ReportsAssignment: React.FC = () => {
             onReportTypeChange={setSelectedReportType}
             onGenerate={handleGenerateReport}
             isGenerating={isGenerating}
+            isGenerateDisabled={false} // Agregar esta prop faltante
           />
 
           {/* Campos extra según tipo */}

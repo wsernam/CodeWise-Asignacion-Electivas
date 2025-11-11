@@ -10,37 +10,34 @@ interface IReportFiltersProps {
   selectedYear: number;
   selectedSemester: 1 | 2;
   selectedReportType: string;
+  studentCode?: string;
   onYearChange: (year: number) => void;
   onSemesterChange: (semester: 1 | 2) => void;
   onReportTypeChange: (type: string) => void;
+  onStudentCodeChange?: (code: string) => void;
   onGenerate: () => void;
   isGenerating: boolean;
-  reportTypeOptions?: IReportTypeOption[]; // prop opcional
+  isGenerateDisabled: boolean;
+  reportTypeOptions?: IReportTypeOption[];
 }
 
 const ReportFilters: React.FC<IReportFiltersProps> = ({
   selectedYear,
   selectedSemester,
   selectedReportType,
+  studentCode = "",
   onYearChange,
   onSemesterChange,
   onReportTypeChange,
+  onStudentCodeChange,
   onGenerate,
   isGenerating,
-  reportTypeOptions, // Recibe las opciones personalizadas
+  isGenerateDisabled,
+  reportTypeOptions,
 }) => {
   const yearOptions = [2024, 2025, 2026];
 
-  // Opciones por defecto para asignación, o usa las personalizadas
-  const defaultReportTypeOptions = [
-    { value: "general", label: "Reporte General" },
-    { value: "por-estudiante", label: "Por Estudiante" },
-    { value: "por-electiva", label: "Por Electiva" },
-    { value: "por-programa", label: "Por Programa Académico" },
-    { value: "listas", label: "Lista asignación y espera" },
-  ];
-
-  const finalReportTypeOptions = reportTypeOptions || defaultReportTypeOptions;
+  const finalReportTypeOptions = reportTypeOptions || [];
 
   return (
     <div className="filters-section">
@@ -98,6 +95,24 @@ const ReportFilters: React.FC<IReportFiltersProps> = ({
           </select>
         </div>
 
+        {/* Campo para código de estudiante */}
+        {selectedReportType === "student-elective-selection" &&
+          onStudentCodeChange && (
+            <div className="filter-group">
+              <label htmlFor="student-code-input" className="filter-label">
+                Código Estudiante
+              </label>
+              <input
+                id="student-code-input"
+                type="text"
+                className="filter-select"
+                value={studentCode}
+                onChange={(e) => onStudentCodeChange(e.target.value)}
+                placeholder="Ej: 104621011376"
+              />
+            </div>
+          )}
+
         <div className="filter-group">
           <label className="filter-label" style={{ visibility: "hidden" }}>
             Acción
@@ -105,7 +120,7 @@ const ReportFilters: React.FC<IReportFiltersProps> = ({
           <Button
             variant="primary"
             onClick={onGenerate}
-            disabled={isGenerating}
+            disabled={isGenerating || isGenerateDisabled}
             className="generate-btn"
           >
             {isGenerating ? "Generando..." : "Generar Reporte"}

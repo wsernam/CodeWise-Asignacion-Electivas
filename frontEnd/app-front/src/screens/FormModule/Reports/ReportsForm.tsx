@@ -1,11 +1,9 @@
 import React, { useEffect, useState } from "react";
 import Card from "../../../components/ui/Card/Card";
 import ReportFilters from "./ReportFilters";
-
 import { useReportStore } from "../../../store/Form/reportStore";
 import { selectionReportService } from "../../../services/Form/selectionReportService";
 import { offerReportService } from "../../../services/Form/offerReportService";
-
 import "./ReportsAssignment.css";
 
 const ReportsForm: React.FC = () => {
@@ -25,6 +23,10 @@ const ReportsForm: React.FC = () => {
     clearReport,
   } = useReportStore();
 
+  // Estado para modal de advertencia
+  const [showWarningModal, setShowWarningModal] = useState(false);
+  const [warningMessage, setWarningMessage] = useState("");
+
   // Limpia el blob anterior al desmontar
   useEffect(() => {
     return () => {
@@ -34,15 +36,28 @@ const ReportsForm: React.FC = () => {
     };
   }, [generatedReport]);
 
+  // Validar si el botón debe estar deshabilitado
+  const isGenerateDisabled = () => {
+    if (!selectedYear || !selectedSemester) return true;
+    if (selectedReportType === "student-elective-selection" && !studentCode)
+      return true;
+    return isGenerating;
+  };
+
+  const showWarning = (message: string) => {
+    setWarningMessage(message);
+    setShowWarningModal(true);
+  };
+
   const handleGenerateReport = async () => {
-    // Validaciones básicas
+    // Validaciones
     if (!selectedYear || !selectedSemester) {
-      alert("Por favor selecciona año y semestre");
+      showWarning("Por favor selecciona año y semestre");
       return;
     }
 
     if (selectedReportType === "student-elective-selection" && !studentCode) {
-      alert("Por favor ingresa el código del estudiante");
+      showWarning("Por favor ingresa el código del estudiante");
       return;
     }
 
@@ -68,14 +83,6 @@ const ReportsForm: React.FC = () => {
           );
           break;
 
-        case "general-selection":
-          // TODO: Implementar cuando tengas el endpoint
-          throw new Error("Reporte general de selección no implementado aún");
-
-        case "enrolled-list":
-          // TODO: Implementar cuando tengas el endpoint
-          throw new Error("Lista de inscritos no implementado aún");
-
         default:
           throw new Error("Tipo de reporte no válido");
       }
@@ -85,8 +92,9 @@ const ReportsForm: React.FC = () => {
       );
       setGeneratedReport(url);
     } catch (error: any) {
+      // Alert mientras separo warning
       alert(error.message || "Error generando el reporte");
-      console.error("Error generating report:", error);
+      console.error("Error generando el reporte:", error);
     } finally {
       setIsGenerating(false);
     }
@@ -101,21 +109,20 @@ const ReportsForm: React.FC = () => {
             <p>Seleccione los filtros y genere el reporte deseado</p>
           </div>
 
-          {/* Filtros */}
+          {/* Filtros con campo integrado para estudiante */}
           <ReportFilters
-            selectedYear={selectedYear || 2024} // Valor por defecto para el select
-            selectedSemester={selectedSemester || 1} // Valor por defecto para el select
+            selectedYear={selectedYear}
+            selectedSemester={selectedSemester}
             selectedReportType={selectedReportType}
+            studentCode={studentCode}
             onYearChange={setSelectedYear}
             onSemesterChange={setSelectedSemester}
             onReportTypeChange={setSelectedReportType}
+            onStudentCodeChange={setStudentCode}
             onGenerate={handleGenerateReport}
             isGenerating={isGenerating}
+            isGenerateDisabled={isGenerateDisabled()}
             reportTypeOptions={[
-              {
-                value: "general-selection",
-                label: "Reporte General Proceso de Selección",
-              },
               {
                 value: "student-elective-selection",
                 label: "Electivas Seleccionadas por Estudiante",
@@ -124,29 +131,8 @@ const ReportsForm: React.FC = () => {
                 value: "offer-report",
                 label: "Reporte de Oferta de Electivas",
               },
-              {
-                value: "enrolled-list",
-                label: "Lista de Estudiantes Inscritos",
-              },
             ]}
           />
-
-          {/* Campo adicional para código de estudiante */}
-          {selectedReportType === "student-elective-selection" && (
-            <div className="filters-section" style={{ marginTop: "-1rem" }}>
-              <div className="filters-grid">
-                <div className="filter-group">
-                  <label className="filter-label">Código Estudiante</label>
-                  <input
-                    className="filter-select"
-                    value={studentCode}
-                    onChange={(e) => setStudentCode(e.target.value)}
-                    placeholder="Ej: 104621011376"
-                  />
-                </div>
-              </div>
-            </div>
-          )}
 
           {/* Visor PDF */}
           <div className="pdf-viewer-section">

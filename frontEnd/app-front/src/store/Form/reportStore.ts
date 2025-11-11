@@ -1,16 +1,16 @@
 import { create } from "zustand";
 
 interface ReportState {
-  selectedYear: number | null;
-  selectedSemester: 1 | 2 | null;
+  selectedYear: number;
+  selectedSemester: 1 | 2;
   selectedReportType: string;
   studentCode: string;
   isGenerating: boolean;
   generatedReport: string | null;
 
   // Acciones
-  setSelectedYear: (year: number | null) => void;
-  setSelectedSemester: (semester: 1 | 2 | null) => void;
+  setSelectedYear: (year: number) => void;
+  setSelectedSemester: (semester: 1 | 2) => void;
   setSelectedReportType: (type: string) => void;
   setStudentCode: (code: string) => void;
   setIsGenerating: (generating: boolean) => void;
@@ -21,8 +21,8 @@ interface ReportState {
 
 export const useReportStore = create<ReportState>((set) => ({
   // Estado inicial
-  selectedYear: null,
-  selectedSemester: null,
+  selectedYear: 2025,
+  selectedSemester: 1,
   selectedReportType: "general-selection",
   studentCode: "",
   isGenerating: false,
@@ -38,8 +38,8 @@ export const useReportStore = create<ReportState>((set) => ({
   clearReport: () => set({ generatedReport: null, isGenerating: false }),
   resetFilters: () =>
     set({
-      selectedYear: null,
-      selectedSemester: null,
+      selectedYear: 2025,
+      selectedSemester: 2,
       studentCode: "",
       generatedReport: null,
     }),
