@@ -10,10 +10,6 @@ export const FORM_STATUS_URL = `${API_BASE_URL}estado`;
 export const OFFER_URL = `${API_BASE_URL}ofertaElectiva`;
 export const SELECTION_URL = `${API_BASE_URL}/api/seleccion-electivas`;
 
-// Endpoints para reportes de formularios
-export const SELECTION_REPORT_URL = `${API_BASE_URL}api/reporte-seleccion`;
-export const OFFER_REPORT_URL = `${API_BASE_URL}api/reporte-oferta`;
-
 // Endpoints para el servicio de asignación
 export const ASSIGNMENT_API_BASE_URL = "http://localhost:8002/api/";
 

@@ -107,3 +107,10 @@ class ReporteOfertaElectivasViewSet(viewsets.ViewSet):
         response['Content-Disposition'] = f'inline; filename="{nombre_archivo}.pdf"'
         response.write(pdf_data)
         return response
+
+
+
+
+
+
+

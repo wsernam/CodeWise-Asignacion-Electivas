@@ -140,3 +140,6 @@ class GenerardorContenidoReporteOferta:
             elementos.append(tabla)
         
         return elementos
+
+
+

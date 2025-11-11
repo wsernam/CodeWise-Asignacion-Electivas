@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { Form, Input, Select } from "antd";
 import { useNavigate } from "react-router";
-import WarningModal from "../../../components/shared/WarningModal/WarningModal";
-import ConfirmModal from "../../../components/shared/ConfirmModal/ConfirmModal";
-import SuccessModal from "../../../components/shared/SuccessModal/SuccessModal";
-import Card from "../../../components/ui/Card/Card";
-import Button from "../../../components/ui/Button/Button";
-import { useElectiveStore } from "../../../store/Form/electiveStore";
-import { useProgramStore } from "../../../store/Form/programStore";
-import type { IElective } from "../../../models/Form/elective";
+import WarningModal from "../../components/shared/WarningModal/WarningModal";
+import ConfirmModal from "../../components/shared/ConfirmModal/ConfirmModal";
+import SuccessModal from "../../components/shared/SuccessModal/SuccessModal";
+import Card from "../../components/ui/Card/Card";
+import Button from "../../components/ui/Button/Button";
+import { useElectiveStore } from "../../store/Form/electiveStore";
+import { useProgramStore } from "../../store/Form/programStore";
+import type { IElective } from "../../models/Form/elective";
 
 const { Option } = Select;
 

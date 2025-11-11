@@ -63,3 +63,5 @@ def crear_pdf(nombre_informe, elementos):
     buffer.close()
     print(f"PDF generado: {nombre_informe}")
     return pdf_data
+
+
