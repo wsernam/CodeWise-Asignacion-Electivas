@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from "react";
-import { useElectiveStore } from "../../store/Form/electiveStore";
-import { useProgramStore } from "../../store/Form/programStore";
-import Card from "../../components/ui/Card/Card";
-import Button from "../../components/ui/Button/Button";
-import ConfirmModal from "../../components/shared/ConfirmModal/ConfirmModal";
-import WarningModal from "../../components/shared/WarningModal/WarningModal";
-import SuccessModal from "../../components/shared/SuccessModal/SuccessModal";
+import { useElectiveStore } from "../../../store/Form/electiveStore";
+import { useProgramStore } from "../../../store/Form/programStore";
+import Card from "../../../components/ui/Card/Card";
+import Button from "../../../components/ui/Button/Button";
+import ConfirmModal from "../../../components/shared/ConfirmModal/ConfirmModal";
+import WarningModal from "../../../components/shared/WarningModal/WarningModal";
+import SuccessModal from "../../../components/shared/SuccessModal/SuccessModal";
 import { useNavigate } from "react-router";
-import type { IElective } from "../../models/Form/elective";
+import type { IElective } from "../../../models/Form/elective";
 import "./ListElective.css";
 
 const Electives: React.FC = () => {

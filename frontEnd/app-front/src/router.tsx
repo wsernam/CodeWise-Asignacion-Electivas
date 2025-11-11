@@ -1,20 +1,20 @@
 // ---------------------- IMPORTS DE PANTALLAS ----------------------
-import PreLogin from "./screens/PreLogin/PreLogin.tsx";
-import LoginStudent from "./screens/LoginStudent/LoginStudent.tsx";
-import PersonalInfo from "./screens/Student/PersonalInfo.tsx";
-import ElectiveSelection from "./screens/Student/ElectiveSelection.tsx";
-import LoginAdmin from "./screens/LoginAdmin/LoginAdmin.tsx";
-import Dashboard from "./screens/Dashboard/Dashboard.tsx";
-import Electives from "./screens/Electives/ListElective.tsx";
-import AddElective from "./screens/Electives/AddElective";
-import EditElective from "./screens/Electives/EditElective.tsx";
-import CreateProgram from "./screens/Program/CreateProgram.tsx";
-import ListProgram from "./screens/Program/ListProgram.tsx";
-import EditProgram from "./screens/Program/EditProgram.tsx";
-import Offer from "./screens/Offer/Offer.tsx";
+import PreLogin from "./screens/LoginModule/PreLogin/PreLogin.tsx";
+import LoginStudent from "./screens/LoginModule/LoginStudent/LoginStudent.tsx";
+import PersonalInfo from "./screens/StudentModule/PersonalInfo.tsx";
+import ElectiveSelection from "./screens/StudentModule/ElectiveSelection.tsx";
+import LoginAdmin from "./screens/LoginModule/LoginAdmin/LoginAdmin.tsx";
+import Dashboard from "./screens/FormModule/Dashboard/Dashboard.tsx";
+import Electives from "./screens/FormModule/Electives/ListElective.tsx";
+import AddElective from "./screens/FormModule/Electives/AddElective.tsx";
+import EditElective from "./screens/FormModule/Electives/EditElective.tsx";
+import CreateProgram from "./screens/FormModule/Program/CreateProgram.tsx";
+import ListProgram from "./screens/FormModule/Program/ListProgram.tsx";
+import EditProgram from "./screens/FormModule/Program/EditProgram.tsx";
+import Offer from "./screens/FormModule/Offer/Offer.tsx";
 import AssignmentModule from "./screens/AssignmentModule/AssignmentModule.tsx";
-import ReportsAssignment from "./screens/Reports/ReportsAssignment.tsx";
-import ReportsForm from "./screens/Reports/ReportsForm.tsx";
+import ReportsAssignment from "./screens/FormModule/Reports/ReportsAssignment.tsx";
+import ReportsForm from "./screens/FormModule/Reports/ReportsForm.tsx";
 
 // ---------------------- IMPORTS DE ROUTER ----------------------
 import { createBrowserRouter } from "react-router";

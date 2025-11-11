@@ -4,14 +4,14 @@ import { Form, Input, message } from "antd";
 import { UserOutlined, LockOutlined } from "@ant-design/icons";
 
 // Componentes reutilizables
-import Header from "../../components/layout/Header/Header";
-import Footer from "../../components/layout/Footer/Footer";
-import Card from "../../components/ui/Card/Card";
-import Button from "../../components/ui/Button/Button";
-import BackButton from "../../components/ui/BackButton/BackButton";
+import Header from "../../../components/layout/Header/Header";
+import Footer from "../../../components/layout/Footer/Footer";
+import Card from "../../../components/ui/Card/Card";
+import Button from "../../../components/ui/Button/Button";
+import BackButton from "../../../components/ui/BackButton/BackButton";
 
 // Servicio de autenticación
-import { loginAdminService } from "../../services/Auth/authService";
+import { loginAdminService } from "../../../services/Auth/authService";
 
 /**
  * COMPONENTE: Login (Administrativo)

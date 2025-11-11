@@ -1,13 +1,13 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Form, Input, Select } from "antd";
-import Card from "../../components/ui/Card/Card";
-import Button from "../../components/ui/Button/Button";
+import Card from "../../../components/ui/Card/Card";
+import Button from "../../../components/ui/Button/Button";
 import { useNavigate, useParams } from "react-router";
-import WarningModal from "../../components/shared/WarningModal/WarningModal";
-import SuccessModal from "../../components/shared/SuccessModal/SuccessModal";
-import { useElectiveStore } from "../../store/Form/electiveStore";
-import { useProgramStore } from "../../store/Form/programStore";
-import type { IElective } from "../../models/Form/elective";
+import WarningModal from "../../../components/shared/WarningModal/WarningModal";
+import SuccessModal from "../../../components/shared/SuccessModal/SuccessModal";
+import { useElectiveStore } from "../../../store/Form/electiveStore";
+import { useProgramStore } from "../../../store/Form/programStore";
+import type { IElective } from "../../../models/Form/elective";
 
 const EditElective: React.FC = () => {
   const [form] = Form.useForm();
