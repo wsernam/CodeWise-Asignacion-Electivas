@@ -3,18 +3,18 @@ import { Select } from "antd";
 import "./Offer.css";
 
 // Components
-import Card from "../../components/ui/Card/Card";
-import Button from "../../components/ui/Button/Button";
-import WarningModal from "../../components/shared/WarningModal/WarningModal";
-import ConfirmModal from "../../components/shared/ConfirmModal/ConfirmModal";
-import SuccessModal from "../../components/shared/SuccessModal/SuccessModal";
+import Card from "../../../components/ui/Card/Card";
+import Button from "../../../components/ui/Button/Button";
+import WarningModal from "../../../components/shared/WarningModal/WarningModal";
+import ConfirmModal from "../../../components/shared/ConfirmModal/ConfirmModal";
+import SuccessModal from "../../../components/shared/SuccessModal/SuccessModal";
 
 // Stores
-import { useElectiveStore } from "../../store/Form/electiveStore";
-import { useProgramStore } from "../../store/Form/programStore";
-import type { IOffer } from "../../models/Form/offer";
-import { useOfferStore } from "../../store/Form/offerStore";
-import { useFormStatusStore } from "../../store/Form/formStatusStore";
+import { useElectiveStore } from "../../../store/Form/electiveStore";
+import { useProgramStore } from "../../../store/Form/programStore";
+import type { IOffer } from "../../../models/Form/offer";
+import { useOfferStore } from "../../../store/Form/offerStore";
+import { useFormStatusStore } from "../../../store/Form/formStatusStore";
 
 const { Option } = Select;
 

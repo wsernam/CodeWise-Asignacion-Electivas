@@ -1,5 +1,5 @@
 import React from "react";
-import Button from "../../components/ui/Button/Button";
+import Button from "../../../components/ui/Button/Button";
 
 interface IReportTypeOption {
   value: string;

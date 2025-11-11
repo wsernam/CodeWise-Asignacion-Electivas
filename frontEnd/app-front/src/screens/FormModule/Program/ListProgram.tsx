@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { useProgramStore } from "../../store/Form/programStore";
-import Card from "../../components/ui/Card/Card";
-import Button from "../../components/ui/Button/Button";
+import { useProgramStore } from "../../../store/Form/programStore";
+import Card from "../../../components/ui/Card/Card";
+import Button from "../../../components/ui/Button/Button";
 import { useNavigate } from "react-router";
 //import type { IProgram as Program } from "../../models/program";
-import type { IProgram as Program } from "../../models/Form/program";
+import type { IProgram as Program } from "../../../models/Form/program";
 import "./ListProgram.css";
 
 const ListProgram: React.FC = () => {

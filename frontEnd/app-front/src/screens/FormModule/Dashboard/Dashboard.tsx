@@ -1,12 +1,12 @@
 import React, { useEffect, useMemo, useState } from "react";
-import Card from "../../components/ui/Card/Card";
-import ConfirmModal from "../../components/shared/ConfirmModal/ConfirmModal";
-import SuccessModal from "../../components/shared/SuccessModal/SuccessModal";
-import WarningModal from "../../components/shared/WarningModal/WarningModal";
+import Card from "../../../components/ui/Card/Card";
+import ConfirmModal from "../../../components/shared/ConfirmModal/ConfirmModal";
+import SuccessModal from "../../../components/shared/SuccessModal/SuccessModal";
+import WarningModal from "../../../components/shared/WarningModal/WarningModal";
 
-import { useFormStatusStore } from "../../store/Form/formStatusStore";
-import { useElectiveStore } from "../../store/Form/electiveStore";
-import { useProgramStore } from "../../store/Form/programStore";
+import { useFormStatusStore } from "../../../store/Form/formStatusStore";
+import { useElectiveStore } from "../../../store/Form/electiveStore";
+import { useProgramStore } from "../../../store/Form/programStore";
 import "./Dashboard.css";
 
 // Librería de gráficas
