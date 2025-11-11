@@ -2,7 +2,7 @@ from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import cm
-from reportlab.platypus import Paragraph, Table, TableStyle, Spacer
+from reportlab.platypus import Paragraph, Table, TableStyle, Spacer,PageBreak,KeepTogether
 from .serializers import ReporteSeleccionElectivasSerializer, ReporteOfertaElectivasSerializer
 from django.db.models.query import QuerySet
 from seleccion_electivas.models import SeleccionEstudianteElectiva
@@ -152,8 +152,9 @@ class GeneradorContenidoReporteGeneralSeleccion:
         self.datos_reporte = datos_reporte
 
     def agregar_subtitulo(self,elementos, mensaje, style, estilo):
+        elementos.append(Spacer(0.5, 0.5 * cm))
         elementos.append(Paragraph(mensaje, style[estilo]))
-        elementos.append(Spacer(1, 0.5 * cm))
+        elementos.append(Spacer(0.1, 0.1 * cm))
         return elementos
     def agregar_texto(self, elementos,mensaje,style,estilo):
         elementos.append(Spacer(1, 0.5 * cm))
@@ -210,6 +211,7 @@ class GeneradorContenidoReporteGeneralSeleccion:
             ("BACKGROUND", (0, 1), (-1, -1), colors.whitesmoke),
         ]))
         elementos.append(tabla)
+        elementos.append(PageBreak())
         #Electivas por programa y la cantidad de estudiantes por programa que la selecionaron
         for programa in conteo_programas:
             nombre_programa = programa["nombre_programa"]
@@ -228,27 +230,36 @@ class GeneradorContenidoReporteGeneralSeleccion:
 
             for ele in electivas:
                 nombre_electiva = ele["nombre"]
-                elementos = self.agregar_subtitulo(elementos,nombre_electiva,styles,"Heading3")
+
+                # --- Crear título ---
+                titulo = Paragraph(nombre_electiva, styles["Heading3"])
+
+                # --- Obtener datos ---
                 selecciones_electivas = selecciones_programa.filter(ele_codigo=ele["codigo"])
                 conteo_electivas = (
                     selecciones_electivas
-                    .values(cod_programa=F('est_codigo__pro_codigo'),nombre_programa=F('est_codigo__pro_codigo__pro_nombre'))
+                    .values(cod_programa=F('est_codigo__pro_codigo'),
+                            nombre_programa=F('est_codigo__pro_codigo__pro_nombre'))
                     .annotate(total_estudiantes=Count('est_codigo', distinct=True))
                     .order_by('nombre_programa')
                 )
-                diagrama_barras = generar_grafico_barras(nombre_electiva,conteo_electivas,ancho=320, alto=180)
-                elementos.append(diagrama_barras)
+
+                # --- Crear gráfico ---
+                diagrama_barras = generar_grafico_barras(nombre_electiva, conteo_electivas, ancho=320, alto=180)
+
+                # Mantener título y gráfico en la misma página
+                elementos.append(KeepTogether([titulo, Spacer(1, 6), diagrama_barras, Spacer(1, 12)]))
+
+                # --- Construir tabla ---
                 encabezados = ["Programa", "Estudiantes"]
                 data = [encabezados]
-                
                 for registro in conteo_electivas:
                     data.append([
-                    registro["nombre_programa"],
-                    registro["total_estudiantes"]
-                ])
+                        registro["nombre_programa"],
+                        registro["total_estudiantes"]
+                    ])
 
-                # Crear tabla con estilo
-                tabla = Table(data, colWidths=[4 * cm, 9 * cm, 3 * cm])
+                tabla = Table(data, colWidths=[9 * cm, 3 * cm])
                 tabla.setStyle(TableStyle([
                     ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#003366")),
                     ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
@@ -258,8 +269,12 @@ class GeneradorContenidoReporteGeneralSeleccion:
                     ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
                     ("BACKGROUND", (0, 1), (-1, -1), colors.whitesmoke),
                 ]))
+
+                # Evitar que la tabla se divida entre páginas
+                tabla.split = lambda *args: []  # fuerza que no se divida
+
                 elementos.append(tabla)
-        
+                    
         return elementos 
 
 
