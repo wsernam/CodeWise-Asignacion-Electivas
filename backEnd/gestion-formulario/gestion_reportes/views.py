@@ -57,6 +57,7 @@ class ReporteSeleccionElectivasEstudianteViewSet(viewsets.ViewSet):
         response['Content-Disposition'] = f'inline; filename="{nombre_archivo}.pdf"'
         response.write(pdf_data)
         return response
+    
 class ReporteSeleccionGeneralViewSet(viewsets.ViewSet):
     serializer_class =  SeleccionEstudianteElectivaSerializer
     generador_contenido: GeneradorContenidoReporteGeneralSeleccion
@@ -86,8 +87,6 @@ class ReporteSeleccionGeneralViewSet(viewsets.ViewSet):
                 status=status.HTTP_404_NOT_FOUND,
             )
         
-
-        reporte_data = SeleccionEstudianteElectivaSerializer(queryset_seleccion, many=True)
 
         self.generador_contenido = GeneradorContenidoReporteGeneralSeleccion(queryset_seleccion)
         nombre_archivo = f"R_seleccion_General__{sel_anio}_{sel_num_semestre}.pdf"

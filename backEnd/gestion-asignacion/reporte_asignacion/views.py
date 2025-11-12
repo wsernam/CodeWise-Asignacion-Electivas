@@ -5,6 +5,9 @@ from django.http import HttpResponse
 from collections import defaultdict
 from referencias.models import SeleccionEstudianteElectiva as Sel  
 from asignacion.models import Asignacion
+from gestion_hojas_de_calculo.models import PerfilAcademico
+from referencias.models import Oferta
+from reporte_asignacion.generador_contenido_reporte_general import GenerardorContenidoReporteGeneral
 from .generador_pdf import crear_pdf
 
 # --- Elementos para ReportLab ---
@@ -13,6 +16,7 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import cm
 from reportlab.lib.enums import TA_CENTER
 from reportlab.lib import colors
+from django.db.models import Count, F
 
 class ReporteAsignacionPDFView(APIView):
     def get(self, request, *args, **kwargs):
@@ -566,6 +570,80 @@ class ReporteLotesSeleccionesPDFView(APIView):
         response = HttpResponse(pdf_bytes, content_type='application/pdf')
         response['Content-Disposition'] = f'attachment; filename="{nombre_pdf}.pdf"'
         return response
+    
+
+class ReporteGeneralAsignacion(APIView):
+    generador_contenido: GenerardorContenidoReporteGeneral
+    nombre_informe = "Reporte general proceso de asignacion de electivas"
+    def get(self, request, *args, **kwargs):
+        # 1) Parámetros requeridos
+        try:
+            anio = int(request.query_params["anio"])
+            semestre = int(request.query_params["semestre"])
+        except (KeyError, ValueError):
+            return Response(
+                {"detail": "Parámetros requeridos: anio (int), semestre (int)."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        # Consultar estudiantes a los que se le asignaron electivas
+        asignaciones_qs = Asignacion.objects.filter(
+            anio=anio,
+            asi_num_semestre=semestre
+        )
+        queryset_oferta = Oferta.objects.filter(
+            ofe_anio = anio,
+            ofe_num_semestre = semestre
+        )
+        if not queryset_oferta.exists():
+             return Response(
+                {"detail": f"No se encontraron ofertas para el periodo {anio}-{semestre}."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        if not asignaciones_qs.exists():
+             return Response(
+                {"detail": f"No se encontraron asinaciones para el periodo {anio}-{semestre}."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        # Consultar los estudiantes con porcentaje de avance igual o superior al 65%
+        queryset_perfil = PerfilAcademico.objects.filter(
+            perfil_anio=anio,
+            perfil_semestre=semestre,
+            porcentaje_avance__gte=65
+        )
+
+        # Obtener los estudiantes que cumplen el umbral de avance pero NO
+        # aparecen en las asignaciones del período (es decir: cumplen >=65%
+        # pero no tienen asignación con cupo en `asignaciones_qs`).
+        # Primero obtenemos los ids de estudiante que sí tienen asignación.
+        estudiantes_con_asignacion = asignaciones_qs.values_list('est_codigo_est_codigo', flat=True).distinct()
+
+        # Luego excluimos esos estudiantes del queryset de perfiles.
+        perfiles_sin_asignacion = queryset_perfil.exclude(est_codigo_est_codigo__in=estudiantes_con_asignacion)
+
+        # (Opcional) Preparar una lista simple para uso en el reporte
+        perfiles_sin_asignacion_data = [
+            {
+                "est_id": p.est_codigo_id,
+                "nombres": getattr(p.est_codigo, "est_nombre", "") or "",
+                "apellidos": getattr(p.est_codigo, "est_apellido", "") or "",
+                "porcentaje_avance": p.porcentaje_avance,
+                "programa": getattr(getattr(p.est_codigo, "pro_codigo", None), "pro_nombre", "") or "",
+            }
+            for p in perfiles_sin_asignacion
+        ]
+
+
+        self.generador_contenido = GenerardorContenidoReporteGeneral(datos_asignacion=asignaciones_qs, 
+                                                                     datos_estudiantes_sin_electiva=perfiles_sin_asignacion_data,
+                                                                     datos_oferta=queryset_oferta)
+        
+        elementos = self.generador_contenido.generar_contenido()
+        pdf_data = crear_pdf(self.nombre_informe,elementos)
+        nombre_archivo = f"R_asignacion_General__{anio}_{semestre}.pdf"
+        response = HttpResponse(content_type='application/pdf')
+        response['Content-Disposition'] = f'inline; filename="{nombre_archivo}.pdf"'
+        response.write(pdf_data)
+        return response
 
 class LotesCodigosSeleccionesView(APIView):
     """
@@ -623,3 +701,14 @@ class LotesCodigosSeleccionesView(APIView):
             "lotes": lotes,
         }
         return Response(data, status=status.HTTP_200_OK)
+        
+
+
+
+        
+
+        
+    
+   
+
+
