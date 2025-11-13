@@ -24,6 +24,6 @@ urlpatterns = [
     path('ofertas/<int:anio>/<int:semestre>/', OfertaElectivaListByAnioSemestreView.as_view(), name='listar_oferta_por_anio_semestre'),
 
     # Endpoint para 'Listar por año, semestre y programa'
-    # Acceder con GET a /api/ofertas/2025/1/123/
-    path('ofertas/<int:anio>/<int:semestre>/<int:programa_codigo>/', OfertaElectivaListByAnioSemestreProgramaView.as_view(), name='listar_oferta_por_anio_semestre_programa'),
+    # Acceder con GET a /api/ofertas/2025/1/'PIS'/
+    path('ofertas/<int:anio>/<int:semestre>/<str:programa_codigo>/', OfertaElectivaListByAnioSemestreProgramaView.as_view(), name='listar_oferta_por_anio_semestre_programa'),
 ]
