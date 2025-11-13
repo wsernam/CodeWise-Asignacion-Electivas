@@ -116,3 +116,82 @@ def generar_grafico_barras(nombre_grafico, datos, ancho=420, alto=280):
     drawing.add(bc)
    
     return drawing
+
+
+def generar_grafico_barras_acumuladas(cant_asig_esp, ancho=500, alto=350):
+    """
+    Genera un gráfico de barras acumuladas (stacked bar chart).
+    
+    Parámetros:
+        cant_asig_esp (dict): Diccionario con estructura:
+                              {
+                                  "ELE-101": {"asignados": 20, "espera": 5},
+                                  "ELE-102": {"asignados": 18, "espera": 3},
+                                  ...
+                              }
+        ancho (int): ancho total del gráfico (Drawing)
+        alto (int): alto total del gráfico (Drawing)
+
+    Retorna:
+        Drawing: objeto gráfico de barras acumuladas compatible con Platypus
+    """
+    if not cant_asig_esp:
+        return Drawing(ancho, alto)
+
+    # Extraer códigos de electivas y separar datos
+    codigos_electivas = list(cant_asig_esp.keys())
+    valores_asignados = [cant_asig_esp[ele]["asignados"] for ele in codigos_electivas]
+    valores_espera = [cant_asig_esp[ele]["espera"] for ele in codigos_electivas]
+
+    drawing = Drawing(ancho, alto)
+
+    # Crear gráfico de barras
+    bc = VerticalBarChart()
+    bc.x = 50
+    bc.y = 60
+    bc.width = ancho - 100  # margen horizontal
+    bc.height = alto - 120  # margen vertical
+    
+    # Datos: primera serie (asignados), segunda serie (espera)
+    bc.data = [valores_asignados, valores_espera]
+    
+    # Habilitar barras acumuladas (stacked)
+    bc.barLabelFormat = "%.0f"  # mostrar valores en las barras
+    bc.categoryAxis.categoryNames = codigos_electivas
+    
+    # Estilo de las barras
+    bc.barWidth = max(10, (bc.width / len(codigos_electivas)) * 0.6)
+    bc.groupSpacing = 8
+    bc.bars[0].fillColor = colors.HexColor("#28C76F")  # Verde para asignados
+    bc.bars[1].fillColor = colors.HexColor("#FF9F43")  # Naranja para espera
+    
+    # Eje Y (valores)
+    bc.valueAxis.valueMin = 0
+    bc.valueAxis.labels.fontSize = 10
+    bc.valueAxis.title = "Cantidad de Estudiantes"
+    bc.valueAxis.titleTextFormat = "%s"
+    
+    # Eje X (categorías)
+    bc.categoryAxis.labels.angle = -45
+    bc.categoryAxis.labels.fontSize = 9
+    bc.categoryAxis.labels.dy = -10
+    bc.categoryAxis.labels.boxAnchor = 'ne'
+    bc.categoryAxis.title = "Códigos de Electivas"
+    
+    drawing.add(bc)
+    
+    # Título del gráfico
+    drawing.add(
+        String(
+            ancho / 2, alto - 20,
+            "Distribución de Estudiantes por Electiva (Asignados vs Espera)",
+            fontSize=12,
+            textAnchor="middle"
+        )
+    )
+    
+    # Leyenda manual
+    drawing.add(String(60, 40, "■ Asignados", fontSize=10, fillColor=colors.HexColor("#28C76F")))
+    drawing.add(String(250, 40, "■ En Espera", fontSize=10, fillColor=colors.HexColor("#FF9F43")))
+
+    return drawing
