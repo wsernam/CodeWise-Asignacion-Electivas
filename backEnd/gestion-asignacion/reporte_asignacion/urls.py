@@ -5,5 +5,5 @@ urlpatterns = [
     path('pdf/asignacion-general/', ReporteAsignacionPDFView.as_view(), name='reporte-asignacion-pdf'),
     path('pdf/electiva/<str:ele_codigo>/', ReporteElectivaPDFView.as_view(), name='reporte-electiva-pdf'),
     path('pdf/estudiante/<int:est_id>/', ReporteEstudiantePDFView.as_view(), name='reporte-estudiante-pdf'),
-    path('pdf/reporte-asignacion-general/<int:anio>/<int:semestre>/', ReporteGeneralAsignacion.as_view(), name='reporte-general-asignacion-pdf'),
+    path('pdf/reporte-asignacion-general/', ReporteGeneralAsignacion.as_view(), name='reporte-general-asignacion-pdf'),
 ]

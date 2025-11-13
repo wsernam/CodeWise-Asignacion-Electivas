@@ -6,7 +6,7 @@ from reportlab.graphics.charts.barcharts import VerticalBarChart
 from reportlab.graphics.charts.textlabels import Label
 
 
-def generar_grafico_pastel(conteo_programas, ancho, alto):
+def generar_grafico_pastel(titulo,conteo_programas, ancho, alto):
     """
     Genera un gráfico de pastel (Pie Chart) a partir del resultado de conteo_programas.
     Retorna un objeto Drawing que puede añadirse a un PDF con platypus.
@@ -59,7 +59,7 @@ def generar_grafico_pastel(conteo_programas, ancho, alto):
     drawing.add(
         String(
             250, 270,  # posición (x, y)
-            "Distribución de estudiantes por programa",
+            titulo,
             fontSize=14,
             textAnchor="middle"
         )
@@ -152,31 +152,32 @@ def generar_grafico_barras_acumuladas(cant_asig_esp, ancho=500, alto=350):
     bc.width = ancho - 100  # margen horizontal
     bc.height = alto - 120  # margen vertical
     
-    # Datos: primera serie (asignados), segunda serie (espera)
+    # Datos: primera serie (asignados - base), segunda serie (espera - encima)
     bc.data = [valores_asignados, valores_espera]
     
-    # Habilitar barras acumuladas (stacked)
-    bc.barLabelFormat = "%.0f"  # mostrar valores en las barras
-    bc.categoryAxis.categoryNames = codigos_electivas
-    
-    # Estilo de las barras
-    bc.barWidth = max(10, (bc.width / len(codigos_electivas)) * 0.6)
+    # IMPORTANTE: Habilitar barras acumuladas (stacked)
     bc.groupSpacing = 8
-    bc.bars[0].fillColor = colors.HexColor("#28C76F")  # Verde para asignados
-    bc.bars[1].fillColor = colors.HexColor("#FF9F43")  # Naranja para espera
+    bc.barWidth = max(10, (bc.width / len(codigos_electivas)) * 0.6)
+    
+    # Establecer que las barras sean acumuladas
+    for bar_group in bc.bars:
+        bar_group.strokeColor = None
+    
+    bc.bars[0].fillColor = colors.HexColor("#28C76F")  # Verde para asignados (base)
+    bc.bars[1].fillColor = colors.HexColor("#FF9F43")  # Naranja para espera (encima)
+    
+    # Configurar para que sea stacked
+    bc.style = 'stacked'
     
     # Eje Y (valores)
     bc.valueAxis.valueMin = 0
     bc.valueAxis.labels.fontSize = 10
-    bc.valueAxis.title = "Cantidad de Estudiantes"
-    bc.valueAxis.titleTextFormat = "%s"
     
     # Eje X (categorías)
     bc.categoryAxis.labels.angle = -45
     bc.categoryAxis.labels.fontSize = 9
     bc.categoryAxis.labels.dy = -10
     bc.categoryAxis.labels.boxAnchor = 'ne'
-    bc.categoryAxis.title = "Códigos de Electivas"
     
     drawing.add(bc)
     
