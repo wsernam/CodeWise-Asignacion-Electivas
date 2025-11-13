@@ -615,26 +615,20 @@ class ReporteGeneralAsignacion(APIView):
         # aparecen en las asignaciones del período (es decir: cumplen >=65%
         # pero no tienen asignación con cupo en `asignaciones_qs`).
         # Primero obtenemos los ids de estudiante que sí tienen asignación.
-        estudiantes_con_asignacion = asignaciones_qs.values_list('est_codigo_est_codigo', flat=True).distinct()
+        from django.db.models import Exists, OuterRef
+        estudiantes_con_asignacion = Asignacion.objects.filter(
+            est_codigo_id=OuterRef('est_codigo_id'),
+            anio=anio,
+            asi_num_semestre=semestre
+        )
 
-        # Luego excluimos esos estudiantes del queryset de perfiles.
-        perfiles_sin_asignacion = queryset_perfil.exclude(est_codigo_est_codigo__in=estudiantes_con_asignacion)
-
-        # (Opcional) Preparar una lista simple para uso en el reporte
-        perfiles_sin_asignacion_data = [
-            {
-                "est_id": p.est_codigo_id,
-                "nombres": getattr(p.est_codigo, "est_nombre", "") or "",
-                "apellidos": getattr(p.est_codigo, "est_apellido", "") or "",
-                "porcentaje_avance": p.porcentaje_avance,
-                "programa": getattr(getattr(p.est_codigo, "pro_codigo", None), "pro_nombre", "") or "",
-            }
-            for p in perfiles_sin_asignacion
-        ]
-
+        # Luego excluimos esos estudiantes del queryset de perfiles usando annotate con Exists.
+        perfiles_sin_asignacion = queryset_perfil.annotate(
+            tiene_asignacion=Exists(estudiantes_con_asignacion)
+        ).filter(tiene_asignacion=False)
 
         self.generador_contenido = GenerardorContenidoReporteGeneral(datos_asignacion=asignaciones_qs, 
-                                                                     datos_estudiantes_sin_electiva=perfiles_sin_asignacion_data,
+                                                                     datos_estudiantes_sin_electiva=perfiles_sin_asignacion,
                                                                      datos_oferta=queryset_oferta)
         
         elementos = self.generador_contenido.generar_contenido()
