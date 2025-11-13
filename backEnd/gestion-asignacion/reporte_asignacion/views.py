@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.http import HttpResponse
 from collections import defaultdict
-
+from referencias.models import SeleccionEstudianteElectiva as Sel  
 from asignacion.models import Asignacion
 from .generador_pdf import crear_pdf
 
@@ -472,3 +472,154 @@ class ReporteEstudiantePDFView(APIView):
         response = HttpResponse(pdf_data, content_type='application/pdf')
         response['Content-Disposition'] = f'attachment; filename="{nombre_informe}.pdf"'
         return response
+    
+class ReporteLotesSeleccionesPDFView(APIView):
+    """
+    Genera un PDF con LOTES de códigos de estudiantes que hicieron selección
+    de electivas en un período dado.
+    - Usa solo SeleccionEstudianteElectiva (Sel).
+    - Filtra por sel_anio, sel_num_semestre.
+    - Param opcional: lote_size (tamaño de cada lote, por defecto 100).
+    """
+
+    def get(self, request, *args, **kwargs):
+        # 1) Parámetros requeridos
+        try:
+            anio = int(request.query_params["anio"])
+            semestre = int(request.query_params["semestre"])
+        except (KeyError, ValueError):
+            return Response(
+                {"detail": "Parámetros requeridos: anio (int), semestre (int)."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # lote_size opcional
+        try:
+            lote_size = int(request.query_params.get("lote_size", 100))
+            if lote_size <= 0:
+                raise ValueError
+        except ValueError:
+            return Response(
+                {"detail": "lote_size debe ser un entero positivo."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # 2) Query: SOLO selecciones por periodo (sin electiva)
+        qs = Sel.objects.filter(sel_anio=anio, sel_num_semestre=semestre)
+
+        codigos = list(
+            qs.values_list("est_codigo_id", flat=True)
+              .distinct()
+              .order_by("est_codigo_id")
+        )
+        total = len(codigos)
+
+        # 3) Armar LOTES
+        lotes = []
+        if total:
+            for i in range(0, total, lote_size):
+                lotes.append(codigos[i:i + lote_size])
+
+        # 4) Construir PDF con ReportLab + crear_pdf
+        styles = getSampleStyleSheet()
+        h2 = ParagraphStyle(name='h2_center', parent=styles['Heading2'],
+                            alignment=TA_CENTER, fontSize=16)
+        h3 = ParagraphStyle(name='h3_center', parent=styles['Heading3'],
+                            alignment=TA_CENTER, fontSize=13)
+        normal = styles['Normal']
+
+        elementos = []
+
+        titulo = "Lotes de Códigos – Selecciones de Electivas"
+        subt = f"Período: {anio}-{semestre} | Total estudiantes: {total}"
+        elementos.append(Paragraph(titulo, h2))
+        elementos.append(Paragraph(subt, normal))
+        elementos.append(Spacer(1, 0.5 * cm))
+
+        if not lotes:
+            elementos.append(
+                Paragraph("<i>No hay estudiantes con selección en el período dado.</i>", normal)
+            )
+        else:
+            base_style = TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#4F81BD")),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, 0), 11),
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                ('GRID', (0, 0), (-1, -1), 1, colors.black),
+            ])
+
+            for idx_lote, lote in enumerate(lotes, start=1):
+                elementos.append(Paragraph(f"Lote {idx_lote}", h3))
+                data = [["#", "Código de Estudiante"]]
+                for i, cod in enumerate(lote, start=1):
+                    data.append([str(i), str(cod)])
+                tabla = Table(data, colWidths=[2.2 * cm, 10 * cm])
+                tabla.setStyle(base_style)
+                elementos.append(tabla)
+                elementos.append(Spacer(1, 0.4 * cm))
+
+        nombre_pdf = f"lotes_selecciones_{anio}-{semestre}"
+        pdf_bytes = crear_pdf(nombre_pdf, elementos)
+
+        response = HttpResponse(pdf_bytes, content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="{nombre_pdf}.pdf"'
+        return response
+
+class LotesCodigosSeleccionesView(APIView):
+    """
+    Endpoint que retorna LOTES de códigos de estudiantes que realizaron
+    selección de electivas en un período dado.
+    - Solo filtra por sel_anio y sel_num_semestre.
+    - Param opcional: lote_size (tamaño de cada lote, default=100).
+    """
+
+    def get(self, request, *args, **kwargs):
+        # 1) Parámetros
+        try:
+            anio = int(request.query_params["anio"])
+            semestre = int(request.query_params["semestre"])
+        except (KeyError, ValueError):
+            return Response(
+                {"detail": "Parámetros requeridos: anio (int), semestre (int)."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            lote_size = int(request.query_params.get("lote_size", 100))
+            if lote_size <= 0:
+                raise ValueError
+        except ValueError:
+            return Response(
+                {"detail": "lote_size debe ser un entero positivo."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # 2) Solo SELECCIONES por periodo (sin filtrar por electiva)
+        qs = Sel.objects.filter(sel_anio=anio, sel_num_semestre=semestre)
+
+        codigos = list(
+            qs.values_list("est_codigo_id", flat=True)
+              .distinct()
+              .order_by("est_codigo_id")
+        )
+
+        total = len(codigos)
+
+        # 3) Armar LOTES
+        lotes = []
+        if total:
+            for i in range(0, total, lote_size):
+                lotes.append(codigos[i:i + lote_size])
+
+        # 4) Respuesta JSON (sin ele_codigo)
+        data = {
+            "anio": anio,
+            "semestre": semestre,
+            "total_estudiantes": total,
+            "lote_size": lote_size,
+            "num_lotes": len(lotes),
+            "lotes": lotes,
+        }
+        return Response(data, status=status.HTTP_200_OK)
