@@ -238,6 +238,105 @@
 				}
 			},
 			"response": []
+		},
+		{
+			"name": "Reporte electivas asignadas a un estudiante",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8002/api/reporte-asignacion/pdf/estudiante/104621011382/?anio=2025&semestre=2",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8002",
+					"path": [
+						"api",
+						"reporte-asignacion",
+						"pdf",
+						"estudiante",
+						"104621011382",
+						""
+					],
+					"query": [
+						{
+							"key": "anio",
+							"value": "2025"
+						},
+						{
+							"key": "semestre",
+							"value": "2"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Generar PDF lotes codigos estudiantes",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8002/api/reporte-asignacion/pdf/lotes-selecciones/?anio=2025&semestre=2",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8002",
+					"path": [
+						"api",
+						"reporte-asignacion",
+						"pdf",
+						"lotes-selecciones",
+						""
+					],
+					"query": [
+						{
+							"key": "anio",
+							"value": "2025"
+						},
+						{
+							"key": "semestre",
+							"value": "2"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Retorna Lotes estudiantes",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8002/api/reporte-asignacion/lotes-selecciones/?anio=2025&semestre=2",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8002",
+					"path": [
+						"api",
+						"reporte-asignacion",
+						"lotes-selecciones",
+						""
+					],
+					"query": [
+						{
+							"key": "anio",
+							"value": "2025"
+						},
+						{
+							"key": "semestre",
+							"value": "2"
+						}
+					]
+				}
+			},
+			"response": []
 		}
 	]
 }
