@@ -1,4 +1,4 @@
-from reportlab.graphics.shapes import Drawing, String
+from reportlab.graphics.shapes import Drawing, String, Rect, Line
 from reportlab.graphics.charts.piecharts import Pie
 from reportlab.lib import colors
 
@@ -10,7 +10,7 @@ def generar_grafico_pastel(titulo,conteo_programas, ancho, alto):
     """
     Genera un gráfico de pastel (Pie Chart) a partir del resultado de conteo_programas.
     Retorna un objeto Drawing que puede añadirse a un PDF con platypus.
-    
+
     conteo_programas = [
         {"nombre_programa": "Ingeniería de Sistemas", "total_estudiantes": 12},
         {"nombre_programa": "Administración", "total_estudiantes": 8},
@@ -121,7 +121,8 @@ def generar_grafico_barras(nombre_grafico, datos, ancho=420, alto=280):
 def generar_grafico_barras_acumuladas(cant_asig_esp, ancho=500, alto=350):
     """
     Genera un gráfico de barras acumuladas (stacked bar chart).
-    
+    La barra de estudiantes en lista de espera aparece encima de la barra de asignados.
+
     Parámetros:
         cant_asig_esp (dict): Diccionario con estructura:
                               {
@@ -140,59 +141,186 @@ def generar_grafico_barras_acumuladas(cant_asig_esp, ancho=500, alto=350):
 
     # Extraer códigos de electivas y separar datos
     codigos_electivas = list(cant_asig_esp.keys())
-    valores_asignados = [cant_asig_esp[ele]["asignados"] for ele in codigos_electivas]
-    valores_espera = [cant_asig_esp[ele]["espera"] for ele in codigos_electivas]
+    
+    # Calcular totales y valores máximos para escala
+    datos_barras = []
+    max_total = 0
+    
+    for ele in codigos_electivas:
+        asignados = cant_asig_esp[ele]["asignados"]
+        espera = cant_asig_esp[ele]["espera"]
+        total = asignados + espera
+        datos_barras.append({
+            'ele_codigo': ele,
+            'asignados': asignados,
+            'espera': espera,
+            'total': total
+        })
+        max_total = max(max_total, total)
 
+    # Configurar escala
+    if max_total == 0:
+        max_total = 1
+    
     drawing = Drawing(ancho, alto)
-
-    # Crear gráfico de barras
-    bc = VerticalBarChart()
-    bc.x = 50
-    bc.y = 60
-    bc.width = ancho - 100  # margen horizontal
-    bc.height = alto - 120  # margen vertical
     
-    # Datos: primera serie (asignados - base), segunda serie (espera - encima)
-    bc.data = [valores_asignados, valores_espera]
+    # Parámetros de posición y tamaño
+    margin_left = 50
+    margin_bottom = 60
+    margin_top = 80
+    margin_right = 20
     
-    # IMPORTANTE: Habilitar barras acumuladas (stacked)
-    bc.groupSpacing = 8
-    bc.barWidth = max(10, (bc.width / len(codigos_electivas)) * 0.6)
+    chart_width = ancho - margin_left - margin_right
+    chart_height = alto - margin_top - margin_bottom
     
-    # Establecer que las barras sean acumuladas
-    for bar_group in bc.bars:
-        bar_group.strokeColor = None
+    # Ancho de cada barra
+    num_barras = len(codigos_electivas)
+    espaciado_barras = chart_width / (num_barras + 1)
+    ancho_barra = espaciado_barras * 0.6
     
-    bc.bars[0].fillColor = colors.HexColor("#28C76F")  # Verde para asignados (base)
-    bc.bars[1].fillColor = colors.HexColor("#FF9F43")  # Naranja para espera (encima)
+    # Escala Y (altura de barra = valor / max_total * chart_height)
+    def scale_value(valor):
+        return (valor / max_total) * chart_height if max_total > 0 else 0
     
-    # Configurar para que sea stacked
-    bc.style = 'stacked'
+    # Dibujar barras acumuladas
+    for i, datos in enumerate(datos_barras):
+        x_pos = margin_left + (i + 1) * espaciado_barras - ancho_barra / 2
+        y_base = margin_bottom
+        
+        # Barra de asignados (base - azul)
+        altura_asignados = scale_value(datos['asignados'])
+        rect_asignados = Rect(
+            x_pos, y_base,
+            ancho_barra, altura_asignados,
+            fillColor=colors.HexColor("#587CFF"),
+            strokeColor=colors.black,
+            strokeWidth=0.5
+        )
+        drawing.add(rect_asignados)
+        
+        # Barra de espera (encima - rojo)
+        y_espera = y_base + altura_asignados
+        altura_espera = scale_value(datos['espera'])
+        rect_espera = Rect(
+            x_pos, y_espera,
+            ancho_barra, altura_espera,
+            fillColor=colors.HexColor("#ED6B6D"),
+            strokeColor=colors.black,
+            strokeWidth=0.5
+        )
+        drawing.add(rect_espera)
+        
+        # Etiqueta en X (código de electiva)
+        label_x = String(
+            x_pos + ancho_barra / 2,
+            margin_bottom - 25,
+            datos['ele_codigo'],
+            fontSize=8,
+            textAnchor='middle',
+            angle=-45
+        )
+        drawing.add(label_x)
+        
+        # Valor total encima de la barra
+        valor_total = String(
+            x_pos + ancho_barra / 2,
+            y_espera + altura_espera + 5,
+            str(datos['total']),
+            fontSize=9,
+            textAnchor='middle',
+            fontName='Helvetica-Bold'
+        )
+        drawing.add(valor_total)
     
-    # Eje Y (valores)
-    bc.valueAxis.valueMin = 0
-    bc.valueAxis.labels.fontSize = 10
+    # Línea de base (eje X)
+    from reportlab.graphics.shapes import Line
+    line_base = Line(
+        margin_left, margin_bottom,
+        margin_left + chart_width, margin_bottom,
+        strokeColor=colors.black,
+        strokeWidth=1
+    )
+    drawing.add(line_base)
     
-    # Eje X (categorías)
-    bc.categoryAxis.labels.angle = -45
-    bc.categoryAxis.labels.fontSize = 9
-    bc.categoryAxis.labels.dy = -10
-    bc.categoryAxis.labels.boxAnchor = 'ne'
+    # Eje Y
+    line_y = Line(
+        margin_left, margin_bottom,
+        margin_left, margin_bottom + chart_height,
+        strokeColor=colors.black,
+        strokeWidth=1
+    )
+    drawing.add(line_y)
     
-    drawing.add(bc)
+    # Etiquetas del eje Y (valores)
+    num_marcas = 5
+    for i in range(num_marcas + 1):
+        valor = int((i / num_marcas) * max_total)
+        y_pos = margin_bottom + (i / num_marcas) * chart_height
+        
+        # Marca pequeña en el eje
+        marca = Line(
+            margin_left - 5, y_pos,
+            margin_left, y_pos,
+            strokeColor=colors.black,
+            strokeWidth=0.5
+        )
+        drawing.add(marca)
+        
+        # Etiqueta numérica
+        label_y = String(
+            margin_left - 15, y_pos - 3,
+            str(valor),
+            fontSize=8,
+            textAnchor='end'
+        )
+        drawing.add(label_y)
     
     # Título del gráfico
-    drawing.add(
-        String(
-            ancho / 2, alto - 20,
-            "Distribución de Estudiantes por Electiva (Asignados vs Espera)",
-            fontSize=12,
-            textAnchor="middle"
-        )
+    titulo = String(
+        ancho / 2, alto - 20,
+        "Distribución de Estudiantes por Electiva (Asignados vs Espera)",
+        fontSize=12,
+        textAnchor="middle",
+        fontName='Helvetica-Bold'
     )
+    drawing.add(titulo)
     
-    # Leyenda manual
-    drawing.add(String(60, 40, "■ Asignados", fontSize=10, fillColor=colors.HexColor("#28C76F")))
-    drawing.add(String(250, 40, "■ En Espera", fontSize=10, fillColor=colors.HexColor("#FF9F43")))
-
+    # Leyenda
+    legend_y = 20
+    legend_x_label = 315
+    legend_x_rect = 300
+    # Rectángulo leyenda asignados
+    rect_legend_asig = Rect(
+        legend_x_rect - 140, legend_y - 3,
+        10, 10,
+        fillColor=colors.HexColor("#587CFF"),
+        strokeColor=colors.black,
+        strokeWidth=0.5
+    )
+    drawing.add(rect_legend_asig)
+    
+    label_asig = String(
+        legend_x_label -140, legend_y,
+        "Asignados",
+        fontSize=9
+    )
+    drawing.add(label_asig)
+    
+    # Rectángulo leyenda espera
+    rect_legend_esp = Rect(
+        legend_x_rect, legend_y - 3,
+        10, 10,
+        fillColor=colors.HexColor("#ED6B6D"),
+        strokeColor=colors.black,
+        strokeWidth=0.5
+    )
+    drawing.add(rect_legend_esp)
+    
+    label_esp = String(
+        legend_x_label, legend_y,
+        "En Espera",
+        fontSize=9
+    )
+    drawing.add(label_esp)
+    
     return drawing
