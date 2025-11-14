@@ -22,7 +22,7 @@ class GestionNiveladosViewSet(viewsets.ViewSet):
     @transaction.atomic
     @action(detail=False,
              methods=['put'],
-             url_path='gestionar-nivelados/')
+             url_path='gestionar-nivelados')
     def gestionar_nivelados(self, request):
         """
         Recibe el periodo 

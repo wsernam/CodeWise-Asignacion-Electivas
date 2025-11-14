@@ -3,8 +3,11 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.http import HttpResponse
 from collections import defaultdict
-
+from referencias.models import SeleccionEstudianteElectiva as Sel  
 from asignacion.models import Asignacion
+from gestion_hojas_de_calculo.models import PerfilAcademico
+from referencias.models import Oferta
+from reporte_asignacion.generador_contenido_reporte_general import GenerardorContenidoReporteGeneral
 from .generador_pdf import crear_pdf
 
 # --- Elementos para ReportLab ---
@@ -54,7 +57,6 @@ class ReporteAsignacionPDFView(APIView):
         estilo_h2 = ParagraphStyle(name='h2_grande', parent=styles['h2'], fontSize=16)
         estilo_normal = ParagraphStyle(name='normal_grande', parent=styles['Normal'], fontSize=11)
         estilo_italic = ParagraphStyle(name='italic_grande', parent=styles['Italic'], fontSize=11)
-        
         # Estilo para los títulos centrados
         estilo_titulo_centrado = ParagraphStyle(
             name='h3_centered',
@@ -74,7 +76,6 @@ class ReporteAsignacionPDFView(APIView):
             ('GRID', (0, 0), (-1, -1), 1, colors.black),
             ('FONTSIZE', (0, 1), (-1, -1), 11), # Tamaño letra contenido
         ])
-        
         # Estilo para la tabla de espera (azul)
         estilo_tabla_espera = TableStyle([
             ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#4F81BD")), # Azul
@@ -96,12 +97,12 @@ class ReporteAsignacionPDFView(APIView):
                 tabla_asignados_data = [["#", "Código", "Nombres y Apellidos"]]
                 for i, (codigo, nombres) in enumerate(data['asignados'], 1):
                     tabla_asignados_data.append([str(i), str(codigo), nombres])
-                
+
                 tabla_asignados = Table(
-                    tabla_asignados_data, 
+                    tabla_asignados_data,
                     colWidths=[1.5*cm, 3*cm, None],
                     # Ajustamos el espaciado entre filas para que no se vea apretado
-                    rowHeights=len(tabla_asignados_data) * [0.8*cm] 
+                    rowHeights=len(tabla_asignados_data) * [0.8*cm]
                 )
                 tabla_asignados.setStyle(estilo_tabla_asignados)
                 elementos.append(tabla_asignados)
@@ -116,9 +117,9 @@ class ReporteAsignacionPDFView(APIView):
                 tabla_espera_data = [["#", "Código", "Nombres y Apellidos"]]
                 for i, (codigo, nombres) in enumerate(data['espera'], 1):
                     tabla_espera_data.append([str(i), str(codigo), nombres])
-                
+
                 tabla_espera = Table(
-                    tabla_espera_data, 
+                    tabla_espera_data,
                     colWidths=[1.5*cm, 3*cm, None],
                     rowHeights=len(tabla_espera_data) * [0.8*cm]
                 )
@@ -151,7 +152,7 @@ class ReporteElectivaPDFView(APIView):
 
         # 1. Consultar y agrupar los datos para UNA electiva
         asignaciones = Asignacion.objects.filter(
-            anio=anio, 
+            anio=anio,
             asi_num_semestre=semestre,
             ele_codigo__ele_codigo=ele_codigo
         ).select_related('ele_codigo', 'est_codigo').order_by(
@@ -182,7 +183,6 @@ class ReporteElectivaPDFView(APIView):
         # --- Estilos con letra más grande ---
         estilo_h2 = ParagraphStyle(name='h2_grande', parent=styles['h2'], fontSize=16)
         estilo_italic = ParagraphStyle(name='italic_grande', parent=styles['Italic'], fontSize=11)
-        
         estilo_titulo_centrado = ParagraphStyle(
             name='h3_centered', parent=styles['h3'], alignment=TA_CENTER, fontSize=14
         )
@@ -197,7 +197,6 @@ class ReporteElectivaPDFView(APIView):
             ('GRID', (0, 0), (-1, -1), 1, colors.black),
             ('FONTSIZE', (0, 1), (-1, -1), 11),
         ])
-        
         estilo_tabla_espera = TableStyle([
             ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#4F81BD")),
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
@@ -216,7 +215,6 @@ class ReporteElectivaPDFView(APIView):
             tabla_data = [["#", "Código", "Nombres y Apellidos"]]
             for i, (codigo, nombres) in enumerate(asignados_data, 1):
                 tabla_data.append([str(i), str(codigo), nombres])
-            
             tabla = Table(tabla_data, colWidths=[1.5*cm, 3*cm, None], rowHeights=len(tabla_data) * [0.8*cm])
             tabla.setStyle(estilo_tabla_asignados)
             elementos.append(tabla)
@@ -230,7 +228,6 @@ class ReporteElectivaPDFView(APIView):
             tabla_data = [["#", "Código", "Nombres y Apellidos"]]
             for i, (codigo, nombres) in enumerate(espera_data, 1):
                 tabla_data.append([str(i), str(codigo), nombres])
-            
             tabla = Table(tabla_data, colWidths=[1.5*cm, 3*cm, None], rowHeights=len(tabla_data) * [0.8*cm])
             tabla.setStyle(estilo_tabla_espera)
             elementos.append(tabla)
@@ -472,3 +469,224 @@ class ReporteEstudiantePDFView(APIView):
         response = HttpResponse(pdf_data, content_type='application/pdf')
         response['Content-Disposition'] = f'attachment; filename="{nombre_informe}.pdf"'
         return response
+    
+class ReporteLotesSeleccionesPDFView(APIView):
+    """
+    Genera un PDF con LOTES de códigos de estudiantes que hicieron selección
+    de electivas en un período dado.
+    - Usa solo SeleccionEstudianteElectiva (Sel).
+    - Filtra por sel_anio, sel_num_semestre.
+    - Param opcional: lote_size (tamaño de cada lote, por defecto 100).
+    """
+
+    def get(self, request, *args, **kwargs):
+        # 1) Parámetros requeridos
+        try:
+            anio = int(request.query_params["anio"])
+            semestre = int(request.query_params["semestre"])
+        except (KeyError, ValueError):
+            return Response(
+                {"detail": "Parámetros requeridos: anio (int), semestre (int)."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # lote_size opcional
+        try:
+            lote_size = int(request.query_params.get("lote_size", 100))
+            if lote_size <= 0:
+                raise ValueError
+        except ValueError:
+            return Response(
+                {"detail": "lote_size debe ser un entero positivo."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # 2) Query: SOLO selecciones por periodo (sin electiva)
+        qs = Sel.objects.filter(sel_anio=anio, sel_num_semestre=semestre)
+
+        codigos = list(
+            qs.values_list("est_codigo_id", flat=True)
+              .distinct()
+              .order_by("est_codigo_id")
+        )
+        total = len(codigos)
+
+        # 3) Armar LOTES
+        lotes = []
+        if total:
+            for i in range(0, total, lote_size):
+                lotes.append(codigos[i:i + lote_size])
+
+        # 4) Construir PDF con ReportLab + crear_pdf
+        styles = getSampleStyleSheet()
+        h2 = ParagraphStyle(name='h2_center', parent=styles['Heading2'],
+                            alignment=TA_CENTER, fontSize=16)
+        h3 = ParagraphStyle(name='h3_center', parent=styles['Heading3'],
+                            alignment=TA_CENTER, fontSize=13)
+        normal = styles['Normal']
+
+        elementos = []
+
+        titulo = "Lotes de Códigos – Selecciones de Electivas"
+        subt = f"Período: {anio}-{semestre} | Total estudiantes: {total}"
+        elementos.append(Paragraph(titulo, h2))
+        elementos.append(Paragraph(subt, normal))
+        elementos.append(Spacer(1, 0.5 * cm))
+
+        if not lotes:
+            elementos.append(
+                Paragraph("<i>No hay estudiantes con selección en el período dado.</i>", normal)
+            )
+        else:
+            base_style = TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#4F81BD")),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, 0), 11),
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                ('GRID', (0, 0), (-1, -1), 1, colors.black),
+            ])
+
+            for idx_lote, lote in enumerate(lotes, start=1):
+                elementos.append(Paragraph(f"Lote {idx_lote}", h3))
+                data = [["#", "Código de Estudiante"]]
+                for i, cod in enumerate(lote, start=1):
+                    data.append([str(i), str(cod)])
+                tabla = Table(data, colWidths=[2.2 * cm, 10 * cm])
+                tabla.setStyle(base_style)
+                elementos.append(tabla)
+                elementos.append(Spacer(1, 0.4 * cm))
+
+        nombre_pdf = f"lotes_selecciones_{anio}-{semestre}"
+        pdf_bytes = crear_pdf(nombre_pdf, elementos)
+
+        response = HttpResponse(pdf_bytes, content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="{nombre_pdf}.pdf"'
+        return response
+    
+
+class ReporteGeneralAsignacion(APIView):
+    generador_contenido: GenerardorContenidoReporteGeneral
+    nombre_informe = "Reporte general proceso de asignacion de electivas"
+    def get(self, request, *args, **kwargs):
+        # 1) Parámetros requeridos
+        try:
+            anio = int(request.query_params["anio"])
+            semestre = int(request.query_params["semestre"])
+        except (KeyError, ValueError):
+            return Response(
+                {"detail": "Parámetros requeridos: anio (int), semestre (int)."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        # Consultar estudiantes a los que se le asignaron electivas o quedaron en lista de espera
+        asignaciones_qs = Asignacion.objects.filter(
+            anio=anio,
+            asi_num_semestre=semestre
+        )
+        queryset_oferta = Oferta.objects.filter(
+            ofe_anio = anio,
+            ofe_num_semestre = semestre
+        )
+        if not queryset_oferta.exists():
+             return Response(
+                {"detail": f"No se encontraron ofertas para el periodo {anio}-{semestre}."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        if not asignaciones_qs.exists():
+             return Response(
+                {"detail": f"No se encontraron asinaciones para el periodo {anio}-{semestre}."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        # Consultar los estudiantes con porcentaje de avance igual o superior al 65%
+        queryset_perfil = PerfilAcademico.objects.filter(
+            perfil_anio=anio,
+            perfil_semestre=semestre,
+            porcentaje_avance__gte=65
+        )
+
+        # Obtener los estudiantes que cumplen el umbral de avance pero NO tienen electivas asignadas o estan en lista de espera
+
+        # Primero obtenemos los ids de estudiante que sí tienen asignación.
+        ids_estudiantes_con_asignacion = asignaciones_qs.values_list('est_codigo__est_codigo',flat=True)
+
+        # Luego excluimos esos estudiantes
+        perfiles_sin_asignacion = queryset_perfil.exclude(est_codigo__in=ids_estudiantes_con_asignacion)
+
+        self.generador_contenido = GenerardorContenidoReporteGeneral(datos_asignacion=asignaciones_qs, datos_estudiantes_sin_electiva=perfiles_sin_asignacion,
+        datos_oferta=queryset_oferta)
+
+        elementos = self.generador_contenido.generar_contenido()
+        pdf_data = crear_pdf(self.nombre_informe,elementos)
+        nombre_archivo = f"R_asignacion_General__{anio}_{semestre}.pdf"
+        response = HttpResponse(content_type='application/pdf')
+        response['Content-Disposition'] = f'inline; filename="{nombre_archivo}.pdf"'
+        response.write(pdf_data)
+        return response
+
+class LotesCodigosSeleccionesView(APIView):
+    """
+    Endpoint que retorna LOTES de códigos de estudiantes que realizaron
+    selección de electivas en un período dado.
+    - Solo filtra por sel_anio y sel_num_semestre.
+    - Param opcional: lote_size (tamaño de cada lote, default=100).
+    """
+
+    def get(self, request, *args, **kwargs):
+        # 1) Parámetros
+        try:
+            anio = int(request.query_params["anio"])
+            semestre = int(request.query_params["semestre"])
+        except (KeyError, ValueError):
+            return Response(
+                {"detail": "Parámetros requeridos: anio (int), semestre (int)."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            lote_size = int(request.query_params.get("lote_size", 100))
+            if lote_size <= 0:
+                raise ValueError
+        except ValueError:
+            return Response(
+                {"detail": "lote_size debe ser un entero positivo."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # 2) Solo SELECCIONES por periodo (sin filtrar por electiva)
+        qs = Sel.objects.filter(sel_anio=anio, sel_num_semestre=semestre)
+
+        codigos = list(
+            qs.values_list("est_codigo_id", flat=True)
+              .distinct()
+              .order_by("est_codigo_id")
+        )
+
+        total = len(codigos)
+
+        # 3) Armar LOTES
+        lotes = []
+        if total:
+            for i in range(0, total, lote_size):
+                lotes.append(codigos[i:i + lote_size])
+
+        # 4) Respuesta JSON (sin ele_codigo)
+        data = {
+            "anio": anio,
+            "semestre": semestre,
+            "total_estudiantes": total,
+            "lote_size": lote_size,
+            "num_lotes": len(lotes),
+            "lotes": lotes,
+        }
+        return Response(data, status=status.HTTP_200_OK)
+        
+
+
+
+        
+
+        
+    
+   
+
+
