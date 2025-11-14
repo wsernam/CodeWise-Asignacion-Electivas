@@ -58,7 +58,7 @@ class ReporteAsignacionPDFView(APIView):
         estilo_h2 = ParagraphStyle(name='h2_grande', parent=styles['h2'], fontSize=16)
         estilo_normal = ParagraphStyle(name='normal_grande', parent=styles['Normal'], fontSize=11)
         estilo_italic = ParagraphStyle(name='italic_grande', parent=styles['Italic'], fontSize=11)
-        
+
         # Estilo para los títulos centrados
         estilo_titulo_centrado = ParagraphStyle(
             name='h3_centered',
@@ -78,7 +78,7 @@ class ReporteAsignacionPDFView(APIView):
             ('GRID', (0, 0), (-1, -1), 1, colors.black),
             ('FONTSIZE', (0, 1), (-1, -1), 11), # Tamaño letra contenido
         ])
-        
+
         # Estilo para la tabla de espera (azul)
         estilo_tabla_espera = TableStyle([
             ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#4F81BD")), # Azul
@@ -100,12 +100,12 @@ class ReporteAsignacionPDFView(APIView):
                 tabla_asignados_data = [["#", "Código", "Nombres y Apellidos"]]
                 for i, (codigo, nombres) in enumerate(data['asignados'], 1):
                     tabla_asignados_data.append([str(i), str(codigo), nombres])
-                
+
                 tabla_asignados = Table(
-                    tabla_asignados_data, 
+                    tabla_asignados_data,
                     colWidths=[1.5*cm, 3*cm, None],
                     # Ajustamos el espaciado entre filas para que no se vea apretado
-                    rowHeights=len(tabla_asignados_data) * [0.8*cm] 
+                    rowHeights=len(tabla_asignados_data) * [0.8*cm]
                 )
                 tabla_asignados.setStyle(estilo_tabla_asignados)
                 elementos.append(tabla_asignados)
@@ -120,9 +120,9 @@ class ReporteAsignacionPDFView(APIView):
                 tabla_espera_data = [["#", "Código", "Nombres y Apellidos"]]
                 for i, (codigo, nombres) in enumerate(data['espera'], 1):
                     tabla_espera_data.append([str(i), str(codigo), nombres])
-                
+
                 tabla_espera = Table(
-                    tabla_espera_data, 
+                    tabla_espera_data,
                     colWidths=[1.5*cm, 3*cm, None],
                     rowHeights=len(tabla_espera_data) * [0.8*cm]
                 )
@@ -155,7 +155,7 @@ class ReporteElectivaPDFView(APIView):
 
         # 1. Consultar y agrupar los datos para UNA electiva
         asignaciones = Asignacion.objects.filter(
-            anio=anio, 
+            anio=anio,
             asi_num_semestre=semestre,
             ele_codigo__ele_codigo=ele_codigo
         ).select_related('ele_codigo', 'est_codigo').order_by(
@@ -186,7 +186,7 @@ class ReporteElectivaPDFView(APIView):
         # --- Estilos con letra más grande ---
         estilo_h2 = ParagraphStyle(name='h2_grande', parent=styles['h2'], fontSize=16)
         estilo_italic = ParagraphStyle(name='italic_grande', parent=styles['Italic'], fontSize=11)
-        
+
         estilo_titulo_centrado = ParagraphStyle(
             name='h3_centered', parent=styles['h3'], alignment=TA_CENTER, fontSize=14
         )
@@ -201,7 +201,7 @@ class ReporteElectivaPDFView(APIView):
             ('GRID', (0, 0), (-1, -1), 1, colors.black),
             ('FONTSIZE', (0, 1), (-1, -1), 11),
         ])
-        
+
         estilo_tabla_espera = TableStyle([
             ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#4F81BD")),
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
@@ -220,7 +220,7 @@ class ReporteElectivaPDFView(APIView):
             tabla_data = [["#", "Código", "Nombres y Apellidos"]]
             for i, (codigo, nombres) in enumerate(asignados_data, 1):
                 tabla_data.append([str(i), str(codigo), nombres])
-            
+
             tabla = Table(tabla_data, colWidths=[1.5*cm, 3*cm, None], rowHeights=len(tabla_data) * [0.8*cm])
             tabla.setStyle(estilo_tabla_asignados)
             elementos.append(tabla)
@@ -234,7 +234,7 @@ class ReporteElectivaPDFView(APIView):
             tabla_data = [["#", "Código", "Nombres y Apellidos"]]
             for i, (codigo, nombres) in enumerate(espera_data, 1):
                 tabla_data.append([str(i), str(codigo), nombres])
-            
+
             tabla = Table(tabla_data, colWidths=[1.5*cm, 3*cm, None], rowHeights=len(tabla_data) * [0.8*cm])
             tabla.setStyle(estilo_tabla_espera)
             elementos.append(tabla)
@@ -585,7 +585,7 @@ class ReporteGeneralAsignacion(APIView):
                 {"detail": "Parámetros requeridos: anio (int), semestre (int)."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        # Consultar estudiantes a los que se le asignaron electivas
+        # Consultar estudiantes a los que se le asignaron electivas o quedaron en lista de espera
         asignaciones_qs = Asignacion.objects.filter(
             anio=anio,
             asi_num_semestre=semestre
@@ -611,26 +611,17 @@ class ReporteGeneralAsignacion(APIView):
             porcentaje_avance__gte=65
         )
 
-        # Obtener los estudiantes que cumplen el umbral de avance pero NO
-        # aparecen en las asignaciones del período (es decir: cumplen >=65%
-        # pero no tienen asignación con cupo en `asignaciones_qs`).
+        # Obtener los estudiantes que cumplen el umbral de avance pero NO tienen electivas asignadas o estan en lista de espera
+
         # Primero obtenemos los ids de estudiante que sí tienen asignación.
-        from django.db.models import Exists, OuterRef
-        estudiantes_con_asignacion = Asignacion.objects.filter(
-            est_codigo_id=OuterRef('est_codigo_id'),
-            anio=anio,
-            asi_num_semestre=semestre
-        )
+        ids_estudiantes_con_asignacion = asignaciones_qs.values_list('est_codigo__est_codigo',flat=True)
 
-        # Luego excluimos esos estudiantes del queryset de perfiles usando annotate con Exists.
-        perfiles_sin_asignacion = queryset_perfil.annotate(
-            tiene_asignacion=Exists(estudiantes_con_asignacion)
-        ).filter(tiene_asignacion=False)
+        # Luego excluimos esos estudiantes
+        perfiles_sin_asignacion = queryset_perfil.exclude(est_codigo__in=ids_estudiantes_con_asignacion)
 
-        self.generador_contenido = GenerardorContenidoReporteGeneral(datos_asignacion=asignaciones_qs, 
-                                                                     datos_estudiantes_sin_electiva=perfiles_sin_asignacion,
-                                                                     datos_oferta=queryset_oferta)
-        
+        self.generador_contenido = GenerardorContenidoReporteGeneral(datos_asignacion=asignaciones_qs, datos_estudiantes_sin_electiva=perfiles_sin_asignacion,
+        datos_oferta=queryset_oferta)
+
         elementos = self.generador_contenido.generar_contenido()
         pdf_data = crear_pdf(self.nombre_informe,elementos)
         nombre_archivo = f"R_asignacion_General__{anio}_{semestre}.pdf"

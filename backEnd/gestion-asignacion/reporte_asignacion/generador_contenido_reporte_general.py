@@ -34,7 +34,7 @@ class GenerardorContenidoReporteGeneral:
             Paragraph(mensaje, style[estilo]),
             Spacer(0.1, 0.1 * cm)
         ]
-    
+
     def generar_contenido(self):
 
         elementos = []
@@ -44,23 +44,23 @@ class GenerardorContenidoReporteGeneral:
         anio = self.datos_asignacion.first().anio
         semestre = self.datos_asignacion.first().asi_num_semestre
         programas_qs = self.datos_oferta.values_list("pro_codigo__pro_codigo", "pro_codigo__pro_nombre").distinct()
-        
+
         # Convertir a lista de dicts para acceso posterior
         programas = [
             {"pro_codigo_pro_codigo": codigo, "pro_codigo_pro_nombre": nombre}
             for codigo, nombre in programas_qs
         ]
-        
+
         # Para el mensaje, extraer solo los nombres
         programas_nombres = ", ".join([p["pro_codigo_pro_nombre"] for p in programas])
         mensaje = (f"Este informe posee la informacion del proceso de asignacion de electivas el periodo"
                     f"academico {anio}-{semestre} de los programas de pregrado: {programas_nombres}.")
-        
+
         elementos.extend(self.agregar_espacios(mensaje,styles,"Texto"))
         asignados = self.datos_asignacion.filter(en_lista_espera=False)
         lista_espera = self.datos_asignacion.filter(en_lista_espera=True)
 
-        #Cuenta a los estudiantes a los que se les asignaron electivas por programa 
+        #Cuenta a los estudiantes a los que se les asignaron electivas por programa
         conteo_asig_por_programa = (
             asignados
             .values(codigo_programa=F('est_codigo__pro_codigo'),nombre_programa=F('est_codigo__pro_codigo__pro_nombre'))
@@ -72,7 +72,7 @@ class GenerardorContenidoReporteGeneral:
         elementos.append(grafico_pastel_asig)
         tabla_asig = self.generar_tabla_graficos_pastel(conteo_asig_por_programa)
         elementos.append(tabla_asig)
-        #Cuenta a los estudiantes que quedaron en lista de espera por programa 
+        #Cuenta a los estudiantes que quedaron en lista de espera por programa
         conteo_lista_esp_por_programa = (
             lista_espera
             .values(codigo_programa=F('est_codigo__pro_codigo'),nombre_programa=F('est_codigo__pro_codigo__pro_nombre'))
@@ -91,7 +91,7 @@ class GenerardorContenidoReporteGeneral:
             .annotate(total_estudiantes=Count('est_codigo', distinct=True))
             .order_by('nombre_programa')
         )
-        
+
 
         titulo_sin_ele = "Distribucion de estudiantes sin electivas asignadas"
         grafico_pastel_sin_ele = generar_grafico_pastel(titulo_sin_ele, conteo_sin_electivas, 400, 300)
@@ -111,21 +111,21 @@ class GenerardorContenidoReporteGeneral:
             for ele in electivas:
                 nombre_ele = ele.ele_codigo.ele_nombre
                 ele_codigo = ele.ele_codigo.ele_codigo
-                
+
                 # Contar estudiantes asignados (en_lista_espera=False) para esta electiva y programa
                 cant_asignados = self.datos_asignacion.filter(
                     ele_codigo=ele_codigo,
                     est_codigo__pro_codigo=codigo_programa,
                     en_lista_espera=False
                 ).values('est_codigo').distinct().count()
-                
+
                 # Contar estudiantes en lista de espera (en_lista_espera=True) para esta electiva y programa
                 cant_espera = self.datos_asignacion.filter(
                     ele_codigo=ele_codigo,
                     est_codigo__pro_codigo=codigo_programa,
                     en_lista_espera=True
                 ).values('est_codigo').distinct().count()
-                
+
                 # Almacenar en el diccionario con formato: {nombre_electiva: {espera:##, asignados:##}}
                 cant_asig_esp[ele_codigo] = {
                     "nombre":nombre_ele,
@@ -143,7 +143,7 @@ class GenerardorContenidoReporteGeneral:
     def generar_tabla_graficos_pastel(self, datos):
         encabezados = ["Código", "Programa", "Cant"]
         data = [encabezados]
-        
+
         for registro in datos:
 
             data.append([
@@ -163,11 +163,11 @@ class GenerardorContenidoReporteGeneral:
         ]))
 
         return tabla
-    
+
     def generar_tabla_graficos_barras(self, datos: dict):
         encabezados = ["Código", "Nombre electiva", "Asignados", "Espera"]
         data = [encabezados]
-        
+
         for ele_codigo in datos.keys():
             data.append([
                         ele_codigo,
@@ -175,7 +175,7 @@ class GenerardorContenidoReporteGeneral:
                         datos[ele_codigo].get("asignados"),
                         datos[ele_codigo].get("espera")
             ])
-        
+
         tabla = Table(data, colWidths=[4 * cm, 9 * cm, 3 * cm,3 * cm])
         tabla.setStyle(TableStyle([
             ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#003366")),
