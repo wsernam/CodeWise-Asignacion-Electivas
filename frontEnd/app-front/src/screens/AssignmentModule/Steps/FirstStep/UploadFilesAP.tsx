@@ -15,6 +15,7 @@ import {
   useExcelProcessingStore,
   useAssignmentFlowStore,
 } from "../../../../store/Assignment";
+import type { ValidationResult } from "../../../../models/Assignment/assignmentProcess";
 
 type AssignmentProcessProps = {
   onNext: () => void;
@@ -58,15 +59,17 @@ const UploadFilesAP: React.FC<AssignmentProcessProps> = ({
   currentStep,
   getStepBorderClass,
 }) => {
+  // Modales
   const [showModal, setShowModal] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [showWarningModal, setShowWarningModal] = useState(false);
   const [warningMessage, setWarningMessage] = useState("");
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+  const [showSummaryModal, setShowSummaryModal] = useState(false);
+  const [summaryResult, setSummaryResult] = useState<ValidationResult | null>(null);
 
   // Conectar con los stores
-  const { validarExcel, loading, error, clearError } =
-    useExcelProcessingStore();
+  const { validarExcel, loading, error, clearError } = useExcelProcessingStore();
   const { addCompletedStep } = useAssignmentFlowStore();
 
   // Manejar archivos subidos desde MultipleFileUploader
@@ -85,19 +88,27 @@ const UploadFilesAP: React.FC<AssignmentProcessProps> = ({
       console.log("Validando formato de archivos Excel...", uploadedFiles);
 
       const resultado = await validarExcel(uploadedFiles);
-      console.log("Resultado del backend:", resultado); // Para depuración
+      console.log("Resultado del backend:", resultado);
 
       // Verificar si hay advertencias
       if (resultado.advertencias && resultado.advertencias.length > 0) {
         console.warn("Advertencias del backend:", resultado.advertencias);
-
         const mensajeAdvertencias = resultado.advertencias.join("\n\n");
         setWarningMessage(mensajeAdvertencias);
         setShowWarningModal(true);
-        return; // No seguir si hay advertencias
+        return;
       }
 
-      setShowConfirm(true);
+      // +++ MODIFICACIÓN: Primero cerrar el modal de archivos, luego mostrar resumen +++
+      setShowModal(false);
+      
+      // Pequeño delay para asegurar que el modal anterior se cierre completamente
+      setTimeout(() => {
+        setSummaryResult(resultado);
+        setShowSummaryModal(true);
+        console.log("Modal de resumen abierto:", true);
+      }, 100);
+
     } catch (error: any) {
       console.error("Error validando archivos:", error);
       alert(`Error en validación: ${error.message}`);
@@ -108,7 +119,8 @@ const UploadFilesAP: React.FC<AssignmentProcessProps> = ({
     console.log("Confirmando guardado, llamando onNext");
     setShowConfirm(false);
     setShowModal(false);
-    addCompletedStep(1); // Marcar paso 1 como completado
+    setShowSummaryModal(false);
+    addCompletedStep(1);
     onNext();
   };
 
@@ -120,6 +132,21 @@ const UploadFilesAP: React.FC<AssignmentProcessProps> = ({
       onStepClick(stepNumber);
     }
   };
+
+  // Función para manejar la continuacion desde el modal de resumen
+  const handleContinueFromSummary = () => {
+    console.log("Continuando desde resumen");
+    setShowSummaryModal(false);
+    addCompletedStep(1);
+    onNext();
+  };
+
+  // +++ NUEVA FUNCIÓN: Para debuguear el estado del modal +++
+  React.useEffect(() => {
+    console.log("Estado de showSummaryModal:", showSummaryModal);
+    console.log("Estado de summaryResult:", summaryResult);
+  }, [showSummaryModal, summaryResult]);
+
   return (
     <div className="aps-wrapper">
       <div className="aps-grid">
@@ -154,7 +181,6 @@ const UploadFilesAP: React.FC<AssignmentProcessProps> = ({
             <MultipleFileUploader onFilesUploaded={handleFilesUploaded} />
           </div>
 
-          {/* Mostrar estado de carga y error */}
           {loading && (
             <div style={{ textAlign: "center", padding: "10px" }}>
               <p>Validando archivos Excel...</p>
@@ -201,6 +227,78 @@ const UploadFilesAP: React.FC<AssignmentProcessProps> = ({
         onConfirm={handleConfirmSave}
         onCancel={() => setShowConfirm(false)}
       />
+
+      {/* Modal de resumen de validación - CORREGIDO */}
+      <SimpleModal
+        open={showSummaryModal}
+        title="Resumen de validación"
+        onClose={() => {
+          console.log("Cerrando modal de resumen");
+          setShowSummaryModal(false);
+        }}
+      >
+        <div style={{ maxHeight: 400, overflowY: "auto" }}>
+          {/* +++ AGREGADO: Debug info +++ */}
+          <div style={{ fontSize: '12px', color: '#666', marginBottom: '10px' }}>
+            Debug: showSummaryModal={showSummaryModal.toString()}, 
+            faltantes={summaryResult?.faltantes?.length ?? 0}, 
+            sobrantes={summaryResult?.sobrantes?.length ?? 0}
+          </div>
+
+          <p>
+            <strong>Estudiantes faltantes:</strong> {summaryResult?.faltantes?.length ?? 0}
+          </p>
+          {summaryResult?.faltantes && summaryResult.faltantes.length > 0 && (
+            <ul>
+              {summaryResult.faltantes.map((f, i) => (
+                <li key={`faltante-${i}`}>{f}</li>
+              ))}
+            </ul>
+          )}
+
+          <p>
+            <strong>Estudiantes sobrantes:</strong> {summaryResult?.sobrantes?.length ?? 0}
+          </p>
+          {summaryResult?.sobrantes && summaryResult.sobrantes.length > 0 && (
+            <ul>
+              {summaryResult.sobrantes.map((s, i) => (
+                <li key={`sobrante-${i}`}>{s}</li>
+              ))}
+            </ul>
+          )}
+
+          {/* Lógica corregida para permitir continuar o no */}
+          {summaryResult && 
+           summaryResult.faltantes && summaryResult.faltantes.length === 0 && 
+           summaryResult.sobrantes && summaryResult.sobrantes.length === 0 ? (
+            <div style={{ marginTop: 16, textAlign: "right" }}>
+              <Button
+                variant="primary"
+                onClick={handleContinueFromSummary}
+              >
+                Continuar
+              </Button>
+            </div>
+          ) : (
+            <div style={{ marginTop: 12, color: "#a00" }}>
+              <p>
+                No es posible continuar: existen filas faltantes o sobrantes. Corrige los archivos y vuelve a validar.
+              </p>
+              <div style={{ marginTop: 16, textAlign: "right" }}>
+                <Button
+                  variant="secondary"
+                  onClick={() => {
+                    console.log("Cerrando modal desde botón Cerrar");
+                    setShowSummaryModal(false);
+                  }}
+                >
+                  Cerrar
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
+      </SimpleModal>
     </div>
   );
 };

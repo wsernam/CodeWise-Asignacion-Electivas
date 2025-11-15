@@ -17,10 +17,12 @@ interface NiveladosState {
     anio: number,
     semestre: number
   ) => Promise<{ message: string }>;
+  
   listarNivelados: (
     anio: number,
     semestre: number
   ) => Promise<LeveledStudent[]>;
+  
   confirmarNivelados: (
     anio: number,
     semestre: number,
@@ -57,10 +59,13 @@ export const useNiveladosStore = create<NiveladosState>((set) => ({
   gestionarNivelados: async (anio: number, semestre: number) => {
     set({ loading: true, error: null });
     try {
+      console.log("[NiveladosStore] Gestionando nivelados para: ", anio, semestre);
       const result = await niveladosService.gestionarNivelados(anio, semestre);
       set({ loading: false });
+      console.log("[NiveladosStore] Resultado de gestionarNivelados: ", result);
       return result;
     } catch (error: any) {
+      console.error("[NiveladosStore] Error gestionando nivelados:", error);
       set({ loading: false, error: error.message });
       throw error;
     }
@@ -77,10 +82,13 @@ export const useNiveladosStore = create<NiveladosState>((set) => ({
   listarNivelados: async (anio: number, semestre: number) => {
     set({ loading: true, error: null });
     try {
+      console.log("[NiveladosStore] Listando nivelados para: ", anio, semestre);
       const result = await niveladosService.listarNivelados(anio, semestre);
       set({ leveledStudents: result, loading: false });
+      console.log("[NiveladosStore] Estudiantes nivelados obtenidos: ", result);
       return result;
     } catch (error: any) {
+      console.error("[NiveladosStore] Error listando nivelados:", error);
       set({ loading: false, error: error.message });
       throw error;
     }
@@ -102,14 +110,17 @@ export const useNiveladosStore = create<NiveladosState>((set) => ({
   ) => {
     set({ loading: true, error: null });
     try {
+      console.log("[NiveladosStore] Confirmando nivelados para: ", anio, semestre, estudiantes);
       const result = await niveladosService.confirmarNivelados(
         anio,
         semestre,
         estudiantes
       );
       set({ confirmedLeveledStudents: estudiantes, loading: false });
+      console.log("[NiveladosStore] Resultado de confirmarNivelados: ", result);
       return result;
     } catch (error: any) {
+      console.error("[NiveladosStore] Error confirmando nivelados:", error);
       set({ loading: false, error: error.message });
       throw error;
     }
