@@ -59,18 +59,35 @@ const UploadFilesAP: React.FC<AssignmentProcessProps> = ({
   currentStep,
   getStepBorderClass,
 }) => {
-  // Modales
+  // ============================================================
+  //                          Modales
+  // ============================================================
   const [showModal, setShowModal] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [showWarningModal, setShowWarningModal] = useState(false);
   const [warningMessage, setWarningMessage] = useState("");
+
+  // Archivos subidos
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+
+  // Estado para el modal de resumen de validación
   const [showSummaryModal, setShowSummaryModal] = useState(false);
   const [summaryResult, setSummaryResult] = useState<ValidationResult | null>(null);
 
-  // Conectar con los stores
+  // Estado para manejar generacion y descarga de lotes de códigos
+  const [isDownloadingCodes, setIsDownloadingCodes] = useState(false);
+  const [codeBatches, setCodeBatches] = useState<string[][]>([]);
+  const [codeBatchesModal, setCodeBatchesModal] = useState(false);
+
+  // ============================================================
+  //                          Stores
+  // ============================================================
   const { validarExcel, loading, error, clearError } = useExcelProcessingStore();
   const { addCompletedStep } = useAssignmentFlowStore();
+
+  // ============================================================
+  //                       Manejadores
+  // ============================================================
 
   // Manejar archivos subidos desde MultipleFileUploader
   const handleFilesUploaded = (files: File[]) => {
@@ -98,10 +115,9 @@ const UploadFilesAP: React.FC<AssignmentProcessProps> = ({
         setShowWarningModal(true);
         return;
       }
-
-      // +++ MODIFICACIÓN: Primero cerrar el modal de archivos, luego mostrar resumen +++
+      // Si no hay advertencias, proceder a mostrar el resumen
       setShowModal(false);
-      
+
       // Pequeño delay para asegurar que el modal anterior se cierre completamente
       setTimeout(() => {
         setSummaryResult(resultado);
@@ -133,6 +149,9 @@ const UploadFilesAP: React.FC<AssignmentProcessProps> = ({
     }
   };
 
+  // ============================================================
+  //                 Funciones de Resumen
+  // ============================================================
   // Función para manejar la continuacion desde el modal de resumen
   const handleContinueFromSummary = () => {
     console.log("Continuando desde resumen");
@@ -141,7 +160,58 @@ const UploadFilesAP: React.FC<AssignmentProcessProps> = ({
     onNext();
   };
 
-  // +++ NUEVA FUNCIÓN: Para debuguear el estado del modal +++
+  // ============================================================
+  //               Funciones de Lotes de Códigos
+  // ============================================================
+
+  // Funcion para generar lotes de codigos
+  const handleGenerateCodeBatches = () => {
+    console.log("Generando lotes de códigos...");
+    setCodeBatchesModal(true);
+
+    // Simulación de generación de lotes de códigos
+    setTimeout(() => {
+      const generatedBatches = [
+        ["104622011437", "104622011439", "104622011440"],
+        ["104622011441", "104622011442", "104622011443"],
+      ];
+      setCodeBatches(generatedBatches);
+      setIsDownloadingCodes(false);
+      setCodeBatchesModal(true);
+    }, 2000);
+  };
+
+  // Abrir el modal de lotes de códigos
+  const openCodeBatchesModal = () => {
+    if (!codeBatches || codeBatches.length === 0) {
+      // Si no hay lotes generados, generarlos primero
+      handleGenerateCodeBatches();
+    } else {
+      setCodeBatchesModal(true);
+    }
+  };
+
+  //Funcion para copiar los lotes de codigos
+  const handleCopyAllCodes = () => {
+    if (!codeBatches || codeBatches.length === 0) {
+      console.log("No hay códigos para copiar.");
+      return;
+    }
+
+    // Convertir los lotes de códigos en un solo string
+    const allCodes = codeBatches.flat().join("\n");
+
+    // Usar la API del portapapeles para copiar los códigos
+    navigator.clipboard.writeText(allCodes)
+      .then(() => {
+        console.log("Códigos copiados al portapapeles.");
+      })
+      .catch(err => {
+        console.error("Error al copiar los códigos: ", err);
+      })
+  };
+
+
   React.useEffect(() => {
     console.log("Estado de showSummaryModal:", showSummaryModal);
     console.log("Estado de summaryResult:", summaryResult);
@@ -165,6 +235,16 @@ const UploadFilesAP: React.FC<AssignmentProcessProps> = ({
             </div>
           );
         })}
+      </div>
+
+      <div className='codes-info'>
+        <Button
+          variant="primary"
+          onClick={openCodeBatchesModal}
+          disabled={isDownloadingCodes}
+        >
+          {isDownloadingCodes ? "Generando códigos..." : "Generar lotes de códigos"}
+        </Button>
       </div>
 
       {/* MODAL para el Paso 1 - Cargar archivos */}
@@ -240,8 +320,8 @@ const UploadFilesAP: React.FC<AssignmentProcessProps> = ({
         <div style={{ maxHeight: 400, overflowY: "auto" }}>
           {/* +++ AGREGADO: Debug info +++ */}
           <div style={{ fontSize: '12px', color: '#666', marginBottom: '10px' }}>
-            Debug: showSummaryModal={showSummaryModal.toString()}, 
-            faltantes={summaryResult?.faltantes?.length ?? 0}, 
+            Debug: showSummaryModal={showSummaryModal.toString()},
+            faltantes={summaryResult?.faltantes?.length ?? 0},
             sobrantes={summaryResult?.sobrantes?.length ?? 0}
           </div>
 
@@ -268,9 +348,9 @@ const UploadFilesAP: React.FC<AssignmentProcessProps> = ({
           )}
 
           {/* Lógica corregida para permitir continuar o no */}
-          {summaryResult && 
-           summaryResult.faltantes && summaryResult.faltantes.length === 0 && 
-           summaryResult.sobrantes && summaryResult.sobrantes.length === 0 ? (
+          {summaryResult &&
+            summaryResult.faltantes && summaryResult.faltantes.length === 0 &&
+            summaryResult.sobrantes && summaryResult.sobrantes.length === 0 ? (
             <div style={{ marginTop: 16, textAlign: "right" }}>
               <Button
                 variant="primary"
@@ -296,6 +376,56 @@ const UploadFilesAP: React.FC<AssignmentProcessProps> = ({
                 </Button>
               </div>
             </div>
+          )}
+        </div>
+      </SimpleModal>
+
+      {/* Modal de lotes de códigos */}
+      <SimpleModal
+        open={codeBatchesModal}
+        title="Lotes de Códigos Generados"
+        onClose={() => setCodeBatchesModal(false)}
+      >
+        <div style={{ maxHeight: 400, overflowY: "auto" }}>
+          {isDownloadingCodes ? (
+            <p>Generando códigos, por favor espere...</p>
+          ) : (
+            <>
+              {/* Mostrar los lotes */}
+              {codeBatches.map((batch, batchIndex) => (
+                <div key={batchIndex} style={{
+                  marginBottom: '20px',
+                  padding: '15px',
+                  border: '1px solid #ddd',
+                  borderRadius: '6px',
+                  backgroundColor: '#f9f9f9'
+                }}>
+                  <h4 style={{ margin: '0 0 10px 0', color: '#555' }}>
+                    Lote {batchIndex + 1}:
+                  </h4>
+                  <p style={{ margin: 0, fontFamily: 'monospace', color: '#333' }}>
+                    {batch.join(", ")}
+                  </p>
+                </div>
+              ))}
+
+              <div style={{
+                textAlign: 'center',
+                marginTop: '20px',
+                paddingTop: '20px',
+                borderTop: '1px solid #e0e0e0'
+              }}>
+                <Button
+                  variant="primary"
+                  onClick={handleCopyAllCodes}
+                >
+                  Copiar Todos los Códigos Generados
+                </Button>
+                <p style={{ fontSize: '12px', color: '#666', margin: '10px 0 0 0' }}>
+                  Máximo 1.00% de códigos
+                </p>
+              </div>
+            </>
           )}
         </div>
       </SimpleModal>

@@ -83,3 +83,9 @@
   gap: 8px;
   margin-top: 20px;
 }
+
+.codes-info {
+  display: flex;
+  justify-content: center;
+  margin: 16px 0;
+}
