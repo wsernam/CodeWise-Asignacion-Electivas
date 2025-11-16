@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import "../AssignmentProcessSteps.css";
 import {
   FaUserSlash,
@@ -10,6 +10,9 @@ import Button from "../../../../components/ui/Button/Button";
 import SimpleModal from "../../../../components/shared/SimpleModal/SimpleModal";
 import ConfirmModal from "../../../../components/shared/ConfirmModal/ConfirmModal";
 
+import { useAssignmentProcessStore, useNiveladosStore } from "../../../../store/Assignment";
+import { message } from "antd";
+
 type AssignmentProcessProps = {
   onNext: () => void;
   onCancel: () => void;
@@ -17,18 +20,25 @@ type AssignmentProcessProps = {
   currentStep: number;
   completedSteps: number[];
   getStepBorderClass: (stepNumber: number) => string;
+
+  currentProccess?: {
+    pa_anio: number;
+    pa_num_semester: number;
+  };
 };
 
+/*
 type LeveledStudent = {
   codigo: string;
   nombre: string;
   apellido: string;
   programa: string;
-  creditosObligatorios: string;
-  periodosMatriculados: string;
-  porcentajeAvance: string;
+  creditosObligatorios: number;
+  periodosMatriculados: number;
+  porcentajeAvance: number;
   confirmado: boolean;
 };
+*/
 
 const cards = [
   {
@@ -62,10 +72,43 @@ const LevelsManagementAP: React.FC<AssignmentProcessProps> = ({
   onStepClick,
   currentStep,
   getStepBorderClass,
+  currentProccess,
 }) => {
   const [showModal, setShowModal] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
-  const [leveledStudents, setLeveledStudents] = useState<LeveledStudent[]>([]);
+
+  // Manejo de estudiantes confirmados
+  const [confirmedStudents, setConfirmedStudents] = useState<Set<number>>(new Set());
+
+  // ========= local state =========
+
+  // Estado local para estudiantes nivelados
+  const {
+    leveledStudents,
+    loading,
+    error,
+    gestionarNivelados,
+    listarNivelados,
+    confirmarNivelados,
+    clearError,
+  } = useNiveladosStore();
+
+  // Obtener el proceso activo desde el store o props
+  const storeProcess = useAssignmentProcessStore((s: any) => s.currentProcess);
+  const activeProcess = currentProccess ?? storeProcess;
+
+
+
+  const confirmedCount = confirmedStudents.size;
+
+  // Manejo de errores
+  useEffect(() => {
+    if (error) {
+      console.error("[LevelsManagementAP] Error detectado:", error);
+      message.error(error);
+      clearError();
+    }
+  }, [error, clearError]);
 
   const handleCardClick = (stepNumber: number) => {
     if (stepNumber === currentStep) {
@@ -75,56 +118,78 @@ const LevelsManagementAP: React.FC<AssignmentProcessProps> = ({
     }
   };
 
-  const handleSave = () => setShowConfirm(true);
+  const handleSave = async () => {
+    console.log("[LevelsManagementAP] handleSave called");
+    if (!activeProcess) {
+      message.warning("No hay un proceso activo seleccionado");
+      return;
+    }
+
+    try {
+      console.log("[LevelsManagementAP] Confirmando estudiantes nivelados...");
+      const estudiantesAConfirmar = leveledStudents.map(student => ({
+        est_codigo: student.estudiante.est_codigo,
+        nivelado: confirmedStudents.has(student.estudiante.est_codigo) ? 1 : 0
+      }));
+
+      console.log("[LevelsManagementAP] Confirmando nivelados:", estudiantesAConfirmar);
+
+      await confirmarNivelados(
+        activeProcess.pa_anio,
+        activeProcess.pa_num_semestre,
+        estudiantesAConfirmar
+      );
+
+      message.success(`${confirmedCount} estudiantes confirmados como nivelados`);
+      setShowConfirm(true);
+    } catch (error) {
+      console.error("[LevelsManagementAP] Error confirmando nivelados:", error);
+      message.error("Error al confirmar estudiantes nivelados");
+    }
+  };
+
   const handleConfirmSave = () => {
     setShowConfirm(false);
     setShowModal(false);
     onNext();
   };
 
-  const loadLeveledStudents = () => {
-    const mockData: LeveledStudent[] = [
-      {
-        codigo: "104622011437",
-        nombre: "Lina",
-        apellido: "Diaz",
-        programa: "Ingeniería de Sistemas",
-        creditosObligatorios: "80",
-        periodosMatriculados: "8",
-        porcentajeAvance: "40%",
-        confirmado: false,
-      },
-      {
-        codigo: "104622011438",
-        nombre: "Carlos",
-        apellido: "Martinez",
-        programa: "Ingeniería Civil",
-        creditosObligatorios: "75",
-        periodosMatriculados: "7",
-        porcentajeAvance: "35%",
-        confirmado: false,
-      },
-    ];
-    setLeveledStudents(mockData);
+  const loadLeveledStudents = async () => {
+    console.log("[LevelsManagementAP] loadLeveledStudents called", {currentProccess, storeProcess, activeProcess});
+    if (!activeProcess) {
+      message.error("No hay un proceso de asignación activo.");
+      return;
+    }
+
+    try {
+      console.log("[LevelsManagementAP] Cargando estudiantes nivelados...");
+      await gestionarNivelados(activeProcess.pa_anio, activeProcess.pa_num_semestre);
+      console.log("[LevelsManagementAP] Listando estudiantes nivelados...");
+      await listarNivelados(activeProcess.pa_anio, activeProcess.pa_num_semestre);
+      console.log("[LevelsManagementAP] Estudiantes nivelados cargados:", leveledStudents);
+      setConfirmedStudents(new Set());
+      message.success("Estudiantes nivelados cargados correctamente.");
+    } catch (err: any) {
+      message.error(
+        err.message || "Error al cargar los estudiantes nivelados."
+      );
+    }
   };
 
-  const toggleConfirmation = (codigo: string) => {
-    setLeveledStudents((prev) =>
-      prev.map((student) =>
-        student.codigo === codigo
-          ? { ...student, confirmado: !student.confirmado }
-          : student
-      )
-    );
+  const toggleConfirmation = (codigo: number) => {
+    setConfirmedStudents((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(codigo)) newSet.delete(codigo);
+      else newSet.add(codigo);
+      console.debug("[LevelsManagementAP] toggleConfirmation -> newSet size", newSet.size);
+      return newSet;
+    });
   };
 
-  const getStatusText = (confirmado: boolean) =>
-    confirmado ? "Nivelado" : "Por confirmar";
-  const getStatusClass = (confirmado: boolean) =>
-    confirmado ? "tag--green" : "tag--default";
-  const confirmedCount = leveledStudents.filter(
-    (student) => student.confirmado
-  ).length;
+  const isConfirmed = (codigo: number) => confirmedStudents.has(codigo);
+
+  const getStatusText = (codigo: number) => (isConfirmed(codigo) ? "Nivelado" : "Por confirmar");
+  const getStatusClass = (codigo: number) => (isConfirmed(codigo) ? "tag--green" : "tag--default");
 
   return (
     <div className="aps-wrapper">
@@ -153,7 +218,11 @@ const LevelsManagementAP: React.FC<AssignmentProcessProps> = ({
           onClose={() => setShowModal(false)}
         >
           <div className="im-modal-content">
-            {leveledStudents.length === 0 ? (
+            {loading ? (
+              <div className="im-empty">
+                <p>Cargando estudiantes nivelados...</p>
+              </div>
+            ) : leveledStudents.length === 0 ? (
               <div className="im-empty">
                 <p>No se han identificado potenciales estudiantes nivelados</p>
                 <Button variant="primary" onClick={loadLeveledStudents}>
@@ -186,35 +255,35 @@ const LevelsManagementAP: React.FC<AssignmentProcessProps> = ({
                       <th className="im-th">Confirmar</th>
                     </tr>
                   </thead>
+
                   <tbody>
-                    {leveledStudents.map((student) => (
-                      <tr key={student.codigo}>
-                        <td className="im-cell">{student.codigo}</td>
-                        <td className="im-cell">{student.nombre}</td>
-                        <td className="im-cell">{student.apellido}</td>
-                        <td className="im-cell">{student.programa}</td>
-                        <td className="im-cell">
-                          {student.creditosObligatorios}
-                        </td>
-                        <td className="im-cell">
-                          {student.periodosMatriculados}
-                        </td>
-                        <td className="im-cell">{student.porcentajeAvance}</td>
-                        <td className="im-cell">
-                          <span className={getStatusClass(student.confirmado)}>
-                            {getStatusText(student.confirmado)}
-                          </span>
-                        </td>
-                        <td className="im-cell">
-                          <input
-                            type="checkbox"
-                            checked={student.confirmado}
-                            onChange={() => toggleConfirmation(student.codigo)}
-                            style={{ transform: "scale(1.2)" }}
-                          />
-                        </td>
-                      </tr>
-                    ))}
+                    {leveledStudents.map((student) => {
+                      const codigo = student.estudiante.est_codigo;
+                      return (
+                        <tr key={codigo}>
+                          <td className="im-cell">{codigo}</td>
+                          <td className="im-cell">{student.estudiante.est_nombre}</td>
+                          <td className="im-cell">{student.estudiante.est_apellido}</td>
+                          <td className="im-cell">{student.estudiante.programa.pro_nombre}</td>
+                          <td className="im-cell">{student.creditos_aprob_total}</td>
+                          <td className="im-cell">{student.num_periodos_matriculados}</td>
+                          <td className="im-cell">{student.porcentaje_avance}%</td>
+                          <td className="im-cell">
+                            <span className={getStatusClass(codigo)}>
+                              {getStatusText(codigo)}
+                            </span>
+                          </td>
+                          <td className="im-cell">
+                            <input
+                              type="checkbox"
+                              checked={isConfirmed(codigo)}
+                              onChange={() => toggleConfirmation(codigo)}
+                              style={{ transform: "scale(1.2)" }}
+                            />
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
 
@@ -230,7 +299,8 @@ const LevelsManagementAP: React.FC<AssignmentProcessProps> = ({
                     onClick={handleSave}
                     disabled={confirmedCount === 0}
                   >
-                    Confirmar nivelados ({confirmedCount})
+                    {loading ? "Confirmando..." : `Confirmar nivelados (${confirmedCount})`}
+
                   </Button>
                 </div>
               </>

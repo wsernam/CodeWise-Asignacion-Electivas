@@ -20,7 +20,7 @@ export const assignmentProcessService = {
         body: JSON.stringify({
           pa_anio: anio,
           pa_num_semestre: semestre,
-          pa_activo: true,
+//          pa_activo: true,
         }),
       });
 
@@ -119,12 +119,12 @@ export const assignmentProcessService = {
     try {
       const fechaFin = new Date().toISOString();
       const response = await fetch(
-        `${ASSIGNMENT_BASE_URL}/procesos/${codigo}/`,
+        `${ASSIGNMENT_BASE_URL}/procesos/${codigo}/estado/`,
         {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            pa_activo: false,
+            pa_estado: 2,
           }),
         }
       );

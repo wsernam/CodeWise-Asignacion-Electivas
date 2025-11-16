@@ -5,6 +5,15 @@ import type {
   IncompleteRow,
 } from "../../models/Assignment/assignmentProcess";
 
+export interface InactiveStudent {
+  id: number;
+  codigo: string;
+  nombre: string;
+  apellido: string;
+  programa: string;
+  creditosObligatorios: number;
+}
+
 interface ExcelProcessingState {
   // ========== ESTADO ==========
   uploadedFiles: File[]; // Archivos Excel subidos
