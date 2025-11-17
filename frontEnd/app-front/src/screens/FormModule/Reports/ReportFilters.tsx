@@ -36,8 +36,14 @@ const ReportFilters: React.FC<IReportFiltersProps> = ({
   reportTypeOptions,
 }) => {
   const yearOptions = [2024, 2025, 2026];
+  const defaultReportTypeOptions = [
+    { value: "general", label: "Reporte General" },
+    { value: "por-estudiante", label: "Por Estudiante" },
+    { value: "por-electiva", label: "Por Electiva" },
+    { value: "listas", label: "Listas asignación y espera" },
+  ];
 
-  const finalReportTypeOptions = reportTypeOptions || [];
+  const finalReportTypeOptions = reportTypeOptions || defaultReportTypeOptions;
 
   return (
     <div className="filters-section">

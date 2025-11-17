@@ -16,7 +16,7 @@ async function fetchPdf(url: string): Promise<Blob> {
 }
 
 export const reporteService = {
-  getGeneralBlob(anio: number, semestre: number) {
+  getListasBlob(anio: number, semestre: number) {
     return fetchPdf(`${REPORTS_BASE_URL}/asignacion-general/?anio=${anio}&semestre=${semestre}`);
   },
   getElectivaBlob(eleCodigo: string, anio: number, semestre: number) {
@@ -24,5 +24,8 @@ export const reporteService = {
   },
   getEstudianteBlob(estId: string | number, anio: number, semestre: number) {
     return fetchPdf(`${REPORTS_BASE_URL}/estudiante/${estId}/?anio=${anio}&semestre=${semestre}`);
+  },
+  getGeneralBlob(anio: number, semestre: number) {
+    return fetchPdf(`${REPORTS_BASE_URL}/reporte-asignacion-general/?anio=${anio}&semestre=${semestre}`);
   },
 };

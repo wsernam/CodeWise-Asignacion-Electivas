@@ -29,7 +29,7 @@ const ReportsAssignment: React.FC = () => {
       let blob: Blob;
 
       if (selectedReportType === "listas") {
-        blob = await reporteService.getGeneralBlob(
+        blob = await reporteService.getListasBlob(
           selectedYear,
           selectedSemester
         );
@@ -44,6 +44,11 @@ const ReportsAssignment: React.FC = () => {
         if (!eleCodigo) throw new Error("Ingresa el código de la electiva");
         blob = await reporteService.getElectivaBlob(
           eleCodigo,
+          selectedYear,
+          selectedSemester
+        );
+      } else if (selectedReportType === "general") {
+        blob = await reporteService.getGeneralBlob(
           selectedYear,
           selectedSemester
         );
