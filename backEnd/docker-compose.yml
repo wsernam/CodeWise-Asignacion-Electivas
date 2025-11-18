@@ -257,4 +257,4 @@ volumes:
   volumen_db_formulario:
   volumen_db_asignacion:
   rabbitmq_data: # Volumen para datos de RabbitMQ
-  mysql_data:
+

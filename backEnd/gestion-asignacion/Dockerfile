@@ -40,7 +40,7 @@ RUN sed -i 's/\r$//' /usr/local/bin/seed_perfiles.sh
 COPY . .
 
 # 7. Exponer el puerto
-EXPOSE 8002
+EXPOSE 8000
 
 # 8. Corregir el punto de entrada (ENTRYPOINT)
 # Aquí es donde se hace el cambio crucial. El ENTRYPOINT es el comando
@@ -50,4 +50,4 @@ ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 
 
 # El compose sobreescribe este CMD
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8002"]
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
