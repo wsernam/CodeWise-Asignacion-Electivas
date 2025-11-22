@@ -8,6 +8,7 @@ import { PROGRAMS_URL } from "../config/config";
  * @returns Promise<Program[]> - Lista de programas
  */
 export const getPrograms = async (): Promise<Program[]> => {
+  //
   try {
     console.log("[programService] Conectando a:", `${PROGRAMS_URL}/`);
 

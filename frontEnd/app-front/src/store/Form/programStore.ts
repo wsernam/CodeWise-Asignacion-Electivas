@@ -43,6 +43,7 @@ export const useProgramStore = create<ProgramState>((set) => ({
   /**
    * Obtiene todos los programas desde el backend
    */
+  
   fetchPrograms: async () => {
     console.log("[ProgramStore] Cargando programas...");
     set({ loading: true, error: null });

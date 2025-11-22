@@ -20,6 +20,7 @@ export const createBulkOffer = async (offerData: IOffer): Promise<any> => {
 };
 
 export const getOffersByProgram = async (
+  //
   programCode: string,
   year: number,
   semester: number

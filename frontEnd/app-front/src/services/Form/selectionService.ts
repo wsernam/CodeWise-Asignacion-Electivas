@@ -24,6 +24,7 @@ const transformSelection = (data: any): ISelectionStudentElective => ({
  * @param semester - Semestre (1 o 2)
  */
 export const getSelectionsByStudent = async (
+  //
   code: number,
   year: number,
   semester: number
@@ -55,6 +56,7 @@ export const createSelectionService = async (
   s: ISelectionStudentElective
 ): Promise<ISelectionStudentElective> => {
   try {
+    //
     console.log("[selectionService] Creando selección:", s);
     const { data } = await axiosInstance.post(`${SELECTION_URL}/`, s);
     const created = transformSelection(data);

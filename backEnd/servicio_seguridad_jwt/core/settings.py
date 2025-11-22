@@ -38,7 +38,8 @@ REST_FRAMEWORK = {
 }
 
 # Clave secreta
-SECRET_KEY = config('SECRET_KEY') # Lee la clave del .env
+SECRET_KEY = config('SECRET_KEY')
+
 
 # Configuración para djangorestframework-simplejwt
 from datetime import timedelta
