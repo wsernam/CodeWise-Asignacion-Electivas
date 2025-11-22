@@ -1,5 +1,5 @@
 export interface IProgram {
-  pro_codigo: number;
+  pro_codigo: string;
   pro_nombre: string;
   fac_codigo: number;
   fac_nombre: string;
