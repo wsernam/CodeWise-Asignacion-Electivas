@@ -254,11 +254,7 @@ services:
 
 
 
-  
-
-
-
-  # ---------------------------------------
+    # ---------------------------------------
   # PostgreSQL para Kong
   # ---------------------------------------
   kong-database:
@@ -277,7 +273,26 @@ services:
       timeout: 5s
       retries: 5
     ports:
-      - "5432:5432"  
+      - "5432:5432"
+
+  # ---------------------------------------
+  # Kong Migrations (ejecutar migraciones primero)
+  # ---------------------------------------
+  kong-migrations:
+    image: kong:3.6
+    container_name: kong_migrations
+    depends_on:
+      kong-database:
+        condition: service_healthy
+    environment:
+      KONG_DATABASE: postgres
+      KONG_PG_HOST: ${POSTGRES_HOST_KONG}
+      KONG_PG_USER: ${POSTGRES_USER_KONG}
+      KONG_PG_PASSWORD: ${POSTGRES_PASSWORD_KONG}
+      KONG_PG_DATABASE: ${POSTGRES_DB_KONG}
+    command: kong migrations bootstrap
+    restart: "no"  # Cambiar a "no" para que no se reinicie constantemente
+
   # ---------------------------------------
   # KONG (API Gateway)
   # ---------------------------------------
@@ -288,6 +303,8 @@ services:
     depends_on:
       kong-database:
         condition: service_healthy
+      kong-migrations:
+        condition: service_completed_successfully  # Esperar a que migrations termine
     environment:
       KONG_DATABASE: postgres
       KONG_PG_HOST: ${POSTGRES_HOST_KONG}
@@ -313,24 +330,6 @@ services:
       start_period: 30s
 
   # ---------------------------------------
-  # Kong Migrations (ejecutar migraciones primero)
-  # ---------------------------------------
-  kong-migrations:
-    image: kong:3.6
-    container_name: kong_migrations
-    depends_on:
-      kong-database:
-        condition: service_healthy
-    environment:
-      KONG_DATABASE: postgres
-      KONG_PG_HOST: ${POSTGRES_HOST_KONG}
-      KONG_PG_USER: ${POSTGRES_USER_KONG}
-      KONG_PG_PASSWORD: ${POSTGRES_PASSWORD_KONG}
-      KONG_PG_DATABASE: ${POSTGRES_DB_KONG}
-    command: kong migrations bootstrap
-    restart: on-failure
-
-  # ---------------------------------------
   # Cargar deck automáticamente
   # ---------------------------------------
   deck-init:
@@ -353,7 +352,6 @@ services:
       echo 'Deck sincronizado exitosamente.'
       "
     restart: "no"
-
 
 volumes:
   volumen_db_usuarios:

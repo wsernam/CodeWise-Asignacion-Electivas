@@ -46,27 +46,48 @@ services:
       - name: jwt
         enabled: true
         config:
-          # URI donde se busca el token (header Authorization)
           uri_param_names:
             - jwt
-          # Nombres de cookies donde buscar el token (opcional)
           cookie_names: []
-          # Nombres de headers donde buscar el token
           header_names:
             - authorization
-          # Claims a incluir en los headers enviados al upstream
           claims_to_verify:
             - exp
-          # Tiempo máximo de vida del token (opcional, en segundos)
           maximum_expiration: 31536000
-          # Algoritmos permitidos
           key_claim_name: iss
           secret_is_base64: false
           anonymous: null
           run_on_preflight: true
       
       # ------------------------------------------------
-      # Plugin CORS (opcional pero recomendado)
+      # Plugin Pre-function
+      # Extrae los claims del JWT y los agrega como headers
+      # ------------------------------------------------
+      - name: pre-function
+        enabled: true
+        config:
+          access:
+            - |
+              -- Extraer los claims del JWT validado
+              local jwt = kong.ctx.shared.jwt_keyset_credential
+              
+              if jwt and jwt.claims then
+                -- Agregar el rol como header
+                if jwt.claims.role then
+                  kong.service.request.set_header("X-User-Role", jwt.claims.role)
+                end
+                
+                -- Agregar el user_id como header
+                if jwt.claims.user_id then
+                  kong.service.request.set_header("X-User-Id", jwt.claims.user_id)
+                end
+                
+                -- Log para debugging (opcional)
+                kong.log.info("JWT Claims extraídos - Role: ", jwt.claims.role, ", User ID: ", jwt.claims.user_id)
+              end
+      
+      # ------------------------------------------------
+      # Plugin CORS
       # ------------------------------------------------
       - name: cors
         enabled: true
@@ -96,7 +117,7 @@ services:
           preflight_continue: false
       
       # ------------------------------------------------
-      # Plugin Rate Limiting (opcional pero recomendado)
+      # Plugin Rate Limiting
       # ------------------------------------------------
       - name: rate-limiting
         enabled: true
@@ -115,18 +136,6 @@ services:
           redis_ssl_verify: false
           redis_timeout: 2000
           redis_database: 0
-      
-      # ------------------------------------------------
-      # Plugin Request Transformer (opcional)
-      # Agrega headers personalizados al upstream
-      # ------------------------------------------------
-      - name: request-transformer
-        enabled: true
-        config:
-          add:
-            headers:
-              - X-Gateway:Kong
-              - X-Service:gestion-asignacion
 
 # ==================================================
 # CONSUMIDORES (ISSUERS) DE JWT
@@ -135,23 +144,15 @@ consumers:
   - username: auth-hs256
     custom_id: django-auth-service
     
-    # ------------------------------------------------
-    # Credenciales JWT para este consumidor
-    # ------------------------------------------------
     jwt_secrets:
       - key: auth-hs256
         algorithm: HS256
         secret: ab3750eadf31526430c6b7242b8ebf1cda010443c77130350d0a11c8e7ea360d
-        # El campo 'key' debe coincidir con el claim 'iss' del token
-        # El 'secret' es tu JWT_SIGNING_KEY de Django
 
 # ==================================================
-# PLUGINS GLOBALES (Aplicados a todos los servicios)
+# PLUGINS GLOBALES
 # ==================================================
 plugins:
-  # ------------------------------------------------
-  # Correlation ID - Para trazabilidad de requests
-  # ------------------------------------------------
   - name: correlation-id
     enabled: true
     config:
@@ -159,9 +160,6 @@ plugins:
       generator: uuid
       echo_downstream: true
 
-  # ------------------------------------------------
-  # Request Size Limiting - Limitar tamaño de requests
-  # ------------------------------------------------
   - name: request-size-limiting
     enabled: true
     config:
@@ -169,9 +167,6 @@ plugins:
       size_unit: megabytes
       require_content_length: false
 
-  # ------------------------------------------------
-  # Response Transformer - Agregar headers de seguridad
-  # ------------------------------------------------
   - name: response-transformer
     enabled: true
     config:
