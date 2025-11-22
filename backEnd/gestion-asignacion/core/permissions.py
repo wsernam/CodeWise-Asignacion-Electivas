@@ -1,7 +1,7 @@
 from rest_framework.permissions import BasePermission
+from rest_framework.exceptions import PermissionDenied, AuthenticationFailed
 import logging
 import jwt
-import json
 
 logger = logging.getLogger(__name__)
 
@@ -9,25 +9,21 @@ logger = logging.getLogger(__name__)
 class IsAsignador(BasePermission):
     """
     Permiso personalizado para permitir el acceso solo a usuarios con el rol 'Asignador'.
-    
-    Como Kong no está pasando los claims como headers, decodificamos el JWT directamente.
-    Kong ya validó que el token es válido, solo necesitamos extraer los claims.
     """
-    message = "No tiene permiso para realizar esta acción. Se requiere el rol 'Asignador'."
-
+    
     def has_permission(self, request, view):
-        # Obtener el token del header Authorization
         auth_header = request.META.get('HTTP_AUTHORIZATION', '')
         
         if not auth_header.startswith('Bearer '):
-            logger.warning("[Auth] No se encontró token Bearer en Authorization header")
-            return False
+            logger.warning("[Auth] No se encontró token Bearer")
+            raise AuthenticationFailed({
+                "error": "Token no proporcionado",
+                "message": "Debe incluir un token JWT válido en el header Authorization."
+            })
         
         token = auth_header.replace('Bearer ', '').strip()
         
         try:
-            # Decodificar el JWT SIN verificar (Kong ya lo verificó)
-            # Usamos verify_signature=False porque Kong ya validó el token
             decoded = jwt.decode(
                 token, 
                 options={
@@ -40,48 +36,51 @@ class IsAsignador(BasePermission):
             user_role = decoded.get('role', None)
             user_id = decoded.get('user_id', None)
             
-            logger.info(
-                f"[Auth] Token decodificado. Rol: '{user_role}', User ID: '{user_id}'"
-            )
-            
-            # Verificamos si el rol es 'Asignador'
-            has_permission = user_role == 'Asignador'
-            
-            if not has_permission:
-                logger.warning(
-                    f"[Auth] Acceso DENEGADO para rol '{user_role}'. "
-                    f"Se requiere 'Asignador'."
-                )
-            else:
-                logger.info(
-                    f"[Auth] Acceso PERMITIDO para usuario {user_id} con rol '{user_role}'"
-                )
-            
-            # Opcional: Agregar el user_id y role al request para usarlo en las vistas
+            # Guardar en request para usarlo en vistas
             request.user_id = user_id
             request.user_role = user_role
             
-            return has_permission
+            logger.info(f"[Auth] Validando IsAsignador - Rol: '{user_role}', User ID: '{user_id}'")
             
+            if user_role != 'Asignador':
+                logger.warning(f"[Auth] Acceso DENEGADO - Rol requerido: 'Asignador', Rol actual: '{user_role}'")
+                raise PermissionDenied({
+                    "error": "Permiso denegado",
+                    "message": f"Esta acción requiere el rol 'Asignador'. Tu rol actual es '{user_role}'."
+                })
+            
+            logger.info(f"[Auth] Acceso PERMITIDO para usuario {user_id}")
+            return True
+            
+        except PermissionDenied:
+            raise
         except jwt.DecodeError as e:
             logger.error(f"[Auth] Error al decodificar JWT: {e}")
-            return False
+            raise AuthenticationFailed({
+                "error": "Token inválido",
+                "message": "El token JWT proporcionado no es válido o está mal formado."
+            })
         except Exception as e:
             logger.error(f"[Auth] Error inesperado: {e}")
-            return False
+            raise AuthenticationFailed({
+                "error": "Error de autenticación",
+                "message": "Ocurrió un error al procesar la autenticación."
+            })
 
 
 class IsAdministrador(BasePermission):
     """
     Permiso para usuarios con rol 'Administrador'.
     """
-    message = "No tiene permiso para realizar esta acción. Se requiere el rol 'Administrador'."
-
+    
     def has_permission(self, request, view):
         auth_header = request.META.get('HTTP_AUTHORIZATION', '')
         
         if not auth_header.startswith('Bearer '):
-            return False
+            raise AuthenticationFailed({
+                "error": "Token no proporcionado",
+                "message": "Debe incluir un token JWT válido en el header Authorization."
+            })
         
         token = auth_header.replace('Bearer ', '').strip()
         
@@ -96,30 +95,45 @@ class IsAdministrador(BasePermission):
             )
             
             user_role = decoded.get('role', None)
-            logger.info(f"[Auth] Validando permiso IsAdministrador. Rol: '{user_role}'")
+            user_id = decoded.get('user_id', None)
             
-            request.user_id = decoded.get('user_id')
+            request.user_id = user_id
             request.user_role = user_role
             
-            return user_role == 'Administrador'
+            logger.info(f"[Auth] Validando IsAdministrador - Rol: '{user_role}'")
             
+            if user_role != 'Administrador':
+                raise PermissionDenied({
+                    "error": "Permiso denegado",
+                    "message": f"Esta acción requiere el rol 'Administrador'. Tu rol actual es '{user_role}'."
+                })
+            
+            return True
+            
+        except PermissionDenied:
+            raise
         except Exception as e:
             logger.error(f"[Auth] Error: {e}")
-            return False
+            raise AuthenticationFailed({
+                "error": "Error de autenticación",
+                "message": "Ocurrió un error al procesar la autenticación."
+            })
 
 
 class IsAutenticado(BasePermission):
     """
     Permiso que verifica que el usuario esté autenticado.
     """
-    message = "No tiene permiso para realizar esta acción. Debe estar autenticado."
-
+    
     def has_permission(self, request, view):
         auth_header = request.META.get('HTTP_AUTHORIZATION', '')
         
         if not auth_header.startswith('Bearer '):
             logger.warning("[Auth] No hay token Bearer")
-            return False
+            raise AuthenticationFailed({
+                "error": "Token no proporcionado",
+                "message": "Debe incluir un token JWT válido en el header Authorization."
+            })
         
         token = auth_header.replace('Bearer ', '').strip()
         
@@ -137,16 +151,23 @@ class IsAutenticado(BasePermission):
             request.user_id = user_id
             request.user_role = decoded.get('role')
             
-            has_permission = user_id is not None
+            if not user_id:
+                raise AuthenticationFailed({
+                    "error": "Token incompleto",
+                    "message": "El token no contiene la información necesaria de usuario."
+                })
             
-            if not has_permission:
-                logger.warning("[Auth] Token no contiene user_id")
+            logger.info(f"[Auth] Usuario autenticado: {user_id}")
+            return True
             
-            return has_permission
-            
+        except PermissionDenied:
+            raise
         except Exception as e:
             logger.error(f"[Auth] Error: {e}")
-            return False
+            raise AuthenticationFailed({
+                "error": "Error de autenticación",
+                "message": "Ocurrió un error al procesar la autenticación."
+            })
 
 
 class TieneRoles(BasePermission):
@@ -158,13 +179,15 @@ class TieneRoles(BasePermission):
         permission_classes = [TieneRoles]
         roles_permitidos = ['Asignador', 'Administrador']
     """
-    message = "No tiene permiso para realizar esta acción."
-
+    
     def has_permission(self, request, view):
         auth_header = request.META.get('HTTP_AUTHORIZATION', '')
         
         if not auth_header.startswith('Bearer '):
-            return False
+            raise AuthenticationFailed({
+                "error": "Token no proporcionado",
+                "message": "Debe incluir un token JWT válido en el header Authorization."
+            })
         
         token = auth_header.replace('Bearer ', '').strip()
         roles_permitidos = getattr(view, 'roles_permitidos', [])
@@ -180,23 +203,27 @@ class TieneRoles(BasePermission):
             )
             
             user_role = decoded.get('role', None)
-            request.user_id = decoded.get('user_id')
+            user_id = decoded.get('user_id', None)
+            
+            request.user_id = user_id
             request.user_role = user_role
             
-            logger.info(
-                f"[Auth] Validando TieneRoles. "
-                f"Rol: '{user_role}', Permitidos: {roles_permitidos}"
-            )
+            logger.info(f"[Auth] Validando TieneRoles - Rol: '{user_role}', Permitidos: {roles_permitidos}")
             
-            has_permission = user_role in roles_permitidos
+            if user_role not in roles_permitidos:
+                roles_str = "', '".join(roles_permitidos)
+                raise PermissionDenied({
+                    "error": "Permiso denegado",
+                    "message": f"Tu rol '{user_role}' no tiene acceso. Roles permitidos: '{roles_str}'."
+                })
             
-            if not has_permission:
-                logger.warning(
-                    f"[Auth] Rol '{user_role}' no está en {roles_permitidos}"
-                )
+            return True
             
-            return has_permission
-            
+        except PermissionDenied:
+            raise
         except Exception as e:
             logger.error(f"[Auth] Error: {e}")
-            return False
+            raise AuthenticationFailed({
+                "error": "Error de autenticación",
+                "message": "Ocurrió un error al procesar la autenticación."
+            })
