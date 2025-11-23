@@ -38,6 +38,7 @@ export const useSelectionStore = create<SelectionState>((set) => ({
     try {
       const newSelection = await createSelectionService(selection);
       set({ selection: newSelection, loading: false, error: null });
+      console.log("[selectionStore] Selección creada:", newSelection);
     } catch (err: any) {
       set({
         loading: false,
@@ -49,6 +50,7 @@ export const useSelectionStore = create<SelectionState>((set) => ({
 
   fetchStudentById: async (code: string) => {
     try {
+      console.log("[selectionStore] Buscando estudiante con código:", code);
       return await getStudentById(parseInt(code));
     } catch (err: any) {
       return null;
@@ -68,6 +70,7 @@ export const useSelectionStore = create<SelectionState>((set) => ({
         year,
         semester
       );
+      console.log("[selectionStore] Electivas activas obtenidas:", electives);
       set({ activeElectives: electives, loading: false });
     } catch (err: any) {
       set({

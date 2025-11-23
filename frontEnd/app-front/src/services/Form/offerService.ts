@@ -32,6 +32,7 @@ export const getOffersByProgram = async (
       "[offerService] Ofertas obtenidas exitosamente: ",
       response.data
     );
+    console.log(`${OFFER_URL}/ofertas/${year}/${semester}/${programCode}/`)
     return response.data;
   } catch (error: any) {
     console.log(

@@ -61,6 +61,7 @@ export const createSelectionService = async (
     console.log("[selectionService] Selección creada:", created);
     return created;
   } catch (error: any) {
+    console.log("JSON Enviado:", JSON.stringify(s));
     console.error("[selectionService] Error creando selección:", error);
     throw new Error(error?.message || "No se pudo crear la selección");
   }
