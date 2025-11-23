@@ -72,7 +72,9 @@ const UploadFilesAP: React.FC<AssignmentProcessProps> = ({
 
   // Estado para el modal de resumen de validación
   const [showSummaryModal, setShowSummaryModal] = useState(false);
-  const [summaryResult, setSummaryResult] = useState<ValidationResult | null>(null);
+  const [summaryResult, setSummaryResult] = useState<ValidationResult | null>(
+    null
+  );
 
   // Estado para manejar generacion y descarga de lotes de códigos
   const [isDownloadingCodes, setIsDownloadingCodes] = useState(false);
@@ -82,7 +84,8 @@ const UploadFilesAP: React.FC<AssignmentProcessProps> = ({
   // ============================================================
   //                          Stores
   // ============================================================
-  const { validarExcel, loading, error, clearError } = useExcelProcessingStore();
+  const { validarExcel, loading, error, clearError } =
+    useExcelProcessingStore();
   const { addCompletedStep } = useAssignmentFlowStore();
 
   // ============================================================
@@ -124,7 +127,6 @@ const UploadFilesAP: React.FC<AssignmentProcessProps> = ({
         setShowSummaryModal(true);
         console.log("Modal de resumen abierto:", true);
       }, 100);
-
     } catch (error: any) {
       console.error("Error validando archivos:", error);
       alert(`Error en validación: ${error.message}`);
@@ -202,15 +204,15 @@ const UploadFilesAP: React.FC<AssignmentProcessProps> = ({
     const allCodes = codeBatches.flat().join("\n");
 
     // Usar la API del portapapeles para copiar los códigos
-    navigator.clipboard.writeText(allCodes)
+    navigator.clipboard
+      .writeText(allCodes)
       .then(() => {
         console.log("Códigos copiados al portapapeles.");
       })
-      .catch(err => {
+      .catch((err) => {
         console.error("Error al copiar los códigos: ", err);
-      })
+      });
   };
-
 
   React.useEffect(() => {
     console.log("Estado de showSummaryModal:", showSummaryModal);
@@ -237,13 +239,15 @@ const UploadFilesAP: React.FC<AssignmentProcessProps> = ({
         })}
       </div>
 
-      <div className='codes-info'>
+      <div className="codes-info">
         <Button
           variant="primary"
           onClick={openCodeBatchesModal}
           disabled={isDownloadingCodes}
         >
-          {isDownloadingCodes ? "Generando códigos..." : "Generar lotes de códigos"}
+          {isDownloadingCodes
+            ? "Generando códigos..."
+            : "Generar lotes de códigos"}
         </Button>
       </div>
 
@@ -311,58 +315,52 @@ const UploadFilesAP: React.FC<AssignmentProcessProps> = ({
       {/* Modal de resumen de validación - CORREGIDO */}
       <SimpleModal
         open={showSummaryModal}
-        title="Resumen de validación"
+        title="Análisis de Validación de Archivos Excel"
         onClose={() => {
           console.log("Cerrando modal de resumen");
           setShowSummaryModal(false);
         }}
       >
         <div style={{ maxHeight: 400, overflowY: "auto" }}>
-          {/* +++ AGREGADO: Debug info +++ */}
-          <div style={{ fontSize: '12px', color: '#666', marginBottom: '10px' }}>
-            Debug: showSummaryModal={showSummaryModal.toString()},
-            faltantes={summaryResult?.faltantes?.length ?? 0},
-            sobrantes={summaryResult?.sobrantes?.length ?? 0}
-          </div>
-
           <p>
-            <strong>Estudiantes faltantes:</strong> {summaryResult?.faltantes?.length ?? 0}
+            <strong>Estudiantes faltantes:</strong>{" "}
+            {summaryResult?.faltantes?.length ?? 0}
           </p>
           {summaryResult?.faltantes && summaryResult.faltantes.length > 0 && (
             <ul>
-              {summaryResult.faltantes.map((f, i) => (
-                <li key={`faltante-${i}`}>{f}</li>
+              {summaryResult.faltantes.map((codigo, i) => (
+                <li key={`faltante-${i}`}>Código: {codigo}</li>
               ))}
             </ul>
           )}
 
           <p>
-            <strong>Estudiantes sobrantes:</strong> {summaryResult?.sobrantes?.length ?? 0}
+            <strong>Estudiantes sobrantes:</strong>{" "}
+            {summaryResult?.sobrantes?.length ?? 0}
           </p>
           {summaryResult?.sobrantes && summaryResult.sobrantes.length > 0 && (
             <ul>
-              {summaryResult.sobrantes.map((s, i) => (
-                <li key={`sobrante-${i}`}>{s}</li>
+              {summaryResult.sobrantes.map((codigo, i) => (
+                <li key={`sobrante-${i}`}>{codigo}</li>
               ))}
             </ul>
           )}
 
           {/* Lógica corregida para permitir continuar o no */}
           {summaryResult &&
-            summaryResult.faltantes && summaryResult.faltantes.length === 0 &&
-            summaryResult.sobrantes && summaryResult.sobrantes.length === 0 ? (
+          summaryResult.faltantes &&
+          summaryResult.faltantes.length === 0 &&
+          summaryResult.sobrantes &&
+          summaryResult.sobrantes.length === 0 ? (
             <div style={{ marginTop: 16, textAlign: "right" }}>
-              <Button
-                variant="primary"
-                onClick={handleContinueFromSummary}
-              >
+              <Button variant="primary" onClick={handleContinueFromSummary}>
                 Continuar
               </Button>
             </div>
           ) : (
             <div style={{ marginTop: 12, color: "#a00" }}>
               <p>
-                No es posible continuar: existen filas faltantes o sobrantes. Corrige los archivos y vuelve a validar.
+                No es posible continuar hasta que ambas listas estén vacías.
               </p>
               <div style={{ marginTop: 16, textAlign: "right" }}>
                 <Button
@@ -393,35 +391,49 @@ const UploadFilesAP: React.FC<AssignmentProcessProps> = ({
             <>
               {/* Mostrar los lotes */}
               {codeBatches.map((batch, batchIndex) => (
-                <div key={batchIndex} style={{
-                  marginBottom: '20px',
-                  padding: '15px',
-                  border: '1px solid #ddd',
-                  borderRadius: '6px',
-                  backgroundColor: '#f9f9f9'
-                }}>
-                  <h4 style={{ margin: '0 0 10px 0', color: '#555' }}>
+                <div
+                  key={batchIndex}
+                  style={{
+                    marginBottom: "20px",
+                    padding: "15px",
+                    border: "1px solid #ddd",
+                    borderRadius: "6px",
+                    backgroundColor: "#f9f9f9",
+                  }}
+                >
+                  <h4 style={{ margin: "0 0 10px 0", color: "#555" }}>
                     Lote {batchIndex + 1}:
                   </h4>
-                  <p style={{ margin: 0, fontFamily: 'monospace', color: '#333' }}>
+                  <p
+                    style={{
+                      margin: 0,
+                      fontFamily: "monospace",
+                      color: "#333",
+                    }}
+                  >
                     {batch.join(", ")}
                   </p>
                 </div>
               ))}
 
-              <div style={{
-                textAlign: 'center',
-                marginTop: '20px',
-                paddingTop: '20px',
-                borderTop: '1px solid #e0e0e0'
-              }}>
-                <Button
-                  variant="primary"
-                  onClick={handleCopyAllCodes}
-                >
+              <div
+                style={{
+                  textAlign: "center",
+                  marginTop: "20px",
+                  paddingTop: "20px",
+                  borderTop: "1px solid #e0e0e0",
+                }}
+              >
+                <Button variant="primary" onClick={handleCopyAllCodes}>
                   Copiar Todos los Códigos Generados
                 </Button>
-                <p style={{ fontSize: '12px', color: '#666', margin: '10px 0 0 0' }}>
+                <p
+                  style={{
+                    fontSize: "12px",
+                    color: "#666",
+                    margin: "10px 0 0 0",
+                  }}
+                >
                   Máximo 1.00% de códigos
                 </p>
               </div>
