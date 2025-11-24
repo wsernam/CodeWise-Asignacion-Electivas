@@ -8,6 +8,8 @@ import {
 } from "react-icons/fa";
 import WarningModal from "../../../../components/shared/WarningModal/WarningModal";
 import Button from "../../../../components/ui/Button/Button";
+import BackButton from "../../../../components/ui/BackButton/BackButton";
+import NextButton from "../../../../components/ui/NextButton/NextButton";
 import SimpleModal from "../../../../components/shared/SimpleModal/SimpleModal";
 import MultipleFileUploader from "../../../../components/fileUploader/MultipleFileUploader";
 import ConfirmModal from "../../../../components/shared/ConfirmModal/ConfirmModal";
@@ -59,16 +61,21 @@ const UploadFilesAP: React.FC<AssignmentProcessProps> = ({
   currentStep,
   getStepBorderClass,
 }) => {
-  // ============================================================
-  //                          Modales
-  // ============================================================
   const [showModal, setShowModal] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [showWarningModal, setShowWarningModal] = useState(false);
-  const [warningMessage, setWarningMessage] = useState("");
+  const [warningMessage] = useState("");
 
   // Archivos subidos
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+
+  // Estado para el modal de análisis de formato
+  const [showFormatAnalysis, setShowFormatAnalysis] = useState(false);
+  const [formatResult, setFormatResult] = useState<{
+    cumple: boolean;
+    mensajes: string[];
+    resultado?: ValidationResult;
+  } | null>(null);
 
   // Estado para el modal de resumen de validación
   const [showSummaryModal, setShowSummaryModal] = useState(false);
@@ -81,16 +88,10 @@ const UploadFilesAP: React.FC<AssignmentProcessProps> = ({
   const [codeBatches, setCodeBatches] = useState<string[][]>([]);
   const [codeBatchesModal, setCodeBatchesModal] = useState(false);
 
-  // ============================================================
-  //                          Stores
-  // ============================================================
+  // Stores
   const { validarExcel, loading, error, clearError } =
     useExcelProcessingStore();
   const { addCompletedStep } = useAssignmentFlowStore();
-
-  // ============================================================
-  //                       Manejadores
-  // ============================================================
 
   // Manejar archivos subidos desde MultipleFileUploader
   const handleFilesUploaded = (files: File[]) => {
@@ -110,23 +111,14 @@ const UploadFilesAP: React.FC<AssignmentProcessProps> = ({
       const resultado = await validarExcel(uploadedFiles);
       console.log("Resultado del backend:", resultado);
 
-      // Verificar si hay advertencias
-      if (resultado.advertencias && resultado.advertencias.length > 0) {
-        console.warn("Advertencias del backend:", resultado.advertencias);
-        const mensajeAdvertencias = resultado.advertencias.join("\n\n");
-        setWarningMessage(mensajeAdvertencias);
-        setShowWarningModal(true);
-        return;
-      }
-      // Si no hay advertencias, proceder a mostrar el resumen
+      // PRIMERO: Mostrar análisis de formato
+      setFormatResult({
+        cumple: !resultado.advertencias || resultado.advertencias.length === 0,
+        mensajes: resultado.advertencias || [],
+        resultado: resultado,
+      });
       setShowModal(false);
-
-      // Pequeño delay para asegurar que el modal anterior se cierre completamente
-      setTimeout(() => {
-        setSummaryResult(resultado);
-        setShowSummaryModal(true);
-        console.log("Modal de resumen abierto:", true);
-      }, 100);
+      setShowFormatAnalysis(true);
     } catch (error: any) {
       console.error("Error validando archivos:", error);
       alert(`Error en validación: ${error.message}`);
@@ -134,7 +126,6 @@ const UploadFilesAP: React.FC<AssignmentProcessProps> = ({
   };
 
   const handleConfirmSave = () => {
-    console.log("Confirmando guardado, llamando onNext");
     setShowConfirm(false);
     setShowModal(false);
     setShowSummaryModal(false);
@@ -151,10 +142,7 @@ const UploadFilesAP: React.FC<AssignmentProcessProps> = ({
     }
   };
 
-  // ============================================================
-  //                 Funciones de Resumen
-  // ============================================================
-  // Función para manejar la continuacion desde el modal de resumen
+  // Función para manejar la continuación desde el modal de resumen
   const handleContinueFromSummary = () => {
     console.log("Continuando desde resumen");
     setShowSummaryModal(false);
@@ -162,16 +150,13 @@ const UploadFilesAP: React.FC<AssignmentProcessProps> = ({
     onNext();
   };
 
-  // ============================================================
-  //               Funciones de Lotes de Códigos
-  // ============================================================
 
-  // Funcion para generar lotes de codigos
+  // Función para generar lotes de códigos
   const handleGenerateCodeBatches = () => {
     console.log("Generando lotes de códigos...");
     setCodeBatchesModal(true);
+    setIsDownloadingCodes(true);
 
-    // Simulación de generación de lotes de códigos
     setTimeout(() => {
       const generatedBatches = [
         ["104622011437", "104622011439", "104622011440"],
@@ -179,31 +164,24 @@ const UploadFilesAP: React.FC<AssignmentProcessProps> = ({
       ];
       setCodeBatches(generatedBatches);
       setIsDownloadingCodes(false);
-      setCodeBatchesModal(true);
     }, 2000);
   };
 
-  // Abrir el modal de lotes de códigos
   const openCodeBatchesModal = () => {
     if (!codeBatches || codeBatches.length === 0) {
-      // Si no hay lotes generados, generarlos primero
       handleGenerateCodeBatches();
     } else {
       setCodeBatchesModal(true);
     }
   };
 
-  //Funcion para copiar los lotes de codigos
   const handleCopyAllCodes = () => {
     if (!codeBatches || codeBatches.length === 0) {
       console.log("No hay códigos para copiar.");
       return;
     }
 
-    // Convertir los lotes de códigos en un solo string
     const allCodes = codeBatches.flat().join("\n");
-
-    // Usar la API del portapapeles para copiar los códigos
     navigator.clipboard
       .writeText(allCodes)
       .then(() => {
@@ -213,11 +191,6 @@ const UploadFilesAP: React.FC<AssignmentProcessProps> = ({
         console.error("Error al copiar los códigos: ", err);
       });
   };
-
-  React.useEffect(() => {
-    console.log("Estado de showSummaryModal:", showSummaryModal);
-    console.log("Estado de summaryResult:", summaryResult);
-  }, [showSummaryModal, summaryResult]);
 
   return (
     <div className="aps-wrapper">
@@ -297,6 +270,73 @@ const UploadFilesAP: React.FC<AssignmentProcessProps> = ({
         </SimpleModal>
       )}
 
+      {/* Modal de Análisis de Formato - NUEVO */}
+      <SimpleModal
+        open={showFormatAnalysis}
+        title="Análisis de Formato"
+        onClose={() => setShowFormatAnalysis(false)}
+      >
+        <div style={{ maxHeight: 400, overflowY: "auto" }}>
+          {formatResult?.cumple ? (
+            <div>
+              <p>
+                <strong>Formato Correcto</strong>
+              </p>
+              <p>
+                Los archivos han pasado la validación de formato exitosamente.
+              </p>
+            </div>
+          ) : (
+            <div>
+              <p>
+                <strong>Problemas de Formato Detectados</strong>
+              </p>
+              <p>
+                Se encontraron los siguientes problemas que deben corregirse:
+              </p>
+              <ul>
+                {formatResult?.mensajes.map((msg, i) => (
+                  <li key={i} style={{ color: "#dc3545", marginBottom: "8px" }}>
+                    {msg}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              marginTop: "20px",
+            }}
+          >
+            <div style={{ width: "120px" }}>
+              <BackButton
+                onClick={() => {
+                  setShowFormatAnalysis(false);
+                  setShowModal(true);
+                }}
+                text="Volver"
+              />
+            </div>
+            <div style={{ width: "120px" }}>
+              <NextButton
+                onClick={() => {
+                  setShowFormatAnalysis(false);
+                  if (formatResult?.cumple && formatResult.resultado) {
+                    setSummaryResult(formatResult.resultado);
+                    setShowSummaryModal(true);
+                  }
+                }}
+                text="Siguiente"
+                disabled={!formatResult?.cumple}
+              />
+            </div>
+          </div>
+        </div>
+      </SimpleModal>
+
       {/* Modal de advertencia para errores de formato */}
       <WarningModal
         open={showWarningModal}
@@ -312,12 +352,11 @@ const UploadFilesAP: React.FC<AssignmentProcessProps> = ({
         onCancel={() => setShowConfirm(false)}
       />
 
-      {/* Modal de resumen de validación - CORREGIDO */}
+      {/* Modal de resumen de validación */}
       <SimpleModal
         open={showSummaryModal}
-        title="Análisis de Validación de Archivos Excel"
+        title="Resumen de validación"
         onClose={() => {
-          console.log("Cerrando modal de resumen");
           setShowSummaryModal(false);
         }}
       >
@@ -341,37 +380,68 @@ const UploadFilesAP: React.FC<AssignmentProcessProps> = ({
           {summaryResult?.sobrantes && summaryResult.sobrantes.length > 0 && (
             <ul>
               {summaryResult.sobrantes.map((codigo, i) => (
-                <li key={`sobrante-${i}`}>{codigo}</li>
+                <li key={`sobrante-${i}`}>Código: {codigo}</li>
               ))}
             </ul>
           )}
 
-          {/* Lógica corregida para permitir continuar o no */}
+          {/* Lógica para permitir continuar o no */}
           {summaryResult &&
           summaryResult.faltantes &&
           summaryResult.faltantes.length === 0 &&
           summaryResult.sobrantes &&
           summaryResult.sobrantes.length === 0 ? (
-            <div style={{ marginTop: 16, textAlign: "right" }}>
-              <Button variant="primary" onClick={handleContinueFromSummary}>
-                Continuar
-              </Button>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                marginTop: "16px",
+              }}
+            >
+              <div style={{ width: "120px" }}>
+                <BackButton
+                  onClick={() => {
+                    setShowSummaryModal(false);
+                    setShowFormatAnalysis(true);
+                  }}
+                  text="Volver"
+                />
+              </div>
+              <div style={{ width: "120px" }}>
+                <NextButton
+                  onClick={handleContinueFromSummary}
+                  text="Confirmar"
+                />
+              </div>
             </div>
           ) : (
             <div style={{ marginTop: 12, color: "#a00" }}>
               <p>
-                No es posible continuar hasta que ambas listas estén vacías.
+                No es posible continuar: existen filas faltantes o sobrantes.
+                Corrige los archivos y vuelve a validar.
               </p>
-              <div style={{ marginTop: 16, textAlign: "right" }}>
-                <Button
-                  variant="secondary"
-                  onClick={() => {
-                    console.log("Cerrando modal desde botón Cerrar");
-                    setShowSummaryModal(false);
-                  }}
-                >
-                  Cerrar
-                </Button>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  marginTop: "16px",
+                }}
+              >
+                <div style={{ width: "120px" }}>
+                  <BackButton
+                    onClick={() => {
+                      setShowSummaryModal(false);
+                      setShowFormatAnalysis(true);
+                    }}
+                    text="Volver"
+                  />
+                </div>
+                <div style={{ width: "120px" }}>
+                  <NextButton
+                    onClick={() => setShowSummaryModal(false)}
+                    text="Cerrar"
+                  />
+                </div>
               </div>
             </div>
           )}
@@ -389,7 +459,6 @@ const UploadFilesAP: React.FC<AssignmentProcessProps> = ({
             <p>Generando códigos, por favor espere...</p>
           ) : (
             <>
-              {/* Mostrar los lotes */}
               {codeBatches.map((batch, batchIndex) => (
                 <div
                   key={batchIndex}
@@ -415,7 +484,6 @@ const UploadFilesAP: React.FC<AssignmentProcessProps> = ({
                   </p>
                 </div>
               ))}
-
               <div
                 style={{
                   textAlign: "center",

@@ -7,6 +7,8 @@ import {
   FaClipboardList,
 } from "react-icons/fa";
 import Button from "../../../../components/ui/Button/Button";
+import BackButton from "../../../../components/ui/BackButton/BackButton";
+import NextButton from "../../../../components/ui/NextButton/NextButton";
 import SimpleModal from "../../../../components/shared/SimpleModal/SimpleModal";
 import ConfirmModal from "../../../../components/shared/ConfirmModal/ConfirmModal";
 import { useExcelProcessingStore } from "../../../../store/Assignment";
@@ -155,7 +157,11 @@ const InactivesManagementAP: React.FC<AssignmentProcessProps> = ({
   // Envía los datos al backend
   const handleSave = async () => {
     try {
-      // Preparar datos para enviar al backend
+      if (inactiveRows.length === 0) {
+        setShowConfirm(true);
+        return;
+      }
+      // Preparar datos para enviar al backend si hay por completar
       const filasACompletar = inactiveRows
         .filter((row) => row.codigo)
         .map((row) => ({
@@ -180,7 +186,6 @@ const InactivesManagementAP: React.FC<AssignmentProcessProps> = ({
       setShowConfirm(true);
     } catch (error) {
       console.error("Error guardando cambios:", error);
-      alert("Error al guardar los cambios. Intenta nuevamente.");
     }
   };
 
@@ -226,6 +231,27 @@ const InactivesManagementAP: React.FC<AssignmentProcessProps> = ({
                     Error: {error}
                   </div>
                 )}
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    marginTop: "20px",
+                  }}
+                >
+                  <div style={{ width: "120px" }}>
+                    <BackButton
+                      onClick={() => setShowModal(false)}
+                      text="Volver"
+                    />
+                  </div>
+                  <div style={{ width: "120px" }}>
+                    <NextButton
+                      onClick={handleSave}
+                      text="Confirmar"
+                      disabled={loading}
+                    />
+                  </div>
+                </div>
               </div>
             ) : (
               <>
@@ -233,22 +259,26 @@ const InactivesManagementAP: React.FC<AssignmentProcessProps> = ({
                   rows={inactiveRows}
                   onRowsChange={setInactiveRows}
                 />
-
                 <div
                   style={{
                     display: "flex",
-                    justifyContent: "flex-end",
-                    gap: "8px",
+                    justifyContent: "space-between",
                     marginTop: "16px",
                   }}
                 >
-                  <Button
-                    variant="primary"
-                    onClick={handleSave}
-                    disabled={loading || hayEstudiantesInactivos()}
-                  >
-                    {loading ? "Guardando..." : "Continuar"}
-                  </Button>
+                  <div style={{ width: "120px" }}>
+                    <BackButton
+                      onClick={() => setShowModal(false)}
+                      text="Volver"
+                    />
+                  </div>
+                  <div style={{ width: "120px" }}>
+                    <NextButton
+                      onClick={handleSave}
+                      text="Confirmar"
+                      disabled={loading || hayEstudiantesInactivos()}
+                    />
+                  </div>
                 </div>
               </>
             )}

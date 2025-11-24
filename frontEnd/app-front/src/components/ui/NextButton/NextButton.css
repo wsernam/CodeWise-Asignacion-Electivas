@@ -1,4 +1,4 @@
-.back-button {
+.next-button {
   background-color: #1f297f;
   color: #fff;
   border: none;
@@ -14,12 +14,14 @@
   justify-content: center;
 }
 
-.back-button:hover:not(:disabled) {
+.next-button:hover:not(.disabled) {
   background-color: #14206d;
   transform: translateY(-1px);
 }
 
-.back-button:disabled {
-  opacity: 0.6;
+.next-button.disabled {
+  background-color: #cccccc;
+  color: #666666;
   cursor: not-allowed;
+  transform: none;
 }
