@@ -2,6 +2,8 @@ import { create } from "zustand";
 import { assignmentProcessService } from "../../services/Assignment";
 import type { AssignmentProcess } from "../../models/Assignment/assignmentProcess";
 
+
+
 interface AssignmentProcessState {
   // ========== ESTADO ==========
   currentProcess: AssignmentProcess | null; // Proceso de asignación actual
@@ -24,7 +26,7 @@ interface AssignmentProcessState {
  * Se usa en el componente CreateProcess para iniciar nuevos procesos.
  */
 export const useAssignmentProcessStore = create<AssignmentProcessState>(
-  (set) => ({
+  (set, get) => ({
     // ========== ESTADO INICIAL ==========
     currentProcess: null,
     allProcess: [],
@@ -126,5 +128,28 @@ export const useAssignmentProcessStore = create<AssignmentProcessState>(
         throw error;
       }
     },
+    
+    // dentro del create(...)
+    ejecutarAsignacion: async (): Promise<any> => {
+      set({ loading: true, error: null });
+
+      try {
+        const proc = get().currentProcess; // <- aquí usamos get()
+        if (!proc) throw new Error("No hay proceso activo.");
+
+        const result = await assignmentProcessService.ejecutarAsignacion(
+          proc.pa_anio,
+          proc.pa_num_semestre
+          // opcional: "PIS"
+        );
+
+        set({ loading: false });
+        return result;
+      } catch (error: any) {
+        set({ loading: false, error: error.message });
+        throw error;
+      }
+  },
+
   })
 );

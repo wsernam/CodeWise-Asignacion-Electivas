@@ -145,4 +145,41 @@ export const assignmentProcessService = {
       throw error;
     }
   },
+
+  /**
+   * EJECUTAR LA ASIGNACIÓN (motor cupos firmes + espera)
+   * Endpoint: POST /api/asignacion/ejecutar/
+   * @param anio - año del período (ej. 2025)
+   * @param semestre - 1 | 2
+   * @param opts - opciones: proCodigo (solo para stats), estrategia, debug
+   * @returns resumen del proceso (creadas_firmes, creadas_en_espera, etc.)
+   */
+  // Ejecuta la asignación (cupo firme + lista de espera)
+  async ejecutarAsignacion(
+    anio: number,
+    semestre: number,
+    proCodigo?: string
+  ): Promise<any> {
+    const resp = await fetch(`${ASSIGNMENT_BASE_URL}/asignacion/ejecutar/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        anio,
+        semestre,
+        ...(proCodigo ? { pro_codigo: proCodigo } : {}),
+        debug: false,
+      }),
+    });
+
+    if (!resp.ok) {
+      let msg = `Error ejecutando asignación: ${resp.status} ${resp.statusText}`;
+      try {
+        const data = await resp.json();
+        if (data.detail) msg = data.detail;
+      } catch {}
+      throw new Error(msg);
+    }
+    return resp.json();
+  }
+
 };
