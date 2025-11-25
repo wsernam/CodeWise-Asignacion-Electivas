@@ -1,0 +1,145 @@
+{
+	"info": {
+		"_postman_id": "b4fb9e30-4036-4854-9aed-95ac4c1c77d5",
+		"name": "Gestion de reportes",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "38802838"
+	},
+	"item": [
+		{
+			"name": "reporte-seleccion-estudiante",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"est_codigo\": 104621011351,\n  \"sel_anio\": 2032,\n  \"sel_num_semestre\": 1,\n  \"est_correo\": \"ashleecampaz\",\n  \"electivas\": [\n    { \"ele_codigo\": \"IA08\", \"sel_prioridad\": 1 , \"ele_nombre\": \"Redes Avanzadas\"},\n    { \"ele_codigo\": \"DA09\", \"sel_prioridad\": 2 , \"ele_nombre\": \"Inteligencia Artificial\"},\n    { \"ele_codigo\": \"CN10\", \"sel_prioridad\": 3 , \"ele_nombre\": \"Sistemas Embebidos\"}\n  ]\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/reporte-seleccion/104621011351/2025/2",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"reporte-seleccion",
+						"104621011351",
+						"2025",
+						"2"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "reporte-oferta",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"est_codigo\": 104621011351,\n  \"sel_anio\": 2032,\n  \"sel_num_semestre\": 1,\n  \"est_correo\": \"ashleecampaz\",\n  \"electivas\": [\n    { \"ele_codigo\": \"IA08\", \"sel_prioridad\": 1 , \"ele_nombre\": \"Redes Avanzadas\"},\n    { \"ele_codigo\": \"DA09\", \"sel_prioridad\": 2 , \"ele_nombre\": \"Inteligencia Artificial\"},\n    { \"ele_codigo\": \"CN10\", \"sel_prioridad\": 3 , \"ele_nombre\": \"Sistemas Embebidos\"}\n  ]\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/reporte-oferta/2025/2",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"reporte-oferta",
+						"2025",
+						"2"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "reporte general seleccion",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/reporte-seleccion-general/2025/2",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"reporte-seleccion-general",
+						"2025",
+						"2"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "reporte gen asignacion",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8002/api/reporte-asignacion/pdf/reporte-asignacion-general/?anio=2025&semestre=2",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8002",
+					"path": [
+						"api",
+						"reporte-asignacion",
+						"pdf",
+						"reporte-asignacion-general",
+						""
+					],
+					"query": [
+						{
+							"key": "anio",
+							"value": "2025"
+						},
+						{
+							"key": "semestre",
+							"value": "2"
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"requests": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"requests": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": ""
+		}
+	]
+}
