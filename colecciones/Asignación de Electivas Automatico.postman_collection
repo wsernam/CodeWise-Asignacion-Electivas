@@ -136,38 +136,6 @@
 			"response": []
 		},
 		{
-			"name": "Eliminar asignacion ejecutada",
-			"request": {
-				"method": "DELETE",
-				"header": [],
-				"url": {
-					"raw": "http://localhost:8002/api/asignacion/purgar/?anio=2025&semestre=2",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "8002",
-					"path": [
-						"api",
-						"asignacion",
-						"purgar",
-						""
-					],
-					"query": [
-						{
-							"key": "anio",
-							"value": "2025"
-						},
-						{
-							"key": "semestre",
-							"value": "2"
-						}
-					]
-				}
-			},
-			"response": []
-		},
-		{
 			"name": "Lista de espera-firmes por electiva",
 			"request": {
 				"method": "GET",
@@ -322,6 +290,39 @@
 						"api",
 						"reporte-asignacion",
 						"lotes-selecciones",
+						""
+					],
+					"query": [
+						{
+							"key": "anio",
+							"value": "2025"
+						},
+						{
+							"key": "semestre",
+							"value": "2"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "reporte-asignacion-general",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8002/api/reporte-asignacion/pdf/reporte-asignacion-general/?anio=2025&semestre=2",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8002",
+					"path": [
+						"api",
+						"reporte-asignacion",
+						"pdf",
+						"reporte-asignacion-general",
 						""
 					],
 					"query": [

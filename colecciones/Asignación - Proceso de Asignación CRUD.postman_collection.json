@@ -92,12 +92,20 @@
 			"response": []
 		},
 		{
-			"name": "Eliminar proceso (DELETE)",
+			"name": "Eliminar proceso de asignacion: perfiles academicos, proceso actual y asignaciones realizadas",
 			"request": {
-				"method": "DELETE",
+				"method": "POST",
 				"header": [],
-				"url": "http://localhost:8002/api/asignacion/procesos/1/",
-				"description": "Elimina un proceso existente (solo pruebas locales)."
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:8002/api/asignacion/procesos/1/eliminar-todo/"
 			},
 			"response": []
 		}
