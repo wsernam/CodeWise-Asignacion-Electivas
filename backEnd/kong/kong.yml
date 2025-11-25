@@ -269,6 +269,27 @@ services:
             config:
               replace:
                 uri: /seleccion-electivas/
+
+      # ------------------------------------------------
+      # Estudiantes - POST (Público para estudiantes)
+      # ------------------------------------------------
+      - name: gestion-formulario-estudiantes-public-post
+        protocols:
+          - http
+          - https
+        methods:
+          - POST
+          - OPTIONS
+        paths:
+          - /gestion-formulario/estudiantes
+        strip_path: false
+        preserve_host: true
+        plugins:
+          - name: request-transformer
+            enabled: true
+            config:
+              replace:
+                uri: /estudiantes/
     
     plugins:
       - name: cors
@@ -350,7 +371,7 @@ services:
           - DELETE
           - OPTIONS
         paths:
-          - ~/gestion-formulario/admin/electivas/(?<pk>\d+)/?
+          - ~/gestion-formulario/admin/electivas/(?<pk>[^/]+)/?
         strip_path: false
         preserve_host: true
         plugins:
@@ -368,7 +389,7 @@ services:
           - PATCH
           - OPTIONS
         paths:
-          - ~/gestion-formulario/admin/electivas/(?<pk>\d+)/toggle_estado/?
+          - ~/gestion-formulario/admin/electivas/(?<pk>[^/]+)/toggle_estado/?
         strip_path: false
         preserve_host: true
         plugins:
@@ -377,6 +398,47 @@ services:
             config:
               replace:
                 uri: /electivas/$(uri_captures['pk'])/toggle_estado/
+      
+      # ------------------------------------------------
+      # Programas - Admin (POST, PUT, PATCH, DELETE)
+      # ------------------------------------------------
+      - name: gestion-formulario-programas-admin-create
+        protocols:
+          - http
+          - https
+        methods:
+          - POST
+          - OPTIONS
+        paths:
+          - /gestion-formulario/admin/programas
+        strip_path: false
+        preserve_host: true
+        plugins:
+          - name: request-transformer
+            enabled: true
+            config:
+              replace:
+                uri: /programas/
+      
+      - name: gestion-formulario-programas-admin-modify
+        protocols:
+          - http
+          - https
+        methods:
+          - PUT
+          - PATCH
+          - DELETE
+          - OPTIONS
+        paths:
+          - ~/gestion-formulario/admin/programas/(?<pk>[^/]+)/?
+        strip_path: false
+        preserve_host: true
+        plugins:
+          - name: request-transformer
+            enabled: true
+            config:
+              replace:
+                uri: /programas/$(uri_captures['pk'])/
       
       # ------------------------------------------------
       # Ofertas - Admin (POST, PUT, DELETE)
@@ -553,6 +615,84 @@ services:
             config:
               replace:
                 uri: /reporte-seleccion/$(uri_captures['est_codigo'])/$(uri_captures['anio'])/$(uri_captures['semestre'])/
+
+      # ------------------------------------------------
+      # Estudiantes - Admin (GET, PUT, PATCH, DELETE)
+      # ------------------------------------------------
+      - name: gestion-formulario-estudiantes-admin-list
+        protocols:
+          - http
+          - https
+        methods:
+          - GET
+          - OPTIONS
+        paths:
+          - /gestion-formulario/admin/estudiantes
+        strip_path: false
+        preserve_host: true
+        plugins:
+          - name: request-transformer
+            enabled: true
+            config:
+              replace:
+                uri: /estudiantes/
+      
+      - name: gestion-formulario-estudiantes-admin-modify
+        protocols:
+          - http
+          - https
+        methods:
+          - GET
+          - PUT
+          - PATCH
+          - DELETE
+          - OPTIONS
+        paths:
+          - ~/gestion-formulario/admin/estudiantes/(?<id>[^/]+)/?
+        strip_path: false
+        preserve_host: true
+        plugins:
+          - name: request-transformer
+            enabled: true
+            config:
+              replace:
+                uri: /estudiantes/$(uri_captures['id'])/
+
+      - name: gestion-formulario-estudiantes-admin-all
+        protocols:
+          - http
+          - https
+        methods:
+          - GET
+          - OPTIONS
+        paths:
+          - /gestion-formulario/admin/estudiantes/all
+        strip_path: false
+        preserve_host: true
+        plugins:
+          - name: request-transformer
+            enabled: true
+            config:
+              replace:
+                uri: /estudiantes/all/
+
+      - name: gestion-formulario-estudiantes-admin-info
+        protocols:
+          - http
+          - https
+        methods:
+          - GET
+          - OPTIONS
+        paths:
+          - /gestion-formulario/admin/estudiantes/info
+        strip_path: false
+        preserve_host: true
+        plugins:
+          - name: request-transformer
+            enabled: true
+            config:
+              replace:
+                uri: /estudiantes/info/
     
     plugins:
       - name: jwt
