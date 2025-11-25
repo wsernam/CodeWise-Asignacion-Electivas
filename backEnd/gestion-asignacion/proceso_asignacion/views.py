@@ -6,6 +6,9 @@ from rest_framework.exceptions import ValidationError
 
 from .models import ProcesoAsignacion
 from .serializers import ProcesoSerializer, ProcesoCambiarEstadoIn
+from .services.proceso_asignacion_reset import (
+    eliminar_todo_del_proceso,
+)
 
 class ProcesoCRUDViewSet(viewsets.ModelViewSet):
     queryset = ProcesoAsignacion.objects.all().order_by("-pa_fecha_creacion")
@@ -79,3 +82,33 @@ class ProcesoCRUDViewSet(viewsets.ModelViewSet):
             raise ValidationError({"detail": "No se pudo activar: ya hay otro ACTIVO."})
 
         return Response(ProcesoSerializer(obj).data)
+    
+     # eliminar perfiles, asignaciones y proceso
+    @action(detail=True, methods=["post"], url_path="eliminar-todo")
+    def eliminar_todo(self, request, pk=None):
+        """
+        Elimina TODO lo generado para este proceso:
+        - Perfiles académicos del año/semestre del proceso
+        - Asignaciones del año/semestre del proceso
+        - El propio ProcesoAsignacion
+
+        Solo si el proceso está ACTIVO y NO está FINALIZADO.
+        """
+        obj = self.get_object()  # por si luego quieres validar algo más
+
+        try:
+            eliminar_todo_del_proceso(obj.pa_codigo)
+        except DjangoValidationError as e:
+            # Convertimos la ValidationError de Django en ValidationError de DRF
+            raise ValidationError({"detail": e.message})
+
+        return Response(
+            {
+                "detail": (
+                    "Perfiles académicos, asignaciones y proceso de asignación "
+                    "eliminados correctamente. Ya puedes iniciar de nuevo la "
+                    "asignación para ese periodo."
+                )
+            },
+            status=status.HTTP_200_OK,
+        )
