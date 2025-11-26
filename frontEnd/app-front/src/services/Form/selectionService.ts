@@ -59,7 +59,7 @@ export const createSelectionService = async (
 ): Promise<ISelectionStudentElective> => {
   try {
     console.log("[selectionService] Creando selección:", s);
-    const response = await apiClient.post(`${SELECTION_URL_PUBLIC}/`, s);
+    const response = await apiClient.post(`${SELECTION_URL_PUBLIC}`, s);
     const created = transformSelection(response.data);
     console.log("[selectionService] Selección creada:", created);
     return created;

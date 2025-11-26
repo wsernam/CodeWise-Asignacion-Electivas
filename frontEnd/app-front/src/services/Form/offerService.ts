@@ -7,7 +7,7 @@ export const createBulkOffer = async (offerData: IOffer): Promise<any> => {
 
   try {
     const response = await apiClient.post(
-      `${OFFER_URL_PRIVATE}/ofertas/bulk-create/`,
+      `${OFFER_URL_PRIVATE}ofertas/bulk-create/`,
       offerData
     );
 
@@ -30,13 +30,13 @@ export const getOffersByProgram = async (
 ): Promise<any> => {
   try {
     const response = await apiClient.get(
-      `${OFFER_URL_PUBLIC}/ofertas/${year}/${semester}/${programCode}/`
+      `${OFFER_URL_PUBLIC}ofertas/${year}/${semester}/${programCode}/`
     );
     console.log(
       "[offerService] Ofertas obtenidas exitosamente: ",
       response.data
     );
-    console.log(`${OFFER_URL}/ofertas/${year}/${semester}/${programCode}/`)
+    console.log(`${OFFER_URL_PUBLIC}ofertas/${year}/${semester}/${programCode}/`)
     return response.data;
   } catch (error: any) {
     console.log(

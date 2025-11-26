@@ -192,29 +192,26 @@ export const getFacultiesFromPrograms = async (): Promise<
   Array<{ fac_codigo: number; fac_nombre: string }>
 > => {
   try {
-    console.log("[programService] Obteniendo facultades desde endpoint...");
+    console.log("[programService] Obteniendo facultades desde programas...");
 
-    const response = await fetch(`${FACULTIES_URL}/`);
+    const allPrograms = await getPrograms();
 
-    
+    // Extraer facultades únicas de los programas
+    const uniqueFaculties = allPrograms.reduce((acc, program) => {
+      const existing = acc.find((f) => f.fac_codigo === program.fac_codigo);
+      if (!existing) {
+        acc.push({
+          fac_codigo: program.fac_codigo,
+          fac_nombre: program.fac_nombre,
+        });
+      }
+      return acc;
+    }, [] as Array<{ fac_codigo: number; fac_nombre: string }>);
 
-    if (!response.ok) {
-      throw new Error(`Error: ${response.status} ${response.statusText}`);
-    }
-
-    const backendData = await response.json();
-    console.log("[programService] Facultades CRUDAS del backend:", backendData);
-
-    const faculties: Array<{ fac_codigo: number; fac_nombre: string }> =
-      backendData.map((item: any) => ({
-        fac_codigo: item.fac_codigo,
-        fac_nombre: item.fac_nombre,
-      }));
-
-    console.log("[programService] Facultades transformadas:", faculties);
-    return faculties;
+    console.log("[programService] Facultades obtenidas:", uniqueFaculties);
+    return uniqueFaculties;
   } catch (error) {
     console.error("[programService] Error obteniendo facultades:", error);
-    throw new Error("No se pudieron cargar las facultades");
+    throw error;
   }
 };
