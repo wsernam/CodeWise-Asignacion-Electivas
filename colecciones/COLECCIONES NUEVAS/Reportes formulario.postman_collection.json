@@ -1,0 +1,141 @@
+{
+	"info": {
+		"_postman_id": "23f6705c-09f4-4ccb-be5c-5bb14e6737d7",
+		"name": "Reportes formulario",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "39878300"
+	},
+	"item": [
+		{
+			"name": "reporte-seleccion-estudiante",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"est_codigo\": 104621011351,\n  \"sel_anio\": 2032,\n  \"sel_num_semestre\": 1,\n  \"est_correo\": \"ashleecampaz\",\n  \"electivas\": [\n    { \"ele_codigo\": \"IA08\", \"sel_prioridad\": 1 , \"ele_nombre\": \"Redes Avanzadas\"},\n    { \"ele_codigo\": \"DA09\", \"sel_prioridad\": 2 , \"ele_nombre\": \"Inteligencia Artificial\"},\n    { \"ele_codigo\": \"CN10\", \"sel_prioridad\": 3 , \"ele_nombre\": \"Sistemas Embebidos\"}\n  ]\n}"
+				},
+				"url": {
+					"raw": "{{base_formulario_protegido}}reporte-seleccion/104621011351/2025/2/",
+					"host": [
+						"{{base_formulario_protegido}}reporte-seleccion"
+					],
+					"path": [
+						"104621011351",
+						"2025",
+						"2",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "reporte-oferta",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"est_codigo\": 104621011351,\n  \"sel_anio\": 2032,\n  \"sel_num_semestre\": 1,\n  \"est_correo\": \"ashleecampaz\",\n  \"electivas\": [\n    { \"ele_codigo\": \"IA08\", \"sel_prioridad\": 1 , \"ele_nombre\": \"Redes Avanzadas\"},\n    { \"ele_codigo\": \"DA09\", \"sel_prioridad\": 2 , \"ele_nombre\": \"Inteligencia Artificial\"},\n    { \"ele_codigo\": \"CN10\", \"sel_prioridad\": 3 , \"ele_nombre\": \"Sistemas Embebidos\"}\n  ]\n}"
+				},
+				"url": {
+					"raw": "{{base_formulario_protegido}}reporte-oferta/2025/2/",
+					"host": [
+						"{{base_formulario_protegido}}reporte-oferta"
+					],
+					"path": [
+						"2025",
+						"2",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "reporte general seleccion",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_formulario_protegido}}reporte-seleccion-general/2025/2",
+					"host": [
+						"{{base_formulario_protegido}}reporte-seleccion-general"
+					],
+					"path": [
+						"2025",
+						"2"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"requests": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"requests": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": ""
+		}
+	]
+}

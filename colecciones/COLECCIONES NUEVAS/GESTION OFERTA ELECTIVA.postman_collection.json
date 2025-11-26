@@ -1,0 +1,180 @@
+{
+	"info": {
+		"_postman_id": "9880153e-8ad0-46d0-80be-29bfa8e31cab",
+		"name": "GESTION OFERTA ELECTIVA",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "39878300"
+	},
+	"item": [
+		{
+			"name": "RUTAS ADMIN",
+			"item": [
+				{
+					"name": "Editar Oferta",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"ofe_anio\": 2026,\n    \"ofe_num_semestre\": 2,\n    \"ele_codigo\": 1,\n    \"pro_codigo\": 1\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_formulario_protegido}}ofertas/1/",
+							"host": [
+								"{{base_formulario_protegido}}ofertas"
+							],
+							"path": [
+								"1",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Crear oferta",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"ofe_anio\": 2025,\n    \"ofe_num_semestre\": 1,\n    \"ele_codigo\": 1,\n    \"pro_codigo\": 1\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_formulario_protegido}}ofertas/",
+							"host": [
+								"{{base_formulario_protegido}}ofertas"
+							],
+							"path": [
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Crear oferta con lista electivas",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"ofe_anio\": 2025,\r\n    \"ofe_num_semestre\": 1,\r\n    \"ofertas\": [\r\n        { \"ele_codigo\": 4, \"pro_codigo\": 5 },\r\n        { \"ele_codigo\": 5, \"pro_codigo\": 5 },\r\n        { \"ele_codigo\": 6, \"pro_codigo\": 4 }\r\n    ]\r\n}\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_formulario_protegido}}/ofertas/bulk-create/",
+							"host": [
+								"{{base_formulario_protegido}}"
+							],
+							"path": [
+								"ofertas",
+								"bulk-create",
+								""
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "RUTAS PUBLICAS",
+			"item": [
+				{
+					"name": "Listar Oferta por Año y Semesre",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_formulario_publico}}ofertas/2025/2/",
+							"host": [
+								"{{base_formulario_publico}}ofertas"
+							],
+							"path": [
+								"2025",
+								"2",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Listar por año, semestre y programa",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_formulario_publico}}ofertas/2025/2/PIS/",
+							"host": [
+								"{{base_formulario_publico}}ofertas"
+							],
+							"path": [
+								"2025",
+								"2",
+								"PIS",
+								""
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}

@@ -1,0 +1,263 @@
+{
+	"info": {
+		"_postman_id": "e6bb7d3c-a30c-4ba5-8072-648363279664",
+		"name": "Reportes Asignación",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "39878300"
+	},
+	"item": [
+		{
+			"name": "Reporte General de Asignación (PDF)",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"anio\": 2025,\r\n    \"semestre\": 2\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_asignacion}}api/reporte-asignacion/pdf/asignacion-general/?anio=2025&semestre=2",
+					"host": [
+						"{{base_asignacion}}api"
+					],
+					"path": [
+						"reporte-asignacion",
+						"pdf",
+						"asignacion-general",
+						""
+					],
+					"query": [
+						{
+							"key": "anio",
+							"value": "2025"
+						},
+						{
+							"key": "semestre",
+							"value": "2"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Reporte General de Asignación con Gráficas",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_asignacion}}api/reporte-asignacion/pdf/reporte-asignacion-general/?anio=2025&semestre=2",
+					"host": [
+						"{{base_asignacion}}api"
+					],
+					"path": [
+						"reporte-asignacion",
+						"pdf",
+						"reporte-asignacion-general",
+						""
+					],
+					"query": [
+						{
+							"key": "anio",
+							"value": "2025"
+						},
+						{
+							"key": "semestre",
+							"value": "2"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Reporte por Electiva (PDF)",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_asignacion}}api/reporte-asignacion/pdf/electiva/ELEC001/?anio=2025&semestre=2",
+					"host": [
+						"{{base_asignacion}}api"
+					],
+					"path": [
+						"reporte-asignacion",
+						"pdf",
+						"electiva",
+						"ELEC001",
+						""
+					],
+					"query": [
+						{
+							"key": "anio",
+							"value": "2025"
+						},
+						{
+							"key": "semestre",
+							"value": "2"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Reporte por Estudiante (PDF)",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_asignacion}}api/reporte-asignacion/pdf/estudiante/200000000001/?anio=2025&semestre=2",
+					"host": [
+						"{{base_asignacion}}api"
+					],
+					"path": [
+						"reporte-asignacion",
+						"pdf",
+						"estudiante",
+						"200000000001",
+						""
+					],
+					"query": [
+						{
+							"key": "anio",
+							"value": "2025"
+						},
+						{
+							"key": "semestre",
+							"value": "2"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Reporte de Lotes de Selecciones (PDF)",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_asignacion}}api/reporte-asignacion/pdf/lotes-selecciones/?anio=2025&semestre=2",
+					"host": [
+						"{{base_asignacion}}api"
+					],
+					"path": [
+						"reporte-asignacion",
+						"pdf",
+						"lotes-selecciones",
+						""
+					],
+					"query": [
+						{
+							"key": "anio",
+							"value": "2025"
+						},
+						{
+							"key": "semestre",
+							"value": "2"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Lotes de Códigos de Selecciones (JSON)",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_asignacion}}api/reporte-asignacion/lotes-selecciones/?anio=2025&semestre=2",
+					"host": [
+						"{{base_asignacion}}api"
+					],
+					"path": [
+						"reporte-asignacion",
+						"lotes-selecciones",
+						""
+					],
+					"query": [
+						{
+							"key": "anio",
+							"value": "2025"
+						},
+						{
+							"key": "semestre",
+							"value": "2"
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

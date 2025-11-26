@@ -1,0 +1,424 @@
+{
+	"info": {
+		"_postman_id": "787342a8-2d92-4ecc-8c03-a67c1a5d9555",
+		"name": "Asignación de Electivas (payload)",
+		"description": "Prueba E2E de asignación: usa PerfilAcadémico de BD, y recibe cupos + preferencias por payload.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "39878300"
+	},
+	"item": [
+		{
+			"name": "RUTAS ASIGNADOR",
+			"item": [
+				{
+					"name": "Ejecutar asignación electivas",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// --- Tests automáticos ---",
+									"pm.test(\"HTTP 200\", () => pm.response.code === 200);",
+									"",
+									"const json = pm.response.json();",
+									"",
+									"// Estructura básica",
+									"pm.test(\"Respuesta tiene resumen o asignados\", function () {",
+									"  pm.expect(json).to.be.an('object');",
+									"  pm.expect(json.resumen || json.asignados).to.exist;",
+									"});",
+									"",
+									"// Si viene 'resumen', validar campos clave",
+									"if (json.resumen) {",
+									"  pm.test(\"Resumen incluye totales\", function () {",
+									"    pm.expect(json.resumen).to.have.property('asignados');",
+									"    pm.expect(json.resumen).to.have.property('pendientes');",
+									"  });",
+									"}",
+									"",
+									"// Listas de espera coherentes (si existen)",
+									"if (json.listas_espera) {",
+									"  pm.test(\"Listas de espera con formato válido\", function () {",
+									"    pm.expect(json.listas_espera).to.be.an('array');",
+									"  });",
+									"}",
+									"",
+									"// Guarda en variables para inspección rápida",
+									"if (json.resumen && json.resumen.asignados !== undefined) {",
+									"  pm.environment.set('asignados_total', json.resumen.asignados);",
+									"}",
+									"if (json.pendientes) {",
+									"  pm.environment.set('pendientes_total', json.pendientes.length);",
+									"}"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "    {\n      \"anio\": 2025,\n      \"semestre\": 2\n    }"
+						},
+						"url": {
+							"raw": "{{base_asignacion}}api/asignacion/ejecutar/",
+							"host": [
+								"{{base_asignacion}}api"
+							],
+							"path": [
+								"asignacion",
+								"ejecutar",
+								""
+							]
+						},
+						"description": "Ejecuta la asignación usando ranking nivelado→promedio→avance. Cupos y preferencias vienen en el payload."
+					},
+					"response": []
+				},
+				{
+					"name": "Lista de estudiante por prioridad (porcentaje de avance, promedio)Ranking",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_asignacion}}api/ListaPrioridadEstudiantes/prioridad/?anio=2025&num_semestre=2",
+							"host": [
+								"{{base_asignacion}}api"
+							],
+							"path": [
+								"ListaPrioridadEstudiantes",
+								"prioridad",
+								""
+							],
+							"query": [
+								{
+									"key": "anio",
+									"value": "2025"
+								},
+								{
+									"key": "num_semestre",
+									"value": "2"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Resumen asignacion de estudiantes (listar asignaciones)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_asignacion}}api/asignacion/resumen-estudiantes/?anio=2025&semestre=2",
+							"host": [
+								"{{base_asignacion}}api"
+							],
+							"path": [
+								"asignacion",
+								"resumen-estudiantes",
+								""
+							],
+							"query": [
+								{
+									"key": "anio",
+									"value": "2025"
+								},
+								{
+									"key": "semestre",
+									"value": "2"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Lista de espera-firmes por electiva",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_asignacion}}api/asignacion/ranking-asignados/?anio=2025&semestre=2&ele_codigo=ELEC001",
+							"host": [
+								"{{base_asignacion}}api"
+							],
+							"path": [
+								"asignacion",
+								"ranking-asignados",
+								""
+							],
+							"query": [
+								{
+									"key": "anio",
+									"value": "2025"
+								},
+								{
+									"key": "semestre",
+									"value": "2"
+								},
+								{
+									"key": "ele_codigo",
+									"value": "ELEC001"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Electivas asignadas a un estudiante",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_asignacion}}api/asignacion/resumen-estudiantes/?anio=2025&semestre=2&est_codigo=104621011376",
+							"host": [
+								"{{base_asignacion}}api"
+							],
+							"path": [
+								"asignacion",
+								"resumen-estudiantes",
+								""
+							],
+							"query": [
+								{
+									"key": "anio",
+									"value": "2025"
+								},
+								{
+									"key": "semestre",
+									"value": "2"
+								},
+								{
+									"key": "est_codigo",
+									"value": "104621011376"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Reporte electivas asignadas a un estudiante",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_asignacion}}api/reporte-asignacion/pdf/estudiante/104621011382/?anio=2025&semestre=2",
+							"host": [
+								"{{base_asignacion}}api"
+							],
+							"path": [
+								"reporte-asignacion",
+								"pdf",
+								"estudiante",
+								"104621011382",
+								""
+							],
+							"query": [
+								{
+									"key": "anio",
+									"value": "2025"
+								},
+								{
+									"key": "semestre",
+									"value": "2"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Generar PDF lotes codigos estudiantes",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_asignacion}}api/reporte-asignacion/pdf/lotes-selecciones/?anio=2025&semestre=2",
+							"host": [
+								"{{base_asignacion}}api"
+							],
+							"path": [
+								"reporte-asignacion",
+								"pdf",
+								"lotes-selecciones",
+								""
+							],
+							"query": [
+								{
+									"key": "anio",
+									"value": "2025"
+								},
+								{
+									"key": "semestre",
+									"value": "2"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Retorna Lotes estudiantes",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_asignacion}}api/reporte-asignacion/lotes-selecciones/?anio=2025&semestre=2",
+							"host": [
+								"{{base_asignacion}}api"
+							],
+							"path": [
+								"reporte-asignacion",
+								"lotes-selecciones",
+								""
+							],
+							"query": [
+								{
+									"key": "anio",
+									"value": "2025"
+								},
+								{
+									"key": "semestre",
+									"value": "2"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "reporte-asignacion-general",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_asignacion}}api/reporte-asignacion/pdf/reporte-asignacion-general/?anio=2025&semestre=2",
+							"host": [
+								"{{base_asignacion}}api"
+							],
+							"path": [
+								"reporte-asignacion",
+								"pdf",
+								"reporte-asignacion-general",
+								""
+							],
+							"query": [
+								{
+									"key": "anio",
+									"value": "2025"
+								},
+								{
+									"key": "semestre",
+									"value": "2"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}

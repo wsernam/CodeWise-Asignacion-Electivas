@@ -1,0 +1,453 @@
+{
+	"info": {
+		"_postman_id": "edf603bd-c56d-43cc-8836-c9a6d7c823cc",
+		"name": "Estudiantes API (CRUD + Tests)",
+		"description": "Colección para probar creación, validaciones, actualización, activación/desactivación y eliminación de Estudiantes en DRF.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "39878300"
+	},
+	"item": [
+		{
+			"name": "RUTAS PUBLICAS",
+			"item": [
+				{
+					"name": "11. Verificar Desactivado (GET)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('200 OK', function () { pm.response.to.have.status(200); });",
+									"let b = pm.response.json();",
+									"pm.test('Sigue false', function(){ pm.expect(b.est_activo).to.eql(false); });"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_formulario_publico}}/estudiantes/{{estudianteId}}/",
+							"host": [
+								"{{base_formulario_publico}}"
+							],
+							"path": [
+								"estudiantes",
+								"{{estudianteId}}",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "5. Crear Estudiante",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('400 Bad Request', function () { pm.response.to.have.status(400); });"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"est_codigo\": 200000000030,\n    \"est_nombre\": \"Email\",\n    \"est_apellido\": \"Invalido\",\n    \"est_correo\": \"no-es-email@gmail.com\",\n    \"pro_codigo\": \"PIS\",\n    \"est_activo\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_formulario_publico}}/estudiantes/",
+							"host": [
+								"{{base_formulario_publico}}"
+							],
+							"path": [
+								"estudiantes",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "6. Listar Estudiantes (GET)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('200 OK', function () { pm.response.to.have.status(200); });",
+									"let data = pm.response.json();",
+									"pm.test('Retorna arreglo o paginado', function(){",
+									"  pm.expect(Array.isArray(data) || (data && data.results)).to.eql(true);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_formulario_publico}}/estudiantes/",
+							"host": [
+								"{{base_formulario_publico}}"
+							],
+							"path": [
+								"estudiantes",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "7. Obtener Detalle (GET by id)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('200 OK', function () { pm.response.to.have.status(200); });",
+									"const body = pm.response.json();",
+									"pm.test('Coincide id', function(){",
+									"  pm.expect(String(body.est_codigo||body.id||body.pk)).to.eql(String(pm.collectionVariables.get('estudianteId')));",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_formulario_publico}}/estudiantes/200000000001/",
+							"host": [
+								"{{base_formulario_publico}}"
+							],
+							"path": [
+								"estudiantes",
+								"200000000001",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "14. Obtener eliminado (GET -> 404)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('404 Not Found', function () { pm.response.to.have.status(404); });"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_formulario_publico}}/estudiantes/{{estudianteId}}/",
+							"host": [
+								"{{base_formulario_publico}}"
+							],
+							"path": [
+								"estudiantes",
+								"{{estudianteId}}",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "9. Actualizar Parcial (PATCH est_nombre)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('200 OK', function () { pm.response.to.have.status(200); });",
+									"let b = pm.response.json();",
+									"pm.test('Nombre actualizado', function(){",
+									"  pm.expect(b.est_nombre).to.eql('NombrePATCH');",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"est_nombre\": \"NombrePATCH\"\n}"
+						},
+						"url": {
+							"raw": "{{base_formulario_publico}}/estudiantes/200000000001/",
+							"host": [
+								"{{base_formulario_publico}}"
+							],
+							"path": [
+								"estudiantes",
+								"200000000001",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "8. Actualizar (PUT)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('200 OK', function () { pm.response.to.have.status(200); });",
+									"let b = pm.response.json();",
+									"pm.test('Nombre y apellido actualizados', function(){",
+									"  pm.expect(b.est_nombre).to.eql('NombrePUT');",
+									"  pm.expect(b.est_apellido).to.eql('ApellidoPUT');",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"est_codigo\": 20000000001,\n    \"est_nombre\": \"Email\",\n    \"est_apellido\": \"Invalido\",\n    \"est_correo\": \"no-es-em@gmail.com\",\n    \"pro_codigo\": \"PIS\",\n    \"est_activo\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_formulario_publico}}/estudiantes/{{estudianteId}}/",
+							"host": [
+								"{{base_formulario_publico}}"
+							],
+							"path": [
+								"estudiantes",
+								"{{estudianteId}}",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "10. Desactivar (PATCH est_activo=false)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('200 OK', function () { pm.response.to.have.status(200); });",
+									"let b = pm.response.json();",
+									"pm.test('est_activo false', function(){",
+									"  pm.expect(b.est_activo).to.eql(false);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{ \"est_activo\": false }"
+						},
+						"url": {
+							"raw": "{{base_formulario_publico}}/estudiantes/{{estudianteId}}/",
+							"host": [
+								"{{base_formulario_publico}}"
+							],
+							"path": [
+								"estudiantes",
+								"{{estudianteId}}",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "13. Eliminar (DELETE -> 204)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('204 No Content', function () { pm.response.to.have.status(204); });"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_formulario_publico}}/estudiantes/{{estudianteId}}/",
+							"host": [
+								"{{base_formulario_publico}}"
+							],
+							"path": [
+								"estudiantes",
+								"{{estudianteId}}",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "12. Reactivar (PATCH est_activo=true)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('200 OK', function () { pm.response.to.have.status(200); });",
+									"let b = pm.response.json();",
+									"pm.test('est_activo true', function(){ pm.expect(b.est_activo).to.eql(true); });"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{ \"est_activo\": true }"
+						},
+						"url": {
+							"raw": "{{base_formulario_publico}}/estudiantes/{{estudianteId}}/",
+							"host": [
+								"{{base_formulario_publico}}"
+							],
+							"path": [
+								"estudiantes",
+								"{{estudianteId}}",
+								""
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8000/api"
+		},
+		{
+			"key": "proCodigo",
+			"value": ""
+		},
+		{
+			"key": "invalidProgId",
+			"value": "999999"
+		},
+		{
+			"key": "estudianteId",
+			"value": ""
+		},
+		{
+			"key": "studentEmail",
+			"value": ""
+		}
+	]
+}
