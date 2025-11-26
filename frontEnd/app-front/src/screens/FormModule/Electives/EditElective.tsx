@@ -54,6 +54,17 @@ const EditElective: React.FC = () => {
           ele_nombre: elective.ele_nombre,
           pro_codigo: elective.pro_codigo,
         });
+
+        // 🔹 Marcar los campos como tocados automáticamente
+        setTouchedFields({
+          ele_nombre: true,
+          pro_codigo: true
+        });
+
+        // 🔹 Forzar validación de los valores cargados
+        form.validateFields().then(() => {
+          setIsFormValid(true);
+        });
         setElectiveFound(true);
       } else {
         setWarning({

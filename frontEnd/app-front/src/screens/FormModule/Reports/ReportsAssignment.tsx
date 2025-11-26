@@ -16,12 +16,18 @@ const ReportsAssignment: React.FC = () => {
   const [estId, setEstId] = useState<string>("");
   const [eleCodigo, setEleCodigo] = useState<string>("");
 
+  const isGenerateDisabled =
+  isGenerating ||
+  (selectedReportType === "por-estudiante" && !estId.trim()) ||
+  (selectedReportType === "por-electiva" && !eleCodigo.trim());
+
   // Limpia el blob anterior
   useEffect(() => {
     return () => {
       if (generatedReport) URL.revokeObjectURL(generatedReport);
     };
   }, [generatedReport]);
+  
 
   const handleGenerateReport = async () => {
     setIsGenerating(true);
@@ -85,7 +91,7 @@ const ReportsAssignment: React.FC = () => {
             onReportTypeChange={setSelectedReportType}
             onGenerate={handleGenerateReport}
             isGenerating={isGenerating}
-            isGenerateDisabled={false} // Agregar esta prop faltante
+            isGenerateDisabled={isGenerateDisabled} // Agregar esta prop faltante
           />
 
           {/* Campos extra según tipo */}
