@@ -117,7 +117,7 @@ services:
       - ./servicio_seguridad_jwt:/app # Monta todo el proyecto en /app dentro del contenedor
         # IMPORTANTE: usar la misma convención en todos los microservicios
     ports:
-      - "8000:8000" # Expone el puerto 8000 para acceder al servicio de seguridad
+      - "8003:8000" # Expone el puerto 8000 para acceder al servicio de seguridad
     env_file:
       - ./servicio_seguridad_jwt/.env # Archivo .env con variables de configuración
     depends_on:
@@ -136,7 +136,7 @@ services:
       - ./gestion-formulario:/app # Monta todo el proyecto en /app dentro del contenedor
         # IMPORTANTE: usar la misma convención en todos los microservicios
     ports:
-      - "8001:8000" # Expone el puerto 8001 para acceder al servicio
+      - "8002:8000" # Expone el puerto 8002 para acceder al servicio
 
     env_file:
       - .env
@@ -180,9 +180,9 @@ services:
     volumes:
       - ./gestion-asignacion:/app # Monta todo el proyecto en /app dentro del contenedor
         # IMPORTANTE: usar la misma convención en todos los microservicios
-    ports:
-      - "8002:8000" # Expone el puerto 8002 para acceder al servicio
 
+    #SE ELIMINA EL PUERTO EXPUESTO PARA QUE SOLO SEA ACCESIBLE VIA KONG UWU
+      
     env_file:
       - .env
     environment:
@@ -249,12 +249,113 @@ services:
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq # Volumen persistente para datos de RabbitMQ
 
-# -------------------------------
-# Definición de volúmenes persistentes
-# -------------------------------
+
+
+
+
+
+    # ---------------------------------------
+  # PostgreSQL para Kong
+  # ---------------------------------------
+  kong-database:
+    image: postgres:14
+    container_name: kong_database
+    restart: always
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB_KONG}
+      POSTGRES_USER: ${POSTGRES_USER_KONG}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD_KONG}
+    volumes:
+      - kong_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "kong"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "5432:5432"
+
+  # ---------------------------------------
+  # Kong Migrations (ejecutar migraciones primero)
+  # ---------------------------------------
+  kong-migrations:
+    image: kong:3.6
+    container_name: kong_migrations
+    depends_on:
+      kong-database:
+        condition: service_healthy
+    environment:
+      KONG_DATABASE: postgres
+      KONG_PG_HOST: ${POSTGRES_HOST_KONG}
+      KONG_PG_USER: ${POSTGRES_USER_KONG}
+      KONG_PG_PASSWORD: ${POSTGRES_PASSWORD_KONG}
+      KONG_PG_DATABASE: ${POSTGRES_DB_KONG}
+    command: kong migrations bootstrap
+    restart: "no"  # Cambiar a "no" para que no se reinicie constantemente
+
+  # ---------------------------------------
+  # KONG (API Gateway)
+  # ---------------------------------------
+  kong:
+    image: kong:3.6
+    container_name: kong
+    restart: always
+    depends_on:
+      kong-database:
+        condition: service_healthy
+      kong-migrations:
+        condition: service_completed_successfully  # Esperar a que migrations termine
+    environment:
+      KONG_DATABASE: postgres
+      KONG_PG_HOST: ${POSTGRES_HOST_KONG}
+      KONG_PG_USER: ${POSTGRES_USER_KONG}
+      KONG_PG_PASSWORD: ${POSTGRES_PASSWORD_KONG}
+      KONG_PG_DATABASE: ${POSTGRES_DB_KONG}
+      KONG_PROXY_LISTEN: "0.0.0.0:8000"
+      KONG_ADMIN_LISTEN: "0.0.0.0:8001"
+      KONG_PROXY_ACCESS_LOG: /dev/stdout
+      KONG_ADMIN_ACCESS_LOG: /dev/stdout
+      KONG_PROXY_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_ERROR_LOG: /dev/stderr
+    ports:
+      - "8000:8000" # Proxy
+      - "8001:8001" # Admin API
+    volumes:
+      - ./kong/kong.yml:/opt/kong/deck/kong.yml
+    healthcheck:
+      test: ["CMD", "kong", "health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # ---------------------------------------
+  # Cargar deck automáticamente
+  # ---------------------------------------
+  deck-init:
+    image: kong/deck:latest
+    container_name: deck_init
+    depends_on:
+      kong:
+        condition: service_healthy
+    volumes:
+      - ./kong/kong.yml:/deck/kong.yml
+    entrypoint: >
+      sh -c "
+      echo 'Kong está listo, aplicando configuración...' &&
+      if deck diff -s /deck/kong.yml --kong-addr=http://kong:8001 2>/dev/null | grep -q 'no changes'; then
+        echo 'Configuración ya aplicada, no se hace nada.';
+      else
+        echo 'Aplicando cambios de configuración...' &&
+        deck sync -s /deck/kong.yml --kong-addr=http://kong:8001;
+      fi &&
+      echo 'Deck sincronizado exitosamente.'
+      "
+    restart: "no"
+
 volumes:
-  volumen_db_usuarios: # Volumen nombrado para almacenar datos de MySQL
+  volumen_db_usuarios:
   volumen_db_formulario:
   volumen_db_asignacion:
-  rabbitmq_data: # Volumen para datos de RabbitMQ
-
+  rabbitmq_data:
+  kong_db_data:

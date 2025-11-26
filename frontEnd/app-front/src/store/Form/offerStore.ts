@@ -1,9 +1,6 @@
 import { create } from "zustand";
 import type { IOffer } from "../../models/Form/offer";
-import {
-  createBulkOffer,
-  getOffersByProgram,
-} from "../../services/Form/offerService";
+import {createBulkOffer, getOffersByProgram} from "../../services/Form/offerService";
 
 interface OfferState {
   loading: boolean;

@@ -1,4 +1,4 @@
-import { LOGIN_URL } from "../config/config";
+import { AUTH_API_BASE_URL } from "../config/config";
 /**
  * @brief Servicio de autenticacion del administrador y asignador.
  *
@@ -11,7 +11,7 @@ import { LOGIN_URL } from "../config/config";
  */
 export const loginAdminService = async (username: string, password: string) => {
   try {
-    const response = await fetch(LOGIN_URL, {
+    const response = await fetch(AUTH_API_BASE_URL, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -37,7 +37,7 @@ export const loginAdminService = async (username: string, password: string) => {
  */
 export const loginStudentService = async (username: string) => {
   try {
-    const response = await fetch(LOGIN_URL, {
+    const response = await fetch(AUTH_API_BASE_URL, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

@@ -7,6 +7,7 @@ from gestion_electivas.models import Electiva
 from .serializers import ElectivaSerializer
 from events.oferta_publisher import publish_oferta_creada, publish_oferta_actualizada, publish_oferta_eliminada
 from django.db import transaction # IMPORT
+from core.permissions import IsAdministrador
 
 # Endpoint para crear y listar (todos los años/semestres)
 # Utilizaremos este para 'Crear oferta_electiva'
@@ -15,6 +16,7 @@ from django.db import transaction # IMPORT
 class OfertaElectivaCreateView(generics.CreateAPIView):
     queryset = Oferta_electiva.objects.all()
     serializer_class = OfertaElectivaSerializer
+    permission_classes = [IsAdministrador]
     def perform_create(self, serializer):
         instance = serializer.save()
         payload = _serialize_oferta(instance)
@@ -24,6 +26,7 @@ class OfertaElectivaCreateView(generics.CreateAPIView):
 # Endpoint para crear múltiples ofertas de electivas a la vez
 class OfertaElectivaBulkCreateView(generics.CreateAPIView):
     serializer_class = OfertaElectivaBulkCreateSerializer
+    permission_classes = [IsAdministrador]
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -40,6 +43,7 @@ class OfertaElectivaBulkCreateView(generics.CreateAPIView):
 class OfertaElectivaUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Oferta_electiva.objects.all()
     serializer_class = OfertaElectivaSerializer
+    permission_classes = [IsAdministrador]
     # Usamos `lookup_field` para especificar que la URL usará el campo
     # 'ofe_codigo' para buscar el objeto
     lookup_field = 'ofe_codigo'

@@ -1,68 +1,60 @@
 import json
 from django.http import JsonResponse
-from django.views.decorators.http import require_http_methods
-from django.views.decorators.csrf import csrf_exempt
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
 from .models import Formulario
+from core.permissions import IsAdministrador
 
-@require_http_methods(["GET"])
-def get_formulario_estado(request):
+class GetFormularioEstadoView(APIView):
     """
     Endpoint para obtener el estado actual del formulario.
     """
-    # Siempre habrá solo una instancia de Formulario.
-    # Si no existe, la crea con estado=False.
-    formulario_instance, created = Formulario.objects.get_or_create(id=1)
-    
-    return JsonResponse({
-        "success": True,
-        "estado": formulario_instance.estado
-    })
-
-@require_http_methods(["POST"])
-@csrf_exempt
-def toggle_formulario(request):
-    """
-    Endpoint para estabelcer el estado del formulario
-    """
-    # Siempre habrá solo una instancia de Formulario.
-    # Si no existe, la crea con estado=False.
-    formulario_instance, created = Formulario.objects.get_or_create(id=1)
-    
-    # Invierte el estado actual
-    #formulario_instance.estado = not formulario_instance.estado
-    #formulario_instance.save()
-
-    try:
-        data = json.loads(request.body)
-        nuevo_estado = data.get('estado')
-        if nuevo_estado is None:
-            return JsonResponse({
-                "success": False, 
-                "message": "Falta el campo 'estado'."}, status=400)
-        # Establece el nuevo estado
-        formulario_instance.estado = bool(nuevo_estado)
-        formulario_instance.save()
-
-        return JsonResponse({
+    def get(self, request, *args, **kwargs):
+        formulario_instance, created = Formulario.objects.get_or_create(id=1)
+        return Response({
             "success": True,
-            "estado": f"{'activado' if formulario_instance.estado else 'desactivado'}"
+            "estado": formulario_instance.estado
         })
-    except json.JSONDecodeError as e:
-        return JsonResponse({
-            "success": False,
-            "message": "JSON no válido"
-        }, status=400)
-    
+
+class ToggleFormularioView(APIView):
+    """
+    Endpoint para establecer el estado del formulario.
+    """
+    permission_classes = [IsAdministrador]
+
+    def post(self, request, *args, **kwargs):
+        formulario_instance, created = Formulario.objects.get_or_create(id=1)
+        
+        try:
+            nuevo_estado = request.data.get('estado')
+            if nuevo_estado is None:
+                return Response({
+                    "success": False, 
+                    "message": "Falta el campo 'estado'."
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            formulario_instance.estado = bool(nuevo_estado)
+            formulario_instance.save()
+
+            return Response({
+                "success": True,
+                "estado": f"{'activado' if formulario_instance.estado else 'desactivado'}"
+            })
+        except Exception as e:
+            return Response({
+                "success": False,
+                "message": "Error al procesar la solicitud."
+            }, status=status.HTTP_400_BAD_REQUEST)
+
 # Para consultar el estado actual del formulario
-@require_http_methods(["GET"])
-@csrf_exempt
-def get_estado_formulario(request):
+class GetEstadoFormularioView(APIView):
     """
     Endpoint para obtener el estado actual del formulario.
     """
-    formulario_instance, created = Formulario.objects.get_or_create(id=1)
-    
-    return JsonResponse({
-        "success": True,
-        "estado": formulario_instance.estado
-    })
+    def get(self, request, *args, **kwargs):
+        formulario_instance, created = Formulario.objects.get_or_create(id=1)
+        return Response({
+            "success": True,
+            "estado": formulario_instance.estado
+        })

@@ -12,6 +12,7 @@ from gestion_oferta_electiva.models import Oferta_electiva
 from collections import defaultdict
 from gestion_electivas.serializers import ElectivaSerializer
 import logging
+from core.permissions import IsAdministrador
 
 logger = logging.getLogger(__name__)
 
@@ -19,6 +20,7 @@ class ReporteSeleccionElectivasEstudianteViewSet(viewsets.ViewSet):
     """
     ViewSet para generar reportes de selección de electivas por estudiante.
     """
+    permission_classes = [IsAdministrador]
     serializer_class = ReporteSeleccionElectivasSerializer
     generador_contenido: GeneradorContenidoReporteSeleccion
     nombre_informe = "Reporte de Selección de Electivas"
@@ -59,6 +61,7 @@ class ReporteSeleccionElectivasEstudianteViewSet(viewsets.ViewSet):
         return response
     
 class ReporteSeleccionGeneralViewSet(viewsets.ViewSet):
+    permission_classes = [IsAdministrador]
     serializer_class =  SeleccionEstudianteElectivaSerializer
     generador_contenido: GeneradorContenidoReporteGeneralSeleccion
     nombre_informe = "Reporte general proceso de seleccion de electivas"
@@ -99,6 +102,7 @@ class ReporteSeleccionGeneralViewSet(viewsets.ViewSet):
         return response
 
 class ReporteOfertaElectivasViewSet(viewsets.ViewSet):
+    permission_classes = [IsAdministrador]
     serializer_class = ReporteSeleccionElectivasSerializer
     generador_contenido: GeneradorContenidoReporteSeleccion
     nombre_informe = "Reporte de Oferta electivas"

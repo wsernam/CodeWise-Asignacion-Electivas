@@ -1,6 +1,7 @@
 from collections import defaultdict
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from .services.priority_service import construir_lista_prioridad
 from asignacion.services.asignador_Service import AsignadorService
@@ -8,10 +9,13 @@ from asignacion.services.asignador_Service import AsignadorService
 from referencias.models import SeleccionEstudianteElectiva as Sel, Oferta as Oferta
 from gestion_hojas_de_calculo.models import PerfilAcademico
 from asignacion.models import Asignacion
+from core.permissions import IsAsignador
 from asignacion.variables import ELECTIVAS_DEBE_VER
 from django.db import transaction
 
 class PrioridadViewSet(viewsets.ViewSet):
+    permission_classes = [IsAsignador]
+
     @action(detail=False, methods=["get"], url_path="")
     def prioridad(self, request):
         try:
@@ -63,6 +67,7 @@ class AsignacionOrquestadorViewSet(viewsets.ViewSet):
       "debug": false           # opcional
     }
     """
+    permission_classes = [IsAsignador]
 
     @action(detail=False, methods=["post"], url_path="ejecutar")
     def ejecutar(self, request):
@@ -132,6 +137,8 @@ class AsignacionOrquestadorViewSet(viewsets.ViewSet):
         """
         GET /api/asignacion/resumen-estudiantes/?anio=2025&semestre=2[&pro_codigo=PIS][&est_codigo=...]
         """
+        permission_classes = [IsAsignador]
+
         try:
             anio = int(request.query_params["anio"])
             semestre = int(request.query_params["semestre"])
@@ -258,6 +265,81 @@ class AsignacionOrquestadorViewSet(viewsets.ViewSet):
         out = [fila(eid) for eid in orden_final]
         return Response(out, status=status.HTTP_200_OK)
     
+
+    @action(detail=False, methods=["delete"], url_path="purgar")
+    def purgar(self, request):
+        """
+        DELETE /api/asignacion/purgar/?anio=2025&semestre=1
+        Filtros opcionales:
+          - pro_codigo=PIS        (filtra por programa del estudiante)
+          - est_codigo=100123456  (un estudiante específico)
+          - ele_codigo=ELEC001    (una electiva específica)
+          - solo_espera=1         (solo filas en lista de espera)
+          - solo_firmes=1         (solo filas con cupo firme)
+          - dry_run=1             (no borra; solo devuelve cuántas borraría)
+        """
+        permission_classes = [IsAsignador]
+
+        try:
+            anio = int(request.query_params["anio"])
+            semestre = int(request.query_params["semestre"])
+        except (KeyError, ValueError):
+            return Response(
+                {"detail": "Faltan parámetros anio y semestre (enteros)."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        pro_codigo   = request.query_params.get("pro_codigo") or None
+        est_codigo   = request.query_params.get("est_codigo") or None
+        ele_codigo   = request.query_params.get("ele_codigo") or None
+        solo_espera  = request.query_params.get("solo_espera") == "1"
+        solo_firmes  = request.query_params.get("solo_firmes") == "1"
+        dry_run      = request.query_params.get("dry_run") == "1"
+
+        qs = Asignacion.objects.filter(anio=anio, asi_num_semestre=semestre)
+
+        if pro_codigo:
+            qs = qs.filter(est_codigo__pro_codigo__pro_codigo=pro_codigo)
+        if est_codigo:
+            qs = qs.filter(est_codigo_id=est_codigo)
+        if ele_codigo:
+            qs = qs.filter(ele_codigo_id=ele_codigo)
+
+        if solo_espera and solo_firmes:
+            return Response(
+                {"detail": "Use solo_espera=1 o solo_firmes=1, no ambos."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if solo_espera:
+            qs = qs.filter(en_lista_espera=True)
+        if solo_firmes:
+            qs = qs.filter(en_lista_espera=False)
+
+        total = qs.count()
+        if dry_run:
+            return Response(
+                {"periodo": f"{anio}-{semestre}", "borraria": total, "dry_run": True},
+                status=status.HTTP_200_OK,
+            )
+
+        with transaction.atomic():
+            borrados, _ = qs.delete()
+
+        return Response(
+            {
+                "periodo": f"{anio}-{semestre}",
+                "borrados": borrados,
+                "filtros": {
+                    "pro_codigo": pro_codigo,
+                    "est_codigo": est_codigo,
+                    "ele_codigo": ele_codigo,
+                    "solo_espera": solo_espera,
+                    "solo_firmes": solo_firmes,
+                },
+            },
+            status=status.HTTP_200_OK,
+        )
+    
     @action(detail=False, methods=["get"], url_path="ranking-asignados")
     def ranking_asignados(self, request):
         """
@@ -267,6 +349,8 @@ class AsignacionOrquestadorViewSet(viewsets.ViewSet):
         Lista SOLO estudiantes que YA están asignados a esa electiva (FIRME o ESPERA),
         ordenados por el ranking oficial.
         """
+        permission_classes = [IsAsignador]
+
         try:
             anio = int(request.query_params["anio"])
             semestre = int(request.query_params["semestre"])
