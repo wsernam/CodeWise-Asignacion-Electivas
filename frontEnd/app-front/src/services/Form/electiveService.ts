@@ -1,7 +1,7 @@
 // src/services/electiveService.ts
+import apiClient from "../apiClient";
 import type { IElective } from "../../models/Form/elective";
-import { ELECTIVES_URL } from "../config/config";
-import axiosInstance from "../../api/axiosInstance";
+import { ELECTIVES_URL_PUBLIC, ELECTIVES_URL_PRIVATE } from "../config/config";
 
 // ========== HELPERS ==========
 const transformElective = (item: any): IElective => ({
@@ -18,18 +18,22 @@ const transformElective = (item: any): IElective => ({
  */
 export const getElectivesService = async (): Promise<IElective[]> => {
   try {
-    console.log("[electiveService] Conectando a:", `${ELECTIVES_URL}/`);
-    const { data } = await axiosInstance.get(`${ELECTIVES_URL}/?status=active`);
-    console.log("[electiveService] Datos CRUDOS del backend:", data);
+    console.log("[electiveService] Conectando a:", `${ELECTIVES_URL_PUBLIC}/`);
+    const response = await apiClient.get(`${ELECTIVES_URL_PUBLIC}/?status=active`);
+    console.log("[electiveService] Datos CRUDOS del backend:", response.data);
 
-    const transformed: IElective[] = Array.isArray(data)
-      ? data.map(transformElective)
+    const transformed: IElective[] = Array.isArray(response.data)
+      ? response.data.map(transformElective)
       : [];
     console.log("[electiveService] Datos transformados:", transformed);
     return transformed;
   } catch (error: any) {
     console.error("[electiveService] Error obteniendo electivas:", error);
-    throw new Error(error?.message || "No se pudieron cargar las electivas");
+    throw new Error(
+      error.response?.data?.detail || 
+      error?.message || 
+      "No se pudieron cargar las electivas"
+    );
   }
 };
 
@@ -41,13 +45,17 @@ export const createElectiveService = async (
 ): Promise<IElective> => {
   try {
     console.log("[electiveService] Creando electiva:", e);
-    const { data } = await axiosInstance.post(`${ELECTIVES_URL}/`, e);
-    const created = transformElective(data);
+    const response = await apiClient.post(`${ELECTIVES_URL_PRIVATE}/`, e);
+    const created = transformElective(response.data);
     console.log("[electiveService] Electiva creada:", created);
     return created;
   } catch (error: any) {
     console.error("[electiveService] Error creando electiva:", error);
-    throw new Error(error?.message || "No se pudo crear la electiva");
+    throw new Error(
+      error.response?.data?.detail || 
+      error?.message || 
+      "No se pudo crear la electiva"
+    );
   }
 };
 
@@ -61,13 +69,17 @@ export const updateElectiveService = async (
   try {
     console.log("[electiveService] Actualizando electiva:", codigo, e);
     console.log("[electiveService] JSON que se enviará:", JSON.stringify(e));
-    const { data } = await axiosInstance.put(`${ELECTIVES_URL}/${codigo}/`, e);
-    const updated = transformElective(data);
+    const response = await apiClient.put(`${ELECTIVES_URL_PRIVATE}/${codigo}/`, e);
+    const updated = transformElective(response.data);
     console.log("[electiveService] Electiva actualizada:", updated);
     return updated;
   } catch (error: any) {
     console.error("[electiveService] Error actualizando electiva:", error);
-    throw new Error(error?.message || "No se pudo actualizar la electiva");
+    throw new Error(
+      error.response?.data?.detail || 
+      error?.message || 
+      "No se pudo actualizar la electiva"
+    );
   }
 };
 
@@ -79,13 +91,17 @@ export const deleteElectiveService = async (
 ): Promise<IElective> => {
   try {
     console.log("[electiveService] Eliminando electiva:", codigo);
-    const { data } = await axiosInstance.delete(`${ELECTIVES_URL}/${codigo}/`);
-    const deleted = transformElective(data);
+    const response = await apiClient.delete(`${ELECTIVES_URL_PRIVATE}/${codigo}/`);
+    const deleted = transformElective(response.data);
     console.log("[electiveService] Electiva eliminada:", deleted);
     return deleted;
   } catch (error: any) {
     console.error("[electiveService] Error eliminando electiva:", error);
-    throw new Error(error?.message || "No se pudo eliminar la electiva");
+    throw new Error(
+      error.response?.data?.detail || 
+      error?.message || 
+      "No se pudo eliminar la electiva"
+    );
   }
 };
 
@@ -97,15 +113,19 @@ export const reactivateElectiveService = async (
 ): Promise<IElective> => {
   try {
     console.log("[electiveService] Reactivando electiva:", codigo);
-    const { data } = await axiosInstance.patch(
-      `${ELECTIVES_URL}/${codigo}/reactivar/`
+    const response = await apiClient.patch(
+      `${ELECTIVES_URL_PRIVATE}/${codigo}/reactivar/`
     );
-    const reactivated = transformElective(data);
+    const reactivated = transformElective(response.data);
     console.log("[electiveService] Electiva reactivada:", reactivated);
     return reactivated;
   } catch (error: any) {
     console.error("[electiveService] Error reactivando electiva:", error);
-    throw new Error(error?.message || "No se pudo reactivar la electiva");
+    throw new Error(
+      error.response?.data?.detail || 
+      error?.message || 
+      "No se pudo reactivar la electiva"
+    );
   }
 };
 
@@ -117,8 +137,8 @@ export const getElectiveByCodeService = async (
 ): Promise<IElective | null> => {
   try {
     console.log(`[electiveService] Buscando electiva: ${codigo}`);
-    const { data } = await axiosInstance.get(`${ELECTIVES_URL}/${codigo}/`);
-    return transformElective(data);
+    const response = await apiClient.get(`${ELECTIVES_URL_PUBLIC}/${codigo}/`);
+    return transformElective(response.data);
   } catch (error: any) {
     // Si tu backend retorna 404, puedes capturarlo así:
     const status = error?.response?.status;
@@ -127,6 +147,10 @@ export const getElectiveByCodeService = async (
       return null;
     }
     console.error("[electiveService] Error buscando electiva:", error);
-    throw new Error(error?.message || "No se pudo obtener la electiva");
+    throw new Error(
+      error.response?.data?.detail || 
+      error?.message || 
+      "No se pudo obtener la electiva"
+    );
   }
 };

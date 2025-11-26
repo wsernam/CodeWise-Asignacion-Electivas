@@ -4,6 +4,7 @@ import ReportFilters from "./ReportFilters";
 import { useReportStore } from "../../../store/Form/reportStore";
 import { selectionReportService } from "../../../services/Form/selectionReportService";
 import { offerReportService } from "../../../services/Form/offerReportService";
+import WarningModal from "../../../components/shared/WarningModal/WarningModal";
 import "./ReportsAssignment.css";
 
 const ReportsForm: React.FC = () => {
@@ -23,11 +24,9 @@ const ReportsForm: React.FC = () => {
     clearReport,
   } = useReportStore();
 
-  // Estado para modal de advertencia
   const [showWarningModal, setShowWarningModal] = useState(false);
   const [warningMessage, setWarningMessage] = useState("");
 
-  // Limpia el blob anterior al desmontar
   useEffect(() => {
     return () => {
       if (generatedReport) {
@@ -36,7 +35,6 @@ const ReportsForm: React.FC = () => {
     };
   }, [generatedReport]);
 
-  // Validar si el botón debe estar deshabilitado
   const isGenerateDisabled = () => {
     if (!selectedYear || !selectedSemester) return true;
     if (selectedReportType === "student-elective-selection" && !studentCode)
@@ -50,7 +48,6 @@ const ReportsForm: React.FC = () => {
   };
 
   const handleGenerateReport = async () => {
-    // Validaciones
     if (!selectedYear || !selectedSemester) {
       showWarning("Por favor selecciona año y semestre");
       return;
@@ -92,12 +89,38 @@ const ReportsForm: React.FC = () => {
       );
       setGeneratedReport(url);
     } catch (error: any) {
-      // Alert mientras separo warning
-      alert(error.message || "Error generando el reporte");
       console.error("Error generando el reporte:", error);
+
+      // Manejo específico de errores
+      if (error.message?.includes("404")) {
+        if (selectedReportType === "student-elective-selection") {
+          showWarning(
+            `No se encontró información para el estudiante ${studentCode} en el período ${selectedYear}-${selectedSemester}`
+          );
+        } else {
+          showWarning(
+            `No se encontró información para el período ${selectedYear}-${selectedSemester}`
+          );
+        }
+      } else if (error.message?.includes("500")) {
+        showWarning(
+          "Error interno del servidor. Por favor, intenta nuevamente más tarde."
+        );
+      } else if (error.message?.includes("403")) {
+        showWarning("No tienes permisos para acceder a este reporte.");
+      } else {
+        showWarning(
+          error.message || "Error al generar el reporte. Intenta nuevamente."
+        );
+      }
     } finally {
       setIsGenerating(false);
     }
+  };
+
+  const handleWarningClose = () => {
+    setShowWarningModal(false);
+    setWarningMessage("");
   };
 
   return (
@@ -109,7 +132,6 @@ const ReportsForm: React.FC = () => {
             <p>Seleccione los filtros y genere el reporte deseado</p>
           </div>
 
-          {/* Filtros con campo integrado para estudiante */}
           <ReportFilters
             selectedYear={selectedYear}
             selectedSemester={selectedSemester}
@@ -134,7 +156,6 @@ const ReportsForm: React.FC = () => {
             ]}
           />
 
-          {/* Visor PDF */}
           <div className="pdf-viewer-section">
             <h3>Vista Previa del Reporte</h3>
             <div className={`pdf-viewer ${generatedReport ? "has-pdf" : ""}`}>
@@ -156,6 +177,12 @@ const ReportsForm: React.FC = () => {
           </div>
         </Card>
       </div>
+
+      <WarningModal
+        open={showWarningModal}
+        message={warningMessage}
+        onClose={handleWarningClose}
+      />
     </div>
   );
 };

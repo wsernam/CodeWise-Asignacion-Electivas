@@ -123,7 +123,7 @@ const EditProgram: React.FC = () => {
       const cleanedValues: Program = {
         pro_codigo: parseInt(codigo),
         pro_nombre: values.nombre.trim().replace(/\s+/g, " "),
-        fac_codigo: 2,
+        fac_codigo: 1,
         fac_nombre: values.facultad,
         pro_activo: true,
       };

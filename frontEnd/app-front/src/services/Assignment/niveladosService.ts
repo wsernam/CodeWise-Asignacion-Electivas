@@ -1,5 +1,6 @@
 // src/services/Assignment/niveladosService.ts
-import { NIVELADOS_URL } from "../config/config";
+import apiClient from "../apiClient";
+import { NIVELADOS_URL_PRIVATE } from "../config/config";
 import type {
   LeveledStudent,
   ConfirmLeveledRequest,
@@ -17,15 +18,20 @@ export const niveladosService = {
     anio: number,
     semestre: number
   ): Promise<{ message: string }> {
-    const response = await fetch(`${NIVELADOS_URL}/gestionar-nivelados/`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ anio, num_semestre: semestre }),
-    });
+    try {
+      const response = await apiClient.put(
+        `${NIVELADOS_URL_PRIVATE}/gestionar-nivelados/`,
+        { anio, num_semestre: semestre }
+      );
 
-    if (!response.ok)
-      throw new Error(`Error gestionando nivelados: ${response.statusText}`);
-    return (await response.json()) as { message: string };
+      return response.data as { message: string };
+    } catch (error: any) {
+      console.error("[niveladosService] Error gestionando nivelados:", error);
+      throw new Error(
+        error.response?.data?.detail || 
+        `Error gestionando nivelados: ${error.message}`
+      );
+    }
   },
 
   /**
@@ -38,12 +44,19 @@ export const niveladosService = {
     anio: number,
     semestre: number
   ): Promise<LeveledStudent[]> {
-    const response = await fetch(
-      `${NIVELADOS_URL}/listar-nivelados/${anio}/${semestre}/`
-    );
-    if (!response.ok)
-      throw new Error(`Error listando nivelados: ${response.statusText}`);
-    return (await response.json()) as LeveledStudent[];
+    try {
+      const response = await apiClient.get(
+        `${NIVELADOS_URL_PRIVATE}/listar-nivelados/${anio}/${semestre}/`
+      );
+
+      return response.data as LeveledStudent[];
+    } catch (error: any) {
+      console.error("[niveladosService] Error listando nivelados:", error);
+      throw new Error(
+        error.response?.data?.detail || 
+        `Error listando nivelados: ${error.message}`
+      );
+    }
   },
 
   /**
@@ -58,17 +71,19 @@ export const niveladosService = {
     semestre: number,
     estudiantes: ConfirmLeveledRequest[]
   ): Promise<{ message: string }> {
-    const response = await fetch(
-      `${NIVELADOS_URL}/confirmar-nivelados/${anio}/${semestre}/`,
-      {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(estudiantes),
-      }
-    );
+    try {
+      const response = await apiClient.put(
+        `${NIVELADOS_URL_PRIVATE}/confirmar-nivelados/${anio}/${semestre}/`,
+        estudiantes
+      );
 
-    if (!response.ok)
-      throw new Error(`Error confirmando nivelados: ${response.statusText}`);
-    return (await response.json()) as { message: string };
+      return response.data as { message: string };
+    } catch (error: any) {
+      console.error("[niveladosService] Error confirmando nivelados:", error);
+      throw new Error(
+        error.response?.data?.detail || 
+        `Error confirmando nivelados: ${error.message}`
+      );
+    }
   },
 };
