@@ -58,6 +58,8 @@ const InactivesManagementAP: React.FC<AssignmentProcessProps> = ({
 }) => {
   const [showModal, setShowModal] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [confirmMessage, setConfirmMessage] = useState<string>("¿Está seguro de guardar este paso y continuar?");
+
   const [inactiveRows, setInactiveRows] = useState<InactiveRow[]>([]);
   const [nextId, setNextId] = useState(1);
 
@@ -158,9 +160,17 @@ const InactivesManagementAP: React.FC<AssignmentProcessProps> = ({
   const handleSave = async () => {
     try {
       if (inactiveRows.length === 0) {
+        setConfirmMessage("No hay estudiantes inactivos para procesar. ¿Desea continuar?");
         setShowConfirm(true);
         return;
       }
+
+      if (hayEstudiantesInactivos()) {
+        setConfirmMessage("Hay estudiantes inactivos con datos incompletos o inválidos. ¿Desea continuar?");
+        setShowConfirm(true);
+        return;
+      }
+
       // Preparar datos para enviar al backend si hay por completar
       const filasACompletar = inactiveRows
         .filter((row) => row.codigo)
@@ -182,7 +192,7 @@ const InactivesManagementAP: React.FC<AssignmentProcessProps> = ({
 
       // Enviar al backend para procesamiento final
       await completarYProcesar(filasACompletar);
-
+      setConfirmMessage("Cambios guardados exitosamente. ¿Desea continuar?");
       setShowConfirm(true);
     } catch (error) {
       console.error("Error guardando cambios:", error);
@@ -276,7 +286,7 @@ const InactivesManagementAP: React.FC<AssignmentProcessProps> = ({
                     <NextButton
                       onClick={handleSave}
                       text="Confirmar"
-                      disabled={loading || hayEstudiantesInactivos()}
+                      disabled={loading}
                     />
                   </div>
                 </div>
@@ -288,7 +298,7 @@ const InactivesManagementAP: React.FC<AssignmentProcessProps> = ({
 
       <ConfirmModal
         open={showConfirm}
-        message="¿Está seguro de guardar este paso y continuar?"
+        message={confirmMessage}
         onConfirm={handleConfirmSave}
         onCancel={() => setShowConfirm(false)}
       />
