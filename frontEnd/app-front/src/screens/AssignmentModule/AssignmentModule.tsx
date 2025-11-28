@@ -33,6 +33,32 @@ const AssignmentModule: React.FC = () => {
   const [processData, setProcessData] = useState<ProcessData | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
+  // Helpers para persistir paso por roceso
+  const storageKeyForProcess = (codigo: number) => `assignment_process_${codigo}_current_step`;
+
+  const loadPersistedState = (codigo: number) => {
+    try {
+      const raw = localStorage.getItem(storageKeyForProcess(codigo));
+      if (!raw) return null;
+      return JSON.parse(raw) as {
+        currentStepLocal?: number; completedSteps?: number[]
+      };
+    } catch {
+      return null;
+    }
+  };
+
+  const savePersistedState = (codigo: number, step: number | null, completed: number[]) => {
+    try {
+      localStorage.setItem(
+        storageKeyForProcess(codigo),
+        JSON.stringify({ currentStepLocal: step, completedSteps: completed })
+      );
+    } catch {
+      // No hacer nada
+    }
+  }
+
   // Estados para el manejo del proceso
   const { finalizarProceso,  eliminarProceso } = useAssignmentProcessStore();
   const {
@@ -62,6 +88,9 @@ const AssignmentModule: React.FC = () => {
     try {
       await eliminarProceso(currentProcess.pa_codigo);
       handleCancelProcess();
+      try {
+        localStorage.removeItem(storageKeyForProcess(currentProcess.pa_codigo));
+      } catch {}
     } catch (error) {
       console.error("Error eliminando proceso:", error);
       throw error;
@@ -81,6 +110,9 @@ const AssignmentModule: React.FC = () => {
       // Avanzar automáticamente al siguiente
       const nextStep = currentStepLocal + 1;
       setCurrentStepLocal(nextStep);
+      if (currentProcess?.pa_codigo) {
+        savePersistedState(currentProcess.pa_codigo, nextStep, [...new Set([...completedSteps, currentStepLocal])]);
+      }
     }
   };
 
@@ -139,7 +171,19 @@ const AssignmentModule: React.FC = () => {
   useEffect(() => {
     if (currentProcess) {
       setHasActiveProcess(true);
-      setCurrentStepLocal(1);
+
+      // Cargar estado persistido
+      const persisted = loadPersistedState(currentProcess.pa_codigo);
+
+      if(persisted?.currentStepLocal) {
+        setCurrentStepLocal(persisted.currentStepLocal);
+        setCompletedSteps(persisted.completedSteps ?? []);
+      } else {
+        // Por defecto inicia en 1
+        setCurrentStepLocal(1);
+        setCompletedSteps([]);
+        savePersistedState(currentProcess.pa_codigo, 1, []);
+      }
       setProcessData({
         year: currentProcess.pa_anio,
         semester: currentProcess.pa_num_semestre,
@@ -147,6 +191,7 @@ const AssignmentModule: React.FC = () => {
     } else {
       setHasActiveProcess(false);
       setCurrentStepLocal(null);
+      setCompletedSteps([]);
       setProcessData(null);
     }
   }, [currentProcess]);
@@ -166,7 +211,7 @@ const AssignmentModule: React.FC = () => {
           <Card className="main-card assignment-card">
             {!hasActiveProcess ? (
               <div className="no-process-container">
-                <div className="info-icon">⚠️</div>
+                <div className="info-icon"></div>
                 <h3>No hay procesos de asignación activos</h3>
                 <Button
                   variant="primary"
