@@ -10,9 +10,6 @@ import Card from "../../components/ui/Card/Card";
 import Button from "../../components/ui/Button/Button";
 import BackButton from "../../components/ui/BackButton/BackButton";
 
-// Servicio de selección
-import { useSelectionStore } from "../../store/Form/selectionStore";
-
 // Servicio de autenticación
 import { useStudentStore } from "../../store/Form/studentStore";
 // import { useAuthStore } from "../../store/authStore";
@@ -21,7 +18,6 @@ const LoginStudent: React.FC = () => {
   const navigate = useNavigate();
   // const { loginStudent, role, error } = useAuthStore();
   const { getStudentById } = useStudentStore();
-
   /**
    * Valida si el código del estudiante es correcto
    * @param value

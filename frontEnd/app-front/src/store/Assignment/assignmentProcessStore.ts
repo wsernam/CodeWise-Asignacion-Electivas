@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { assignmentProcessService } from "../../services/Assignment";
 import type { AssignmentProcess } from "../../models/Assignment/assignmentProcess";
+import type { CodeBatchesResponse } from "../../models/Assignment/assignmentProcess";
 
 
 
@@ -18,6 +19,15 @@ interface AssignmentProcessState {
   finalizarProceso: (procesoId: number) => Promise<void>;
   clearError: () => void;
   reset: () => void;
+}
+
+interface CodeBatchState {
+  loading: boolean;
+  error: string | null;
+  data : CodeBatchesResponse | null;
+  fetchCodeBatches: (anio: number, semestre: number) => Promise<CodeBatchesResponse>;
+  downloadCodeBatchesPDF: (anio: number, semestre: number) => Promise<Blob>;
+  clear: () => void;
 }
 
 /**
@@ -130,6 +140,7 @@ export const useAssignmentProcessStore = create<AssignmentProcessState>(
     },
     
     // dentro del create(...)
+    /**
     ejecutarAsignacion: async (): Promise<any> => {
       set({ loading: true, error: null });
 
@@ -150,6 +161,36 @@ export const useAssignmentProcessStore = create<AssignmentProcessState>(
         throw error;
       }
   },
+   */
 
   })
 );
+
+export const useCodeBatchStore = create<CodeBatchState>((set) => ({
+  loading: false,
+  error: null,
+  data: null,
+  fetchCodeBatches: async (anio: number, semestre: number) => {
+    set({ loading: true, error: null });
+    try {
+      const data = await assignmentProcessService.getCodeBatches(anio, semestre);
+      set({ data, loading: false });
+      return data;
+    } catch (error: any) {
+      set({ loading: false, error: error.message });
+      throw error;
+    }
+  },
+  downloadCodeBatchesPDF: async (anio: number, semestre: number) => {
+    set({ loading: true, error: null });
+    try {
+      const data = await assignmentProcessService.downloadCodeBatches(anio, semestre);
+      set({ loading: false });
+      return data;
+    } catch (error: any) {
+      set({ loading: false, error: error.message });
+      throw error;
+    }
+  },
+  clear: () => set({ data: null, error: null })
+}));

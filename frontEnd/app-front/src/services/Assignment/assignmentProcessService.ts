@@ -1,6 +1,7 @@
 import apiClient from "../apiClient";
 import { ASSIGNMENT_API_BASE_URL_PRIVATE } from "../config/config";
 import type { AssignmentProcess } from "../../models/Assignment/assignmentProcess";
+import type { CodeBatchesResponse } from "../../models/Assignment/assignmentProcess";
 
 export const assignmentProcessService = {
   /**
@@ -125,6 +126,55 @@ export const assignmentProcessService = {
         error
       );
       throw error;
+    }
+  },
+
+  /**
+   * OBTENER LOTES DE CÓDIGOS DE ESTUDIANTES PARA ASIGNACIÓN
+   * Endpoint: GET api/reporte-asignacion/lotes-selecciones/?anio={anio}&semestre={semestre}
+   * @param anio - Año académico
+   * @param semestre - Semestre (1 o 2)
+   * @returns Información de lotes de códigos de estudiantes
+   */
+  async getCodeBatches(
+    anio: number,
+    semestre: number
+  ): Promise<CodeBatchesResponse> {
+    const url = `${ASSIGNMENT_API_BASE_URL_PRIVATE}api/reporte-asignacion/lotes-selecciones/?anio={anio}&semestre={semestre}`;
+    try {
+      const resp = await apiClient.get<CodeBatchesResponse>(url, {
+        params: { anio, semestre },
+      });
+      console.log("[codeBatchService] getCodeBatches response:", resp.data);
+      return resp.data;
+    } catch (err: any) {
+      console.error("[codeBatchService] getCodeBatches error:", err);
+      throw err;
+    }
+  },
+
+  /**
+   * OBTENER LOTES DE CÓDIGOS DE ESTUDIANTES PARA ASIGNACIÓN
+   * Endpoint: GET api/reporte-asignacion/lotes-selecciones/?anio={anio}&semestre={semestre}
+   * @param anio - Año académico
+   * @param semestre - Semestre (1 o 2)
+   * @returns Información de lotes de códigos de estudiantes
+   */
+  async downloadCodeBatches(
+    anio: number,
+    semestre: number
+  ): Promise<Blob> {
+    const url = `${ASSIGNMENT_API_BASE_URL_PRIVATE}api/reporte-asignacion/pdf/lotes-selecciones/?anio={anio}&semestre={semestre}`;
+    try {
+      const resp = await apiClient.get(url, {
+        params: { anio, semestre },
+        responseType: 'blob',
+      });
+      console.log("[codeBatchService] getCodeBatches response:", resp.data);
+      return resp.data as Blob;
+    } catch (err: any) {
+      console.error("[codeBatchService] getCodeBatches error:", err);
+      throw err;
     }
   },
 };

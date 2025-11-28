@@ -17,7 +17,9 @@ import {
   useExcelProcessingStore,
   useAssignmentFlowStore,
 } from "../../../../store/Assignment";
+import { useCodeBatchStore, useAssignmentProcessStore } from "../../../../store/Assignment/assignmentProcessStore";
 import type { ValidationResult } from "../../../../models/Assignment/assignmentProcess";
+import type { CodeBatchesResponse } from "../../../../models/Assignment/assignmentProcess";
 
 type AssignmentProcessProps = {
   onNext: () => void;
@@ -92,6 +94,8 @@ const UploadFilesAP: React.FC<AssignmentProcessProps> = ({
   const { validarExcel, loading, error, clearError } =
     useExcelProcessingStore();
   const { addCompletedStep } = useAssignmentFlowStore();
+  const { fetchCodeBatches, downloadCodeBatchesPDF } = useCodeBatchStore();
+  const { currentProcess } = useAssignmentProcessStore();
 
   // Manejar archivos subidos desde MultipleFileUploader
   const handleFilesUploaded = (files: File[]) => {
@@ -152,24 +156,31 @@ const UploadFilesAP: React.FC<AssignmentProcessProps> = ({
 
 
   // Función para generar lotes de códigos
-  const handleGenerateCodeBatches = () => {
+  const handleGenerateCodeBatches = async () => {
     console.log("Generando lotes de códigos...");
-    setCodeBatchesModal(true);
     setIsDownloadingCodes(true);
 
-    setTimeout(() => {
-      const generatedBatches = [
-        ["104622011437", "104622011439", "104622011440"],
-        ["104622011441", "104622011442", "104622011443"],
-      ];
-      setCodeBatches(generatedBatches);
+    try {
+      const year = currentProcess ? currentProcess.pa_anio : new Date().getFullYear();
+      const semester = currentProcess ? currentProcess.pa_num_semestre : 1;
+      const data: CodeBatchesResponse = await fetchCodeBatches(year, semester);
+      console.log("Lotes de códigos recibidos:", data.lotes);
+      const batches = (data.lotes || []).map((batch) =>
+        batch.map((code) => code.toString())
+      );
+      setCodeBatches(batches);
+      setCodeBatchesModal(true);
+    } catch (error) {
+      console.error("Error generando lotes de códigos:", error);
+      setShowWarningModal(true);
+    } finally {
       setIsDownloadingCodes(false);
-    }, 2000);
+    }
   };
 
   const openCodeBatchesModal = () => {
     if (!codeBatches || codeBatches.length === 0) {
-      handleGenerateCodeBatches();
+      void handleGenerateCodeBatches();
     } else {
       setCodeBatchesModal(true);
     }
@@ -191,6 +202,55 @@ const UploadFilesAP: React.FC<AssignmentProcessProps> = ({
         console.error("Error al copiar los códigos: ", err);
       });
   };
+
+  // Función para descargar los códigos como un txt
+  const handleDownloadCodesTXT = () => {
+    if (!codeBatches || codeBatches.length === 0) {
+      console.log("No hay códigos para descargar.");
+      return;
+    } else {
+      try {
+        const element = document.createElement("a");
+        const fileContent = codeBatches
+          .map((batch, index) => `Lote ${index + 1}:\n${batch.join(", ")}`)
+          .join("\n\n");
+        const fileBlob = new Blob([fileContent], { type: "text/plain" });
+        element.href = URL.createObjectURL(fileBlob);
+        element.download = `lotes_codigos_${currentProcess ? currentProcess.pa_anio : new Date().getFullYear()}_${currentProcess ? currentProcess.pa_num_semestre : 1}.txt`;
+        document.body.appendChild(element);
+        element.click();
+        document.body.removeChild(element);
+      } catch (error) {
+        console.error("Error descargando los códigos: ", error);
+      }
+    }
+  };
+
+  // Función para descargar los códigos como un pdf
+  const handleDownloadCodesPDF = async () => {
+    if (!codeBatches || codeBatches.length === 0) {
+      console.log("No hay códigos para descargar.");
+      return;
+    }
+    else {
+      try {
+        const year = currentProcess ? currentProcess.pa_anio : new Date().getFullYear();
+        const semester = currentProcess ? currentProcess.pa_num_semestre : 1;
+        const pdfBlob: Blob = await downloadCodeBatchesPDF(year, semester);
+
+        const blobUrl = URL.createObjectURL(pdfBlob);
+        const link = document.createElement("a");
+        link.href = blobUrl;
+        link.download = `lotes_codigos_${year}_${semester}.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+      } catch (error) {
+        console.error("Error descargando los códigos: ", error);
+    }
+  }
+};
 
   return (
     <div className="aps-wrapper">
@@ -387,10 +447,10 @@ const UploadFilesAP: React.FC<AssignmentProcessProps> = ({
 
           {/* Lógica para permitir continuar o no */}
           {summaryResult &&
-          summaryResult.faltantes &&
-          summaryResult.faltantes.length === 0 &&
-          summaryResult.sobrantes &&
-          summaryResult.sobrantes.length === 0 ? (
+            summaryResult.faltantes &&
+            summaryResult.faltantes.length === 0 &&
+            summaryResult.sobrantes &&
+            summaryResult.sobrantes.length === 0 ? (
             <div
               style={{
                 display: "flex",
@@ -493,17 +553,17 @@ const UploadFilesAP: React.FC<AssignmentProcessProps> = ({
                 }}
               >
                 <Button variant="primary" onClick={handleCopyAllCodes}>
-                  Copiar Todos los Códigos Generados
+                  Copiar
                 </Button>
-                <p
-                  style={{
-                    fontSize: "12px",
-                    color: "#666",
-                    margin: "10px 0 0 0",
-                  }}
-                >
-                  Máximo 1.00% de códigos
-                </p>
+
+                <Button variant="primary" onClick={handleDownloadCodesTXT}>
+                  Descargar txt
+                </Button>
+
+                <Button variant="primary" onClick={handleDownloadCodesPDF}>
+                  Descargar pdf
+                </Button>
+
               </div>
             </>
           )}
