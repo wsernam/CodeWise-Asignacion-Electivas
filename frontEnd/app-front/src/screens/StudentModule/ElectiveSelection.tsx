@@ -105,8 +105,8 @@ const ElectiveSelection: React.FC = () => {
 
     // Filtrar electivas no vacías
     const nonEmpty = selectedElectives
-    .map((ele_codigo, idx) => ({ ele_codigo, originalIndex: idx}))
-    .filter((x) => x.ele_codigo !== "");
+      .map((ele_codigo, idx) => ({ ele_codigo, originalIndex: idx }))
+      .filter((x) => x.ele_codigo !== "");
 
     const electivesPayload = nonEmpty.map((intem, i) => {
       const elective = activeElectives.find(
@@ -153,10 +153,20 @@ const ElectiveSelection: React.FC = () => {
   }
 
   return (
-    <div className="form-page-container">
+    <div className="form-page-container" style={{
+      display: "flex",
+      flexDirection: "column",
+      height: "100vh"
+    }}>
       <Header />
 
-      <div className="form-page-content">
+      <div
+        className="form-page-content"
+        style={{
+          flex: 1,
+          overflowY: "auto"
+        }}
+      >
         <div style={{ maxWidth: "800px", width: "100%" }}>
           <Card className="form-card" padding="xl">
             <h2 className="form-title">Selección de Electivas</h2>
@@ -259,7 +269,7 @@ const ElectiveSelection: React.FC = () => {
               </p>
               {hasDuplicateElectives() && (
                 <p style={{ color: "var(--primary-red)", fontSize: "0.9rem" }}>
-                  ⚠️ Tienes electivas duplicadas. Por favor selecciona electivas
+                  Tienes electivas duplicadas. Por favor selecciona electivas
                   diferentes.
                 </p>
               )}

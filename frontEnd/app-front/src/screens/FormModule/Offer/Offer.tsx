@@ -228,7 +228,7 @@ const Offer: React.FC = () => {
             {formStatus && (
               <div className="offer-blocking-overlay">
                 <div className="offer-blocking-message">
-                  <div className="offer-blocking-icon">🔒</div>
+                  <div className="offer-blocking-icon"></div>
                   <h3>Formulario en Modo Activo</h3>
                   <p>
                     No se pueden realizar modificaciones mientras el formulario

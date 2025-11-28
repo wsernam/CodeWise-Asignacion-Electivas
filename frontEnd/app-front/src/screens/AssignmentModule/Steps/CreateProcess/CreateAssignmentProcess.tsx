@@ -156,7 +156,7 @@ const CreateAssignmentProcess: React.FC<AssignmentProcessProps> = ({
           </div>
         )}
 
-        <div className="form-create-actions">
+        <div className="form-create-actions" style={{ display: 'flex', justifyContent: 'center', gap: '10px', marginTop: '20px' }}>
           <Button
             variant="primary"
             onClick={handleSave}
