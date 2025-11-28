@@ -25,13 +25,16 @@ interface ProcessHistory {
 }
 
 const AssignmentModule: React.FC = () => {
+  // Estados para el manejo de modales
   const [showCreateModal, setShowCreateModal] = useState<boolean>(false);
   const [hasActiveProcess, setHasActiveProcess] = useState<boolean>(false);
   const [currentStepLocal, setCurrentStepLocal] = useState<number | null>(null);
   const [completedSteps, setCompletedSteps] = useState<number[]>([]);
   const [processData, setProcessData] = useState<ProcessData | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
-  const { finalizarProceso } = useAssignmentProcessStore();
+  // Estados para el manejo del proceso
+  const { finalizarProceso,  eliminarProceso } = useAssignmentProcessStore();
   const {
     obtenerProcesoActivo,
     obtenerTodosLosProcesos,
@@ -39,6 +42,7 @@ const AssignmentModule: React.FC = () => {
     allProcess,
   } = useAssignmentProcessStore();
 
+  // Manejadores
   const handleProcessCreated = (year: number, semester: 1 | 2) => {
     setShowCreateModal(false);
     setCompletedSteps([]);
@@ -52,15 +56,21 @@ const AssignmentModule: React.FC = () => {
     setProcessData(null);
   };
 
-  const handleUndoLastStep = () => {
-    if (currentStepLocal && currentStepLocal > 1) {
-      const previousStep = currentStepLocal - 1;
-      setCurrentStepLocal(previousStep);
-      setCompletedSteps((prev) =>
-        prev.filter((step) => step !== currentStepLocal - 1)
-      );
-    } else if (currentStepLocal === 1) {
+  const handleConfirmDelete = async () => {
+    setShowDeleteConfirm(false);
+    if (!currentProcess) return;
+    try {
+      await eliminarProceso(currentProcess.pa_codigo);
       handleCancelProcess();
+    } catch (error) {
+      console.error("Error eliminando proceso:", error);
+      throw error;
+    }
+  }
+
+  const handleDeleteProcess = () => {
+    if (currentProcess) {
+      setShowDeleteConfirm(true);
     }
   };
 
@@ -178,10 +188,10 @@ const AssignmentModule: React.FC = () => {
                   </div>
                   <Button
                     variant="secondary"
-                    onClick={handleUndoLastStep}
-                    disabled={currentStepLocal === 1}
+                    onClick={handleDeleteProcess}
+                    disabled={getProcessStatus() === "Finalizado"}
                   >
-                    Deshacer
+                    Eliminar Proceso
                   </Button>
                 </div>
 
@@ -303,6 +313,32 @@ const AssignmentModule: React.FC = () => {
           onCancel={() => setShowCreateModal(false)}
           onNext={handleProcessCreated}
         />
+      </SimpleModal>
+
+      <SimpleModal
+        open={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        title="Confirmar Eliminación"
+      >
+        <div style ={{ minWidth: '360' }}>
+          <p>¿Está seguro de eliminar el proceso de asignación activo? Esta acción no se puede deshacer</p>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', marginTop: '20px' }}>
+            <Button
+            variant="primary"
+            onClick={() => setShowDeleteConfirm(false)}
+            >
+              Cancelar
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={handleConfirmDelete}
+            >
+              Eliminar
+            </Button>
+
+          </div>
+        </div>
+
       </SimpleModal>
     </>
   );

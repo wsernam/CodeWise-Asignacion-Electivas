@@ -130,6 +130,28 @@ export const assignmentProcessService = {
   },
 
   /**
+   * ELIMINAR UN PROCESO DE ASIGNACIÓN
+   * Endpoint: DELETE /api/asignacion/procesos/{codigo}/
+   * @param codigo - Código del proceso a finalizar
+   * @returns Proceso eliminado
+   */
+  async eliminarProceso(codigo: number): Promise<AssignmentProcess> {
+    try {
+      const response = await apiClient.delete(`${ASSIGNMENT_API_BASE_URL_PRIVATE}api/asignacion/procesos/${codigo}/`);
+      console.log("[assignmentProcessService] Proceso eliminado:", response.data);
+      return response.data as AssignmentProcess;
+    } catch (error: any) {
+      console.error(
+        "[assignmentProcessService] Error eliminando proceso:",
+        error
+      );
+      throw error;
+    }
+  },
+
+  // Lotes de códigos de estudiantes para asignación
+
+  /**
    * OBTENER LOTES DE CÓDIGOS DE ESTUDIANTES PARA ASIGNACIÓN
    * Endpoint: GET api/reporte-asignacion/lotes-selecciones/?anio={anio}&semestre={semestre}
    * @param anio - Año académico

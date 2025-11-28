@@ -17,6 +17,7 @@ interface AssignmentProcessState {
   obtenerProcesoActivo: () => Promise<AssignmentProcess | null>;
   obtenerTodosLosProcesos: () => Promise<AssignmentProcess[]>;
   finalizarProceso: (procesoId: number) => Promise<void>;
+  eliminarProceso: (procesoId: number) => Promise<void>;
   clearError: () => void;
   reset: () => void;
 }
@@ -126,6 +127,29 @@ export const useAssignmentProcessStore = create<AssignmentProcessState>(
       set({ loading: true, error: null });
       try {
         await assignmentProcessService.finalizarProceso(codigo);
+        set({
+          currentProcess: null,
+          loading: false,
+        });
+      } catch (error: any) {
+        set({
+          loading: false,
+          error: error.message,
+        });
+        throw error;
+      }
+    },
+
+    /**
+     * ELIMINAR PROCESO DE ASIGNACIÓN
+     * @param codigo - Código del proceso a eliminar
+     */
+
+    eliminarProceso: async (codigo: number) => {
+      set({ loading: true, error: null });
+      try {
+        await assignmentProcessService.eliminarProceso(codigo);
+        console.log("Proceso eliminado:", codigo);
         set({
           currentProcess: null,
           loading: false,
