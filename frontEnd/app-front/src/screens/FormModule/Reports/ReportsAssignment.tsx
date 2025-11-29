@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from "react";
 import Card from "../../../components/ui/Card/Card";
 import ReportFilters from "./ReportFilters";
+
+import WarningModal from "../../../components/shared/WarningModal/WarningModal";
+
 import { reporteService } from "../../../services/Assignment/reporteService";
 import "./ReportsAssignment.css";
 
@@ -16,10 +19,15 @@ const ReportsAssignment: React.FC = () => {
   const [estId, setEstId] = useState<string>("");
   const [eleCodigo, setEleCodigo] = useState<string>("");
 
+  const [showWarningModal, setShowWarningModal] = useState<{ open: boolean; message: string }>({
+    open: false,
+    message: "",
+  });
+
   const isGenerateDisabled =
-  isGenerating ||
-  (selectedReportType === "por-estudiante" && !estId.trim()) ||
-  (selectedReportType === "por-electiva" && !eleCodigo.trim());
+    isGenerating ||
+    (selectedReportType === "por-estudiante" && !estId.trim()) ||
+    (selectedReportType === "por-electiva" && !eleCodigo.trim());
 
   // Limpia el blob anterior
   useEffect(() => {
@@ -27,7 +35,7 @@ const ReportsAssignment: React.FC = () => {
       if (generatedReport) URL.revokeObjectURL(generatedReport);
     };
   }, [generatedReport]);
-  
+
 
   const handleGenerateReport = async () => {
     setIsGenerating(true);
@@ -67,7 +75,14 @@ const ReportsAssignment: React.FC = () => {
       );
       setGeneratedReport(url);
     } catch (e: any) {
-      alert(e.message || "Error generando el reporte");
+      if(e.message.includes("404")) {
+        e.message = "No se encontró información para los filtros seleccionados";
+      }
+      setShowWarningModal({
+        open: true,
+        message: e.message || "Ocurrió un error al generar el reporte"
+      });
+      //alert(e.message || "Error generando el reporte");
     } finally {
       setIsGenerating(false);
     }
@@ -149,6 +164,11 @@ const ReportsAssignment: React.FC = () => {
           </div>
         </Card>
       </div>
+      <WarningModal
+        open={showWarningModal.open}
+        message={showWarningModal.message}
+        onClose={() => setShowWarningModal({ open: false, message: "" })}
+      />
     </div>
   );
 };
