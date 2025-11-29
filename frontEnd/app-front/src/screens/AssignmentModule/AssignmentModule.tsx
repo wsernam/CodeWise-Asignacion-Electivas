@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router";
 import "./AssignmentModule.css";
 import Card from "../../components/ui/Card/Card";
 import Button from "../../components/ui/Button/Button";
@@ -33,6 +34,7 @@ const AssignmentModule: React.FC = () => {
   const [processData, setProcessData] = useState<ProcessData | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
+  const navigate = useNavigate();
   // Helpers para persistir paso por roceso
   const storageKeyForProcess = (codigo: number) => `assignment_process_${codigo}_current_step`;
 
@@ -136,6 +138,11 @@ const AssignmentModule: React.FC = () => {
       }
     }
   };
+
+  const handleSeeReport = () => {
+    handleFinalizeProcess();
+    navigate("/reports-assignment");
+  }
 
   // Estado simple del proceso - SOLO EL NOMBRE
   const getProcessStatus = () => {
@@ -295,7 +302,12 @@ const AssignmentModule: React.FC = () => {
                       >
                         Finalizar Proceso
                       </Button>
-                      <Button variant="secondary">Ver asignación</Button>
+                      <Button 
+                      variant="secondary"
+                      onClick={handleSeeReport}
+                      >
+                        Ver asignación
+                      </Button>
                     </div>
                   </div>
                 )}

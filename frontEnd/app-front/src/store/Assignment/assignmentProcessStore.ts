@@ -164,7 +164,7 @@ export const useAssignmentProcessStore = create<AssignmentProcessState>(
     },
     
     // dentro del create(...)
-    /**
+    
     ejecutarAsignacion: async (): Promise<any> => {
       set({ loading: true, error: null });
 
@@ -185,7 +185,7 @@ export const useAssignmentProcessStore = create<AssignmentProcessState>(
         throw error;
       }
   },
-   */
+  
 
   })
 );

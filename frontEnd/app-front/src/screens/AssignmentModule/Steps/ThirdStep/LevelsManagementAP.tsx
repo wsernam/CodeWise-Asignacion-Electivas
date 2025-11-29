@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { act, useEffect, useState } from "react";
 import "../AssignmentProcessSteps.css";
 import {
   FaUserSlash,
@@ -199,6 +199,13 @@ const LevelsManagementAP: React.FC<AssignmentProcessProps> = ({
     }
   };
 
+  // Cargar nivelados al abrir el modal
+  useEffect(() => {
+    if (showModal) {
+      void loadLeveledStudents();
+    }
+  }, [showModal, activeProcess?.pa_anio, activeProcess?.pa_num_semestre]);
+
   const toggleConfirmation = (codigo: number) => {
     setConfirmedStudents((prev) => {
       const newSet = new Set(prev);
@@ -248,7 +255,7 @@ const LevelsManagementAP: React.FC<AssignmentProcessProps> = ({
           <div className="im-modal-content">
             {loading ? (
               <div className="im-empty">
-                <p>No se han identificado potenciales estudiantes nivelados</p>
+                <p>Cargando estudiantes nivelados...</p>
                 <div
                   style={{
                     display: "flex",
@@ -262,21 +269,19 @@ const LevelsManagementAP: React.FC<AssignmentProcessProps> = ({
                       text="Volver"
                     />
                   </div>
-                  <div style={{ width: "120px" }}>
-                    <NextButton
-                      onClick={loadLeveledStudents}
-                      text="Cargar"
-                      disabled={loading}
-                    />
-                  </div>
                 </div>
               </div>
             ) : leveledStudents.length === 0 ? (
               <div className="im-empty">
                 <p>No se han identificado potenciales estudiantes nivelados</p>
-                <Button variant="primary" onClick={loadLeveledStudents}>
-                  Cargar estudiantes nivelados
-                </Button>
+                <div style={{ display: "flex", justifyContent: "center", marginTop: "20px", gap: 8 }}>
+                  <Button 
+                  variant="primary" 
+                  onClick={handleSave}
+                  >
+                    Continuar
+                  </Button>
+                </div>
               </div>
             ) : (
               <>
@@ -366,10 +371,10 @@ const LevelsManagementAP: React.FC<AssignmentProcessProps> = ({
                       onClick={handleSave}
                       text={
                         loading
-                          ? "Confirmando..."
-                          : `Confirmar (${confirmedCount})`
+                          ? "Guardando..."
+                          : `Guardar (${confirmedCount})`
                       }
-                      disabled={loading || confirmedCount === 0}
+                      disabled={loading}
                     />
                   </div>
                 </div>

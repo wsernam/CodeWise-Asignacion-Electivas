@@ -149,6 +149,33 @@ export const assignmentProcessService = {
     }
   },
 
+  /**
+   * EJECUTAR ASIGNACIÓN
+   * Endpoint: POST /api/asignacion/ejecutar/
+   * 
+   * @param anio 
+   * @param semestre 
+   */
+
+  async ejecutarAsignacion(anio: number, semestre: number ): Promise<any> {
+    try {
+      const response = await apiClient.post(
+        `${ASSIGNMENT_API_BASE_URL_PRIVATE}api/asignacion/ejecutar/`,
+        {
+          anio,
+          semestre,
+        }
+      );
+      console.log("[assignmentProcessService] Asignación ejecutada:", response.data);
+    } catch (error: any) {
+      console.error(
+        "[assignmentProcessService] Error ejecutando asignación:",
+        error
+      );
+      throw error;
+    }
+  },
+
   // Lotes de códigos de estudiantes para asignación
 
   /**
