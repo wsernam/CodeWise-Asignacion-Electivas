@@ -29,7 +29,7 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
 }) => {
   return (
     <Modal
-      title={<span className="confirm-title">🔔 Confirmación</span>} // Título con ícono
+      title={<span className="confirm-title">Confirmación</span>} // Título con ícono
       open={open} // Mostrar/ocultar modal
       onOk={onConfirm} // Acción al hacer clic en "Sí"
       onCancel={onCancel} // Acción al hacer clic en "No" o fuera del modal

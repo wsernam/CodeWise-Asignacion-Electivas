@@ -19,7 +19,7 @@ const WarningModal: React.FC<WarningModalProps> = ({
 }) => {
   return (
     <Modal
-      title={<span className="warning-title">⚠ Advertencia</span>} // Título con ícono
+      title={<span className="warning-title">Advertencia</span>} // Título con ícono
       open={open} // Mostrar/ocultar modal
       onOk={onClose} // Acción al hacer clic en "Entendido"
       onCancel={onClose} // También cierra al hacer clic fuera del modal o cancelar

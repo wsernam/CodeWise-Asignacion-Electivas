@@ -15,7 +15,7 @@ const SuccessModal: React.FC<SuccessModalProps> = ({
 }) => {
   return (
     <Modal
-      title={<span className="success-title">✅ Éxito</span>}
+      title={<span className="success-title">Éxito</span>}
       open={open}
       onOk={onClose}
       onCancel={onClose}
