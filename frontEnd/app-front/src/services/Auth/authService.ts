@@ -65,8 +65,8 @@ export const login = async (
  * Cierra la sesión del usuario eliminando los tokens.
  */
 export const logout = (): void => {
-  window.location.href = "/";
   removeAuthTokens();
+  window.location.href = "/";
 };
 
 /**

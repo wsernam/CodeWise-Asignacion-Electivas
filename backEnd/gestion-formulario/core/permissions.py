@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 class IsAsignador(BasePermission):
     """
-    Permiso personalizado para permitir el acceso solo a usuarios con el rol 'Asignador'.
+    Permiso personalizado para permitir el acceso solo a usuarios con el rol 'Asignador' o 'ambos'.
     """
     
     def has_permission(self, request, view):
@@ -42,11 +42,10 @@ class IsAsignador(BasePermission):
             
             logger.info(f"[Auth] Validando IsAsignador - Rol: '{user_role}', User ID: '{user_id}'")
             
-            if user_role != 'Asignador':
-                logger.warning(f"[Auth] Acceso DENEGADO - Rol requerido: 'Asignador', Rol actual: '{user_role}'")
+            if user_role not in ['Administrador', 'Ambos']:  # <-- AGREGAR 'Ambos'
                 raise PermissionDenied({
                     "error": "Permiso denegado",
-                    "message": f"Esta acción requiere el rol 'Asignador'. Tu rol actual es '{user_role}'."
+                    "message": f"Esta acción requiere el rol 'Administrador' o 'Ambos'. Tu rol actual es '{user_role}'."
                 })
             
             logger.info(f"[Auth] Acceso PERMITIDO para usuario {user_id}")
@@ -70,7 +69,7 @@ class IsAsignador(BasePermission):
 
 class IsAdministrador(BasePermission):
     """
-    Permiso para usuarios con rol 'Administrador'.
+    Permiso para usuarios con rol 'Administrador' o 'ambos'.
     """
     
     def has_permission(self, request, view):
@@ -102,11 +101,14 @@ class IsAdministrador(BasePermission):
             
             logger.info(f"[Auth] Validando IsAdministrador - Rol: '{user_role}'")
             
-            if user_role != 'Administrador':
+            if user_role not in ['Asignador', 'Ambos']:  # <-- AGREGAR 'Ambos'
+                logger.warning(f"[Auth] Acceso DENEGADO - Rol requerido: 'Asignador' o 'Ambos', Rol actual: '{user_role}'")
                 raise PermissionDenied({
                     "error": "Permiso denegado",
-                    "message": f"Esta acción requiere el rol 'Administrador'. Tu rol actual es '{user_role}'."
+                    "message": f"Esta acción requiere el rol 'Asignador' o 'Ambos'. Tu rol actual es '{user_role}'."
                 })
+            
+            logger.info(f"[Auth] Acceso PERMITIDO para usuario {user_id}")
             
             return True
             

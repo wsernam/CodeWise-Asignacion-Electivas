@@ -15,7 +15,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 
   // Si no hay token, redirigir al login
   if (!token) {
-    return <Navigate to="/login-admin" replace />;
+    return <Navigate to="/" replace />;
   }
 
   // Si se especifican roles y el usuario no tiene permiso
