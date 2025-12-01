@@ -10,6 +10,10 @@ import InactivesManagementAP from "./Steps/SecondStep/InactivesManagementAP";
 import LevelsManagementAP from "./Steps/ThirdStep/LevelsManagementAP";
 import AssignmentManagementAP from "./Steps/FourStep/AssignmentManagementAP";
 import TooltipInfo from "../../components/ui/TooltipInfo/TooltipInfo";
+import {
+  getFechaFinalizacion,
+  setFechaFinalizacion,
+} from "../../utils/dateUtils";
 import { useAssignmentProcessStore } from "../../store/Assignment";
 
 type ProcessData = {
@@ -142,6 +146,7 @@ const AssignmentModule: React.FC = () => {
     if (currentProcess) {
       try {
         await finalizarProceso(currentProcess.pa_codigo);
+        setFechaFinalizacion(currentProcess.pa_codigo);
         await obtenerTodosLosProcesos();
       } catch (error) {
         console.error("Error finalizando proceso:", error);
@@ -150,9 +155,17 @@ const AssignmentModule: React.FC = () => {
   };
 
   const handleSeeReport = () => {
-    // NO finalizar proceso, aún está pendiente
-    handleFinalizeProcess();
-    navigate("/reports-assignment");
+    if (processData) {
+      // Navegar con estado de "vista previa"
+      navigate(`/reports-assignment`, {
+        state: {
+          isPreview: true,
+          year: processData.year,
+          semester: processData.semester,
+          processId: currentProcess?.pa_codigo,
+        },
+      });
+    }
   };
 
   // Estado simple del proceso - SOLO EL NOMBRE
@@ -392,22 +405,29 @@ const AssignmentModule: React.FC = () => {
                     !proceso.pa_activo &&
                     proceso.pa_codigo !== currentProcess?.pa_codigo
                 )
-                .map((proceso) => (
-                  <div key={proceso.pa_codigo} className="process-history-item">
-                    <div className="process-period">
-                      {proceso.pa_anio}-{proceso.pa_num_semestre}
-                    </div>
-                    <div className="process-details">
-                      <div className="process-date">
-                        Finalizado en:{" "}
-                        {proceso.fechaFinalizacion
-                          ? formatDate(proceso.fechaFinalizacion)
-                          : "Fecha no disponible"}
+                .map((proceso) => {
+                  const fechaFinalizacion = getFechaFinalizacion(
+                    proceso.pa_codigo
+                  );
+
+                  return (
+                    <div
+                      key={proceso.pa_codigo}
+                      className="process-history-item"
+                    >
+                      <div className="process-period">
+                        {proceso.pa_anio}-{proceso.pa_num_semestre}
                       </div>
-                      <span className="status-finished">Finalizado</span>
+                      <div className="process-details">
+                        <div className="process-date">
+                          Fecha finalización:{" "}
+                          {fechaFinalizacion || "Fecha no disponible"}
+                        </div>
+                        <span className="status-finished">Finalizado</span>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
           </Card>
         </div>
       </div>
