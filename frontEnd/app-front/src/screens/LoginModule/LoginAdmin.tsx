@@ -44,10 +44,13 @@ const LoginAdmin: React.FC = () => {
       if (role) {
         switch (role) {
           case "asignador":
-            navigate("/assignment-module"); // TODO: Reemplazar con la ruta real del Asignador
+            navigate("/assignment-module");
             break;
           case "administrador":
-            navigate("/dashboard"); // TODO: Reemplazar con la ruta real del Administrador
+            navigate("/dashboard");
+            break;
+          case "ambos":
+            navigate("/dashboard");
             break;
           default:
             // Si el rol no es reconocido, redirigir a una página por defecto

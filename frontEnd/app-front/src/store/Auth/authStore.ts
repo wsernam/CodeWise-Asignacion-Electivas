@@ -6,7 +6,7 @@ import {
   getUserRole,
 } from "../../services/Auth/authService";
 
-type Role = "administrador" | "asignador" | null;
+type Role = "administrador" | "asignador" | "ambos" | null;
 
 interface AuthState {
   token: string | null;
@@ -44,6 +44,8 @@ export const useAuthStore = create<AuthState>((set) => ({
           ? "administrador"
           : backendRole === "Asignador"
           ? "asignador"
+          : backendRole === "Ambos"
+          ? "ambos"
           : null;
 
       set({
@@ -68,6 +70,8 @@ export const useAuthStore = create<AuthState>((set) => ({
           ? "administrador"
           : backendRole === "Asignador"
           ? "asignador"
+          : backendRole === "Ambos"
+          ? "ambos"
           : null;
 
       // Actualizar estado

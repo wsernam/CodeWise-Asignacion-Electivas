@@ -8,7 +8,8 @@ class User(AbstractUser):
     # Cada tupla contiene: (valor almacenado en la base de datos, etiqueta legible para el administrador)
     ROLE_CHOICES = (
         ('Asignador', 'Asignador'),         # Usuario encargado de asignar tareas o recursos
-        ('Administrador', 'Administrador')  # Usuario que Administra electivas
+        ('Administrador', 'Administrador'),  # Usuario que Administra electivas
+        ('Ambos', 'Ambos')  # Usuario con todos los privilegios
     )
 
     # Campo adicional que define el rol del usuario dentro de la aplicación

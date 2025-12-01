@@ -1,4 +1,5 @@
 import React from "react";
+import { useState } from "react";
 import { useNavigate, useLocation, Link } from "react-router";
 import {
   FaHome,
@@ -12,8 +13,9 @@ import {
 import { useAuthStore } from "../../../store/Auth/authStore";
 import { FaSignOutAlt } from "react-icons/fa";
 import bannerImage from "../../../assets/banner-gestionelectivas.png";
-import adminIcon from "../../../assets/icon-admi.png";
-import asigIcon from "../../../assets/icon-asig.png";
+import adminIcon from "../../../assets/icon-admin.png";
+import asigIcon from "../../../assets/icon-assig.png";
+import ambosIcon from "../../../assets/icon-ambos.png";
 import type { IconType } from "react-icons";
 import "./Sidebard.css";
 
@@ -25,7 +27,7 @@ interface MenuItem {
   label: string;
   path: string;
   icon: IconType;
-  roles: Array<"administrador" | "asignador">;
+  roles: Array<"administrador" | "asignador" | "ambos">;
 }
 
 const menuItems: MenuItem[] = [
@@ -33,43 +35,43 @@ const menuItems: MenuItem[] = [
     label: "Inicio",
     path: "/dashboard",
     icon: FaHome,
-    roles: ["administrador"],
+    roles: ["administrador", "ambos"],
   },
   {
     label: "Oferta",
     path: "/offer",
     icon: FaUserGraduate,
-    roles: ["administrador"],
+    roles: ["administrador", "ambos"],
   },
   {
     label: "Electivas",
     path: "/electives",
     icon: FaBook,
-    roles: ["administrador"],
+    roles: ["administrador", "ambos"],
   },
   {
     label: "Programas",
     path: "/programs",
     icon: FaBookOpen,
-    roles: ["administrador"],
+    roles: ["administrador", "ambos"],
   },
   {
     label: "Proceso Asignación",
     path: "/assignment-module",
     icon: FaClipboardList,
-    roles: ["asignador"],
+    roles: ["asignador", "ambos"],
   },
   {
     label: "Reportes Asignación",
     path: "/reports-assignment",
-    icon: FaClipboardList,
-    roles: ["asignador"],
+    icon: FaFileSignature,
+    roles: ["asignador", "ambos"],
   },
   {
     label: "Reportes Formulario",
     path: "/reports-form",
     icon: FaFileSignature,
-    roles: ["administrador"],
+    roles: ["administrador", "ambos"],
   },
 ];
 
@@ -77,7 +79,19 @@ const Sidebar: React.FC<SidebardProps> = ({ onClose }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { role, userId } = useAuthStore();
+  const [currentModule, setCurrentModule] = useState<"admin" | "asignador">(
+    role === "asignador" ? "asignador" : "admin"
+  );
+  const handleModuleSwitch = (module: "admin" | "asignador") => {
+    setCurrentModule(module);
 
+    // Redirigir según el módulo seleccionado
+    if (module === "admin") {
+      navigate("/dashboard");
+    } else {
+      navigate("/assignment-module");
+    }
+  };
   return (
     <aside className="sidebard-container">
       <div>
@@ -101,11 +115,41 @@ const Sidebar: React.FC<SidebardProps> = ({ onClose }) => {
             </button>
           </div>
         )}
-
+        {/* Selector de módulo solo para rol "ambos" */}
+        {role === "ambos" && (
+          <div className="sidebard-module-selector">
+            <button
+              className={`sidebard-module-btn${
+                currentModule === "admin" ? " active" : ""
+              }`}
+              onClick={() => handleModuleSwitch("admin")}
+            >
+              Módulo formulario
+            </button>
+            <button
+              className={`sidebard-module-btn${
+                currentModule === "asignador" ? " active" : ""
+              }`}
+              onClick={() => handleModuleSwitch("asignador")}
+            >
+              Módulo asignación
+            </button>
+          </div>
+        )}
         {/* Menú lateral */}
         <nav className="sidebard-links">
           {menuItems
-            .filter((item) => item.roles.includes(role!))
+            .filter((item) => {
+              if (role === "ambos") {
+                if (currentModule === "admin") {
+                  return item.roles.includes("administrador");
+                } else {
+                  return item.roles.includes("asignador");
+                }
+              }
+              // Para otros roles, filtrar normi
+              return item.roles.includes(role!);
+            })
             .map((item) => {
               const Icon = item.icon;
               return (
@@ -127,18 +171,26 @@ const Sidebar: React.FC<SidebardProps> = ({ onClose }) => {
       <div className="sidebard-profile">
         {/* Imagen según rol */}
         <img
-          src={role === "administrador" ? adminIcon : asigIcon}
+          src={
+            role === "administrador"
+              ? adminIcon
+              : role === "asignador"
+              ? asigIcon
+              : ambosIcon
+          }
           className="sidebard-profile-img"
         />
 
         <div className="sidebard-profile-info">
           <div className="sidebard-profile-name">{userId || "Usuario"}</div>
           <div className="sidebard-profile-role">
-            {role === "administrador"
+            {role === "ambos"
+              ? currentModule === "admin"
+                ? "Módulo formulario"
+                : "Módulo asignación"
+              : role === "administrador"
               ? "Módulo formulario"
-              : role === "asignador"
-              ? "Módulo asignación"
-              : "Módulo completo"}
+              : "Módulo asignación"}
           </div>
         </div>
 

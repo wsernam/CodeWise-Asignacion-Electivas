@@ -357,3 +357,59 @@
   max-width: 230px;
   height: auto;
 }
+
+.sidebard-module-selector {
+  /* Modelo de caja */
+  display: flex;
+  overflow: hidden;
+
+  /* Márgenes */
+  margin: 1rem;
+
+  /* Bordes */
+  border-radius: 8px;
+  border: 1px solid #ddd;
+
+  /* Fondos */
+  background: #f8f9fa;
+}
+
+.sidebard-module-btn {
+  /* Flexbox y Grid */
+  flex: 1;
+
+  /* Relleno */
+  padding: 0.75rem 0.5rem;
+
+  /* Bordes */
+  border: none;
+
+  /* Fondos */
+  background: transparent;
+
+  /* Tipografía */
+  font-size: 0.85rem;
+  font-weight: 500;
+
+  /* Colores y efectos */
+  color: #666;
+
+  /* Interactividad */
+  cursor: pointer;
+}
+
+.sidebard-module-btn:hover {
+  /* Fondos */
+  background: #e9ecef;
+}
+
+.sidebard-module-btn.active {
+  /* Fondos */
+  background: #1e40af;
+
+  /* Tipografía */
+  font-weight: 600;
+
+  /* Colores y efectos */
+  color: white;
+}

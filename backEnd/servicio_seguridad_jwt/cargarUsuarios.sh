@@ -23,6 +23,13 @@ if not User.objects.filter(username='administrador').exists():
     print("Usuario 'administrador' creado.")
 else:
     print("El usuario 'administrador' ya existe.")
+
+# Verifica si el usuario 'Ambos' ya existe antes de crearlo
+if not User.objects.filter(username='ambos').exists():
+    user = User.objects.create_user(username='ambos', password='contraseña_ambos', email='ambos@example.com', role='Ambos')
+    print("Usuario 'ambos' creado.")
+else:
+    print("El usuario 'ambos' ya existe.")
 EOF
 
 # Ejecuta el servidor de Django
