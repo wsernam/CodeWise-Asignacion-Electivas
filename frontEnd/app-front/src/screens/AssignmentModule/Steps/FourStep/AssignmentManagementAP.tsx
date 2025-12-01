@@ -10,6 +10,7 @@ import Button from "../../../../components/ui/Button/Button";
 import SimpleModal from "../../../../components/shared/SimpleModal/SimpleModal";
 import ConfirmModal from "../../../../components/shared/ConfirmModal/ConfirmModal";
 import { useAssignmentProcessStore } from "../../../../store/Assignment";
+import RoleCard from "../../../../components/shared/RoleCard/RoleCard";
 
 type AssignmentProcessProps = {
   onNext: () => void;
@@ -73,13 +74,12 @@ const AssignmentManagementAP: React.FC<AssignmentProcessProps> = ({
   // NEW: ahora es async y llama al endpoint vía store
   const handleConfirmSave = async () => {
     try {
-      await ejecutarAsignacion(); // ← ejecuta POST /asignacion/ejecutar/
+      await ejecutarAsignacion();
       setShowConfirm(false);
       setShowModal(false);
       onNext(); // avanza al siguiente paso
     } catch (e: any) {
       console.error("Error ejecutando la asignación:", e?.message || e);
-      // aquí podrías mostrar un toast/notificación de error
     }
   };
 

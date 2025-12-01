@@ -320,7 +320,53 @@ const UploadFilesAP: React.FC<AssignmentProcessProps> = ({
           }}
         >
           <div className="fileUploader">
-            <MultipleFileUploader onFilesUploaded={handleFilesUploaded} />
+            {/* ELIMINA el botón de seleccionar del MultipleFileUploader */}
+            {/* Solo muestra la lista de archivos */}
+            <div style={{ maxHeight: "300px", overflowY: "auto" }}>
+              {uploadedFiles.length === 0 ? (
+                <div
+                  style={{
+                    textAlign: "center",
+                    padding: "20px",
+                    color: "#666",
+                  }}
+                >
+                  No hay archivos seleccionados
+                </div>
+              ) : (
+                uploadedFiles.map((file, index) => (
+                  <div
+                    key={index}
+                    style={{
+                      padding: "10px",
+                      marginBottom: "8px",
+                      backgroundColor: "#f5f5f5",
+                      borderRadius: "6px",
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                    }}
+                  >
+                    <span>{file.name}</span>
+                    <button
+                      onClick={() => {
+                        const newFiles = [...uploadedFiles];
+                        newFiles.splice(index, 1);
+                        setUploadedFiles(newFiles);
+                      }}
+                      style={{
+                        background: "none",
+                        border: "none",
+                        color: "red",
+                        cursor: "pointer",
+                      }}
+                    >
+                      🗑
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
           </div>
 
           {loading && (
@@ -343,14 +389,62 @@ const UploadFilesAP: React.FC<AssignmentProcessProps> = ({
             </div>
           )}
 
-          <div className="aps-step-buttons" style={{ marginTop: "16px" }}>
-            <Button
-              variant="primary"
-              onClick={handleSave}
-              disabled={loading || uploadedFiles.length === 0}
-            >
-              {loading ? "Validando..." : "Continuar"}
-            </Button>
+          {/* BOTONES ABAJO */}
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              marginTop: "20px",
+              gap: "10px",
+            }}
+          >
+            <div style={{ display: "flex", gap: "10px" }}>
+              {/* Botón Seleccionar archivos */}
+              <input
+                id="modal-file-input"
+                type="file"
+                multiple
+                accept=".xlsx,.xls,.xlsm,.xltm,.xltx,.csv"
+                onChange={(e) => {
+                  if (e.target.files) {
+                    const newFiles = Array.from(e.target.files);
+                    setUploadedFiles([...uploadedFiles, ...newFiles]);
+                  }
+                }}
+                style={{ display: "none" }}
+              />
+              <Button
+                variant="primary"
+                size="medium"
+                onClick={() =>
+                  document.getElementById("modal-file-input")?.click()
+                }
+              >
+                Seleccionar archivos
+              </Button>
+
+              {/* Botón Limpiar todo */}
+              {uploadedFiles.length > 0 && (
+                <Button
+                  variant="secondary"
+                  size="medium"
+                  onClick={() => setUploadedFiles([])}
+                >
+                  Limpiar todo
+                </Button>
+              )}
+            </div>
+
+            {/* Botón Continuar */}
+            <div>
+              <Button
+                variant="primary"
+                onClick={handleSave}
+                disabled={loading || uploadedFiles.length === 0}
+              >
+                {loading ? "Validando..." : "Continuar"}
+              </Button>
+            </div>
           </div>
         </SimpleModal>
       )}
