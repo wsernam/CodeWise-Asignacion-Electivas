@@ -13,8 +13,8 @@ import ListProgram from "./screens/FormModule/Program/ListProgram.tsx";
 import EditProgram from "./screens/FormModule/Program/EditProgram.tsx";
 import Offer from "./screens/FormModule/Offer/Offer.tsx";
 import AssignmentModule from "./screens/AssignmentModule/AssignmentModule.tsx";
-import ReportsAssignment from "./screens/FormModule/Reports/ReportsAssignment.tsx";
-import ReportsForm from "./screens/FormModule/Reports/ReportsForm.tsx";
+import ReportsAssignment from "./screens/Reports/ReportsAssignment.tsx";
+import ReportsForm from "./screens/Reports/ReportsForm.tsx";
 // ---------------------- IMPORTS DE ROUTER ----------------------
 import { createBrowserRouter } from "react-router";
 import DashboardLayout from "./components/layout/DashboardLayout/DashboardLayout.tsx";
@@ -81,7 +81,7 @@ const router = createBrowserRouter([
     path: "/programs/edit/:codigo",
     element: withDashboardLayout(EditProgram),
   },
-  
+
   {
     path: "/offer",
     element: withDashboardLayout(Offer),
