@@ -10,6 +10,10 @@ import {
   FaTimes,
 } from "react-icons/fa";
 import { useAuthStore } from "../../../store/Auth/authStore";
+import { FaSignOutAlt } from "react-icons/fa";
+import bannerImage from "../../../assets/banner-gestionelectivas.png";
+import adminIcon from "../../../assets/icon-admi.png";
+import asigIcon from "../../../assets/icon-asig.png";
 import type { IconType } from "react-icons";
 import "./Sidebard.css";
 
@@ -77,9 +81,17 @@ const Sidebar: React.FC<SidebardProps> = ({ onClose }) => {
   return (
     <aside className="sidebard-container">
       <div>
-        {/* Botón de cerrar - NUEVO */}
         {onClose && (
           <div className="sidebar-close-header">
+            {/* Banner a la izquierda */}
+            <div className="sidebar-banner">
+              <img
+                src={bannerImage}
+                alt="Gestión Electivas"
+                className="sidebar-banner-img"
+              />
+            </div>
+            {/* Botón de cerrar */}
             <button
               className="sidebar-close-btn"
               onClick={onClose}
@@ -111,23 +123,34 @@ const Sidebar: React.FC<SidebardProps> = ({ onClose }) => {
         </nav>
       </div>
 
-      {/* Perfil */}
+      {/* Perfil y logout */}
       <div className="sidebard-profile">
+        {/* Imagen según rol */}
         <img
-          src="https://randomuser.me/api/portraits/men/32.jpg"
-          alt="profile"
+          src={role === "administrador" ? adminIcon : asigIcon}
           className="sidebard-profile-img"
         />
-        <div>
+
+        <div className="sidebard-profile-info">
           <div className="sidebard-profile-name">{userId || "Usuario"}</div>
           <div className="sidebard-profile-role">
             {role === "administrador"
               ? "Módulo formulario"
               : role === "asignador"
               ? "Módulo asignación"
-              : "Usuario"}
+              : "Módulo completo"}
           </div>
         </div>
+
+        {/* Botón de logout */}
+        <button
+          className="sidebard-logout-btn"
+          onClick={() => useAuthStore.getState().logout()}
+          aria-label="Cerrar sesión"
+          title="Cerrar sesión"
+        >
+          <FaSignOutAlt />
+        </button>
       </div>
     </aside>
   );
