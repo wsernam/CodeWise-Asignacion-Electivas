@@ -46,7 +46,7 @@ EXPOSE 8000
 # Aquí es donde se hace el cambio crucial. El ENTRYPOINT es el comando
 # principal del contenedor. Usamos nuestro script de shell para manejar
 # toda la lógica de inicialización.
-ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+ENTRYPOINT ["sh","/usr/local/bin/entrypoint.sh"]
 
 
 # El compose sobreescribe este CMD
