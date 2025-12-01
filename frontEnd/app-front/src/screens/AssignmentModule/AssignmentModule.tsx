@@ -142,6 +142,7 @@ const AssignmentModule: React.FC = () => {
     if (currentProcess) {
       try {
         await finalizarProceso(currentProcess.pa_codigo);
+        await obtenerTodosLosProcesos();
       } catch (error) {
         console.error("Error finalizando proceso:", error);
       }

@@ -262,14 +262,7 @@ const LevelsManagementAP: React.FC<AssignmentProcessProps> = ({
                     justifyContent: "space-between",
                     marginTop: "20px",
                   }}
-                >
-                  <div style={{ width: "120px" }}>
-                    <BackButton
-                      onClick={() => setShowModal(false)}
-                      text="Volver"
-                    />
-                  </div>
-                </div>
+                ></div>
               </div>
             ) : leveledStudents.length === 0 ? (
               <div className="im-empty">
