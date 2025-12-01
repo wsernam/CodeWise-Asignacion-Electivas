@@ -11,7 +11,6 @@ import SimpleModal from "../../../../components/shared/SimpleModal/SimpleModal";
 import ConfirmModal from "../../../../components/shared/ConfirmModal/ConfirmModal";
 import { useAssignmentProcessStore } from "../../../../store/Assignment";
 
-
 type AssignmentProcessProps = {
   onNext: () => void;
   onCancel: () => void;
@@ -50,18 +49,18 @@ const cards = [
 
 const AssignmentManagementAP: React.FC<AssignmentProcessProps> = ({
   onNext,
-  onCancel,
   onStepClick,
   currentStep,
-  completedSteps,
   getStepBorderClass,
 }) => {
   const [showModal, setShowModal] = React.useState(false);
   const [showConfirm, setShowConfirm] = React.useState(false);
-    // NEW: traemos del store la acción y el loading (opcional para deshabilitar botón)
-  const ejecutarAsignacion = useAssignmentProcessStore((s: any) => s.ejecutarAsignacion); // NEW
+  // NEW: traemos del store la acción y el loading (opcional para deshabilitar botón)
+  const ejecutarAsignacion = useAssignmentProcessStore(
+    (s: any) => s.ejecutarAsignacion
+  ); // NEW
   const loading = useAssignmentProcessStore((s) => s.loading); // NEW
-  
+
   const handleCardClick = (stepNumber: number) => {
     if (stepNumber === currentStep) {
       setShowModal(true);
@@ -74,10 +73,10 @@ const AssignmentManagementAP: React.FC<AssignmentProcessProps> = ({
   // NEW: ahora es async y llama al endpoint vía store
   const handleConfirmSave = async () => {
     try {
-      await ejecutarAsignacion();           // ← ejecuta POST /asignacion/ejecutar/
+      await ejecutarAsignacion(); // ← ejecuta POST /asignacion/ejecutar/
       setShowConfirm(false);
       setShowModal(false);
-      onNext();                             // avanza al siguiente paso
+      onNext(); // avanza al siguiente paso
     } catch (e: any) {
       console.error("Error ejecutando la asignación:", e?.message || e);
       // aquí podrías mostrar un toast/notificación de error
@@ -127,9 +126,9 @@ const AssignmentManagementAP: React.FC<AssignmentProcessProps> = ({
         message="¿Está seguro de finalizar el proceso de asignación?"
         onConfirm={handleConfirmSave}
         onCancel={() => setShowConfirm(false)}
-        confirmDisabled={loading}   // deshabilita el botón "Sí"
-        cancelDisabled={loading}    // deshabilita "No" mientras carga (opcional)
-        confirmLoading={loading}    // muestra spinner en "Sí" (opcional)
+        confirmDisabled={loading} // deshabilita el botón "Sí"
+        cancelDisabled={loading} // deshabilita "No" mientras carga (opcional)
+        confirmLoading={loading} // muestra spinner en "Sí" (opcional)
       />
     </div>
   );

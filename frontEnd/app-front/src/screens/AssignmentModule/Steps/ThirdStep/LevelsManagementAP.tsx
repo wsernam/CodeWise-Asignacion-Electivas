@@ -274,11 +274,15 @@ const LevelsManagementAP: React.FC<AssignmentProcessProps> = ({
             ) : leveledStudents.length === 0 ? (
               <div className="im-empty">
                 <p>No se han identificado potenciales estudiantes nivelados</p>
-                <div style={{ display: "flex", justifyContent: "center", marginTop: "20px", gap: 8 }}>
-                  <Button 
-                  variant="primary" 
-                  onClick={handleSave}
-                  >
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "center",
+                    marginTop: "20px",
+                    gap: 8,
+                  }}
+                >
+                  <Button variant="primary" onClick={handleSave}>
                     Continuar
                   </Button>
                 </div>
@@ -370,9 +374,7 @@ const LevelsManagementAP: React.FC<AssignmentProcessProps> = ({
                     <NextButton
                       onClick={handleSave}
                       text={
-                        loading
-                          ? "Guardando..."
-                          : `Guardar (${confirmedCount})`
+                        loading ? "Guardando..." : `Guardar (${confirmedCount})`
                       }
                       disabled={loading}
                     />

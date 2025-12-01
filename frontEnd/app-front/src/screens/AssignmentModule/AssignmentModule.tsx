@@ -9,6 +9,7 @@ import UploadFilesAP from "./Steps/FirstStep/UploadFilesAP";
 import InactivesManagementAP from "./Steps/SecondStep/InactivesManagementAP";
 import LevelsManagementAP from "./Steps/ThirdStep/LevelsManagementAP";
 import AssignmentManagementAP from "./Steps/FourStep/AssignmentManagementAP";
+import TooltipInfo from "../../components/ui/TooltipInfo/TooltipInfo";
 import { useAssignmentProcessStore } from "../../store/Assignment";
 
 type ProcessData = {
@@ -36,21 +37,27 @@ const AssignmentModule: React.FC = () => {
 
   const navigate = useNavigate();
   // Helpers para persistir paso por roceso
-  const storageKeyForProcess = (codigo: number) => `assignment_process_${codigo}_current_step`;
+  const storageKeyForProcess = (codigo: number) =>
+    `assignment_process_${codigo}_current_step`;
 
   const loadPersistedState = (codigo: number) => {
     try {
       const raw = localStorage.getItem(storageKeyForProcess(codigo));
       if (!raw) return null;
       return JSON.parse(raw) as {
-        currentStepLocal?: number; completedSteps?: number[]
+        currentStepLocal?: number;
+        completedSteps?: number[];
       };
     } catch {
       return null;
     }
   };
 
-  const savePersistedState = (codigo: number, step: number | null, completed: number[]) => {
+  const savePersistedState = (
+    codigo: number,
+    step: number | null,
+    completed: number[]
+  ) => {
     try {
       localStorage.setItem(
         storageKeyForProcess(codigo),
@@ -59,10 +66,10 @@ const AssignmentModule: React.FC = () => {
     } catch {
       // No hacer nada
     }
-  }
+  };
 
   // Estados para el manejo del proceso
-  const { finalizarProceso,  eliminarProceso } = useAssignmentProcessStore();
+  const { finalizarProceso, eliminarProceso } = useAssignmentProcessStore();
   const {
     obtenerProcesoActivo,
     obtenerTodosLosProcesos,
@@ -97,7 +104,7 @@ const AssignmentModule: React.FC = () => {
       console.error("Error eliminando proceso:", error);
       throw error;
     }
-  }
+  };
 
   const handleDeleteProcess = () => {
     if (currentProcess) {
@@ -113,7 +120,9 @@ const AssignmentModule: React.FC = () => {
       const nextStep = currentStepLocal + 1;
       setCurrentStepLocal(nextStep);
       if (currentProcess?.pa_codigo) {
-        savePersistedState(currentProcess.pa_codigo, nextStep, [...new Set([...completedSteps, currentStepLocal])]);
+        savePersistedState(currentProcess.pa_codigo, nextStep, [
+          ...new Set([...completedSteps, currentStepLocal]),
+        ]);
       }
     }
   };
@@ -142,7 +151,7 @@ const AssignmentModule: React.FC = () => {
   const handleSeeReport = () => {
     handleFinalizeProcess();
     navigate("/reports-assignment");
-  }
+  };
 
   // Estado simple del proceso - SOLO EL NOMBRE
   const getProcessStatus = () => {
@@ -182,7 +191,7 @@ const AssignmentModule: React.FC = () => {
       // Cargar estado persistido
       const persisted = loadPersistedState(currentProcess.pa_codigo);
 
-      if(persisted?.currentStepLocal) {
+      if (persisted?.currentStepLocal) {
         setCurrentStepLocal(persisted.currentStepLocal);
         setCompletedSteps(persisted.completedSteps ?? []);
       } else {
@@ -216,6 +225,49 @@ const AssignmentModule: React.FC = () => {
       <div className="assignment-page-container">
         <div className="form-page-content">
           <Card className="main-card assignment-card">
+            <div className="assignment-tooltip-wrapper">
+              <TooltipInfo
+                symbol="!"
+                title={hasActiveProcess ? "Tener en cuenta" : "Importante"}
+                description={
+                  hasActiveProcess ? (
+                    <>
+                      <strong>Cargar Archivos: </strong>
+                      se reciben archivos en formato excel (.xlsx) con la
+                      información de los estudiantes.
+                      <br />
+                      <strong>Gestión de Potenciales Inactivos: </strong>
+                      se permite completar los datos de quienes tengan
+                      información faltante, o no incluirlos en la asignación.
+                      <br />
+                      <strong>Gestión de Potenciales Nivelados: </strong>
+                      se verifica qué estudientes pasan el filtro de nivelación
+                      para ver electivas.
+                      <br />
+                      <strong>Asignación: </strong>
+                      se confirma de la asignación automática.
+                      <br />
+                    </>
+                  ) : (
+                    <>
+                      <strong>Antes de comenzar:</strong>
+                      <br />
+                      • Debe tener los datos de estudiantes que coincidan con el
+                      formulario de inscripción.
+                      <br />
+                      • Verifique que no haya datos incompletos, o tenga cerca
+                      la información.
+                      <br />•{" "}
+                      <strong>
+                        Una vez iniciado, no podrá volver entre pasos.
+                      </strong>
+                      <br />• Asegúrese de proceder con cuidado.
+                    </>
+                  )
+                }
+                position="left"
+              />
+            </div>
             {!hasActiveProcess ? (
               <div className="no-process-container">
                 <div className="info-icon"></div>
@@ -302,10 +354,7 @@ const AssignmentModule: React.FC = () => {
                       >
                         Finalizar Proceso
                       </Button>
-                      <Button 
-                      variant="secondary"
-                      onClick={handleSeeReport}
-                      >
+                      <Button variant="secondary" onClick={handleSeeReport}>
                         Ver asignación
                       </Button>
                     </div>
@@ -377,25 +426,30 @@ const AssignmentModule: React.FC = () => {
         onClose={() => setShowDeleteConfirm(false)}
         title="Confirmar Eliminación"
       >
-        <div style ={{ minWidth: '360' }}>
-          <p>¿Está seguro de eliminar el proceso de asignación activo? Esta acción no se puede deshacer</p>
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', marginTop: '20px' }}>
+        <div style={{ minWidth: "360" }}>
+          <p>
+            ¿Está seguro de eliminar el proceso de asignación activo? Esta
+            acción no se puede deshacer
+          </p>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              gap: "10px",
+              marginTop: "20px",
+            }}
+          >
             <Button
-            variant="primary"
-            onClick={() => setShowDeleteConfirm(false)}
+              variant="primary"
+              onClick={() => setShowDeleteConfirm(false)}
             >
               Cancelar
             </Button>
-            <Button
-              variant="secondary"
-              onClick={handleConfirmDelete}
-            >
+            <Button variant="secondary" onClick={handleConfirmDelete}>
               Eliminar
             </Button>
-
           </div>
         </div>
-
       </SimpleModal>
     </>
   );
