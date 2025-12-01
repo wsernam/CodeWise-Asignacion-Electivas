@@ -1,5 +1,5 @@
 // src/services/electiveService.ts
-import apiClient from "../apiClient";
+import apiClient from "../Auth/apiClient";
 import type { IElective } from "../../models/Form/elective";
 import { ELECTIVES_URL_PUBLIC, ELECTIVES_URL_PRIVATE } from "../config/config";
 
@@ -19,7 +19,9 @@ const transformElective = (item: any): IElective => ({
 export const getElectivesService = async (): Promise<IElective[]> => {
   try {
     console.log("[electiveService] Conectando a:", `${ELECTIVES_URL_PUBLIC}/`);
-    const response = await apiClient.get(`${ELECTIVES_URL_PUBLIC}/?status=active`);
+    const response = await apiClient.get(
+      `${ELECTIVES_URL_PUBLIC}/?status=active`
+    );
     console.log("[electiveService] Datos CRUDOS del backend:", response.data);
 
     const transformed: IElective[] = Array.isArray(response.data)
@@ -30,9 +32,9 @@ export const getElectivesService = async (): Promise<IElective[]> => {
   } catch (error: any) {
     console.error("[electiveService] Error obteniendo electivas:", error);
     throw new Error(
-      error.response?.data?.detail || 
-      error?.message || 
-      "No se pudieron cargar las electivas"
+      error.response?.data?.detail ||
+        error?.message ||
+        "No se pudieron cargar las electivas"
     );
   }
 };
@@ -52,9 +54,9 @@ export const createElectiveService = async (
   } catch (error: any) {
     console.error("[electiveService] Error creando electiva:", error);
     throw new Error(
-      error.response?.data?.detail || 
-      error?.message || 
-      "No se pudo crear la electiva"
+      error.response?.data?.detail ||
+        error?.message ||
+        "No se pudo crear la electiva"
     );
   }
 };
@@ -69,16 +71,19 @@ export const updateElectiveService = async (
   try {
     console.log("[electiveService] Actualizando electiva:", codigo, e);
     console.log("[electiveService] JSON que se enviará:", JSON.stringify(e));
-    const response = await apiClient.put(`${ELECTIVES_URL_PRIVATE}/${codigo}/`, e);
+    const response = await apiClient.put(
+      `${ELECTIVES_URL_PRIVATE}/${codigo}/`,
+      e
+    );
     const updated = transformElective(response.data);
     console.log("[electiveService] Electiva actualizada:", updated);
     return updated;
   } catch (error: any) {
     console.error("[electiveService] Error actualizando electiva:", error);
     throw new Error(
-      error.response?.data?.detail || 
-      error?.message || 
-      "No se pudo actualizar la electiva"
+      error.response?.data?.detail ||
+        error?.message ||
+        "No se pudo actualizar la electiva"
     );
   }
 };
@@ -91,16 +96,18 @@ export const deleteElectiveService = async (
 ): Promise<IElective> => {
   try {
     console.log("[electiveService] Eliminando electiva:", codigo);
-    const response = await apiClient.delete(`${ELECTIVES_URL_PRIVATE}/${codigo}/`);
+    const response = await apiClient.delete(
+      `${ELECTIVES_URL_PRIVATE}/${codigo}/`
+    );
     const deleted = transformElective(response.data);
     console.log("[electiveService] Electiva eliminada:", deleted);
     return deleted;
   } catch (error: any) {
     console.error("[electiveService] Error eliminando electiva:", error);
     throw new Error(
-      error.response?.data?.detail || 
-      error?.message || 
-      "No se pudo eliminar la electiva"
+      error.response?.data?.detail ||
+        error?.message ||
+        "No se pudo eliminar la electiva"
     );
   }
 };
@@ -122,9 +129,9 @@ export const reactivateElectiveService = async (
   } catch (error: any) {
     console.error("[electiveService] Error reactivando electiva:", error);
     throw new Error(
-      error.response?.data?.detail || 
-      error?.message || 
-      "No se pudo reactivar la electiva"
+      error.response?.data?.detail ||
+        error?.message ||
+        "No se pudo reactivar la electiva"
     );
   }
 };
@@ -148,9 +155,9 @@ export const getElectiveByCodeService = async (
     }
     console.error("[electiveService] Error buscando electiva:", error);
     throw new Error(
-      error.response?.data?.detail || 
-      error?.message || 
-      "No se pudo obtener la electiva"
+      error.response?.data?.detail ||
+        error?.message ||
+        "No se pudo obtener la electiva"
     );
   }
 };

@@ -9,12 +9,15 @@ import {
   FaFileSignature,
   FaTimes,
 } from "react-icons/fa";
+import { useAuthStore } from "../../../store/Auth/authStore";
+import { FaSignOutAlt } from "react-icons/fa";
+import bannerImage from "../../../assets/banner-gestionelectivas.png";
+import adminIcon from "../../../assets/icon-admi.png";
+import asigIcon from "../../../assets/icon-asig.png";
 import type { IconType } from "react-icons";
 import "./Sidebard.css";
 
 interface SidebardProps {
-  onRoleChange: (role: "admin" | "asignador") => void;
-  currentRole: "admin" | "asignador";
   onClose?: () => void;
 }
 
@@ -22,7 +25,7 @@ interface MenuItem {
   label: string;
   path: string;
   icon: IconType;
-  roles: Array<"admin" | "asignador">;
+  roles: Array<"administrador" | "asignador">;
 }
 
 const menuItems: MenuItem[] = [
@@ -30,25 +33,25 @@ const menuItems: MenuItem[] = [
     label: "Inicio",
     path: "/dashboard",
     icon: FaHome,
-    roles: ["admin"],
+    roles: ["administrador"],
   },
   {
     label: "Oferta",
     path: "/offer",
     icon: FaUserGraduate,
-    roles: ["admin"],
+    roles: ["administrador"],
   },
   {
     label: "Electivas",
     path: "/electives",
     icon: FaBook,
-    roles: ["admin"],
+    roles: ["administrador"],
   },
   {
     label: "Programas",
     path: "/programs",
     icon: FaBookOpen,
-    roles: ["admin"],
+    roles: ["administrador"],
   },
   {
     label: "Proceso Asignación",
@@ -66,29 +69,29 @@ const menuItems: MenuItem[] = [
     label: "Reportes Formulario",
     path: "/reports-form",
     icon: FaFileSignature,
-    roles: ["admin"],
+    roles: ["administrador"],
   },
 ];
 
-const Sidebar: React.FC<SidebardProps> = ({
-  onRoleChange,
-  currentRole,
-  onClose,
-}) => {
+const Sidebar: React.FC<SidebardProps> = ({ onClose }) => {
   const navigate = useNavigate();
   const location = useLocation();
-
-  const handleRoleClick = (role: "admin" | "asignador") => {
-    onRoleChange(role);
-    navigate("/dashboard");
-  };
+  const { role, userId } = useAuthStore();
 
   return (
     <aside className="sidebard-container">
       <div>
-        {/* Botón de cerrar - NUEVO */}
         {onClose && (
           <div className="sidebar-close-header">
+            {/* Banner a la izquierda */}
+            <div className="sidebar-banner">
+              <img
+                src={bannerImage}
+                alt="Gestión Electivas"
+                className="sidebar-banner-img"
+              />
+            </div>
+            {/* Botón de cerrar */}
             <button
               className="sidebar-close-btn"
               onClick={onClose}
@@ -102,7 +105,7 @@ const Sidebar: React.FC<SidebardProps> = ({
         {/* Menú lateral */}
         <nav className="sidebard-links">
           {menuItems
-            .filter((item) => item.roles.includes(currentRole))
+            .filter((item) => item.roles.includes(role!))
             .map((item) => {
               const Icon = item.icon;
               return (
@@ -118,38 +121,36 @@ const Sidebar: React.FC<SidebardProps> = ({
               );
             })}
         </nav>
-
-        {/* Selector de rol */}
-        <div className="sidebard-roles">
-          {["admin", "asignador"].map((role) => (
-            <button
-              key={role}
-              className={`sidebard-role-btn${
-                currentRole === role ? " active" : ""
-              }`}
-              onClick={() => handleRoleClick(role as "admin" | "asignador")}
-            >
-              {role === "admin" ? "Módulo formulario" : "Módulo asignación"}
-            </button>
-          ))}
-        </div>
       </div>
 
-      {/* Perfil */}
+      {/* Perfil y logout */}
       <div className="sidebard-profile">
+        {/* Imagen según rol */}
         <img
-          src="https://randomuser.me/api/portraits/men/32.jpg"
-          alt="profile"
+          src={role === "administrador" ? adminIcon : asigIcon}
           className="sidebard-profile-img"
         />
-        <div>
-          <div className="sidebard-profile-name">Username</div>
+
+        <div className="sidebard-profile-info">
+          <div className="sidebard-profile-name">{userId || "Usuario"}</div>
           <div className="sidebard-profile-role">
-            {currentRole === "admin"
-              ? "Modulo formulario"
-              : "Modulo asignacion"}
+            {role === "administrador"
+              ? "Módulo formulario"
+              : role === "asignador"
+              ? "Módulo asignación"
+              : "Módulo completo"}
           </div>
         </div>
+
+        {/* Botón de logout */}
+        <button
+          className="sidebard-logout-btn"
+          onClick={() => useAuthStore.getState().logout()}
+          aria-label="Cerrar sesión"
+          title="Cerrar sesión"
+        >
+          <FaSignOutAlt />
+        </button>
       </div>
     </aside>
   );

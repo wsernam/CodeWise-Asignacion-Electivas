@@ -1,5 +1,5 @@
 // src/services/Assignment/niveladosService.ts
-import apiClient from "../apiClient";
+import apiClient from "../Auth/apiClient";
 import { NIVELADOS_URL_PRIVATE } from "../config/config";
 import type {
   LeveledStudent,
@@ -28,8 +28,8 @@ export const niveladosService = {
     } catch (error: any) {
       console.error("[niveladosService] Error gestionando nivelados:", error);
       throw new Error(
-        error.response?.data?.detail || 
-        `Error gestionando nivelados: ${error.message}`
+        error.response?.data?.detail ||
+          `Error gestionando nivelados: ${error.message}`
       );
     }
   },
@@ -53,8 +53,8 @@ export const niveladosService = {
     } catch (error: any) {
       console.error("[niveladosService] Error listando nivelados:", error);
       throw new Error(
-        error.response?.data?.detail || 
-        `Error listando nivelados: ${error.message}`
+        error.response?.data?.detail ||
+          `Error listando nivelados: ${error.message}`
       );
     }
   },
@@ -81,8 +81,8 @@ export const niveladosService = {
     } catch (error: any) {
       console.error("[niveladosService] Error confirmando nivelados:", error);
       throw new Error(
-        error.response?.data?.detail || 
-        `Error confirmando nivelados: ${error.message}`
+        error.response?.data?.detail ||
+          `Error confirmando nivelados: ${error.message}`
       );
     }
   },

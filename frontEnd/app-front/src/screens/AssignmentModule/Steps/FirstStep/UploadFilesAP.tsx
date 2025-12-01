@@ -13,11 +13,15 @@ import NextButton from "../../../../components/ui/NextButton/NextButton";
 import SimpleModal from "../../../../components/shared/SimpleModal/SimpleModal";
 import MultipleFileUploader from "../../../../components/fileUploader/MultipleFileUploader";
 import ConfirmModal from "../../../../components/shared/ConfirmModal/ConfirmModal";
+import TooltipInfo from "../../../../components/ui/TooltipInfo/TooltipInfo";
 import {
   useExcelProcessingStore,
   useAssignmentFlowStore,
 } from "../../../../store/Assignment";
-import { useCodeBatchStore, useAssignmentProcessStore } from "../../../../store/Assignment/assignmentProcessStore";
+import {
+  useCodeBatchStore,
+  useAssignmentProcessStore,
+} from "../../../../store/Assignment/assignmentProcessStore";
 import type { ValidationResult } from "../../../../models/Assignment/assignmentProcess";
 import type { CodeBatchesResponse } from "../../../../models/Assignment/assignmentProcess";
 
@@ -66,7 +70,6 @@ const UploadFilesAP: React.FC<AssignmentProcessProps> = ({
   const [showModal, setShowModal] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [showWarningModal, setShowWarningModal] = useState(false);
-  const [warningMessage] = useState("");
 
   // Archivos subidos
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
@@ -115,14 +118,33 @@ const UploadFilesAP: React.FC<AssignmentProcessProps> = ({
       const resultado = await validarExcel(uploadedFiles);
       console.log("Resultado del backend:", resultado);
 
-      // PRIMERO: Mostrar análisis de formato
-      setFormatResult({
-        cumple: !resultado.advertencias || resultado.advertencias.length === 0,
-        mensajes: resultado.advertencias || [],
-        resultado: resultado,
-      });
-      setShowModal(false);
-      setShowFormatAnalysis(true);
+      // Verificar formato
+      const formatoCumple =
+        !resultado.advertencias || resultado.advertencias.length === 0;
+
+      // Verificar datos
+      const datosCumplen =
+        (!resultado.faltantes || resultado.faltantes.length === 0) &&
+        (!resultado.sobrantes || resultado.sobrantes.length === 0);
+
+      if (formatoCumple && datosCumplen) {
+        // Continuar automáticamente si todo ok
+        console.log("Todo correcto, continuando...");
+        addCompletedStep(1);
+        onNext();
+      } else if (!formatoCumple) {
+        setFormatResult({
+          cumple: formatoCumple,
+          mensajes: resultado.advertencias || [],
+          resultado: resultado,
+        });
+        setShowModal(false);
+        setShowFormatAnalysis(true);
+      } else if (!datosCumplen) {
+        setSummaryResult(resultado);
+        setShowModal(false);
+        setShowSummaryModal(true);
+      }
     } catch (error: any) {
       console.error("Error validando archivos:", error);
       alert(`Error en validación: ${error.message}`);
@@ -154,14 +176,15 @@ const UploadFilesAP: React.FC<AssignmentProcessProps> = ({
     onNext();
   };
 
-
   // Función para generar lotes de códigos
   const handleGenerateCodeBatches = async () => {
     console.log("Generando lotes de códigos...");
     setIsDownloadingCodes(true);
 
     try {
-      const year = currentProcess ? currentProcess.pa_anio : new Date().getFullYear();
+      const year = currentProcess
+        ? currentProcess.pa_anio
+        : new Date().getFullYear();
       const semester = currentProcess ? currentProcess.pa_num_semestre : 1;
       const data: CodeBatchesResponse = await fetchCodeBatches(year, semester);
       console.log("Lotes de códigos recibidos:", data.lotes);
@@ -216,7 +239,9 @@ const UploadFilesAP: React.FC<AssignmentProcessProps> = ({
           .join("\n\n");
         const fileBlob = new Blob([fileContent], { type: "text/plain" });
         element.href = URL.createObjectURL(fileBlob);
-        element.download = `lotes_codigos_${currentProcess ? currentProcess.pa_anio : new Date().getFullYear()}_${currentProcess ? currentProcess.pa_num_semestre : 1}.txt`;
+        element.download = `lotes_codigos_${
+          currentProcess ? currentProcess.pa_anio : new Date().getFullYear()
+        }_${currentProcess ? currentProcess.pa_num_semestre : 1}.txt`;
         document.body.appendChild(element);
         element.click();
         document.body.removeChild(element);
@@ -231,10 +256,11 @@ const UploadFilesAP: React.FC<AssignmentProcessProps> = ({
     if (!codeBatches || codeBatches.length === 0) {
       console.log("No hay códigos para descargar.");
       return;
-    }
-    else {
+    } else {
       try {
-        const year = currentProcess ? currentProcess.pa_anio : new Date().getFullYear();
+        const year = currentProcess
+          ? currentProcess.pa_anio
+          : new Date().getFullYear();
         const semester = currentProcess ? currentProcess.pa_num_semestre : 1;
         const pdfBlob: Blob = await downloadCodeBatchesPDF(year, semester);
 
@@ -245,12 +271,11 @@ const UploadFilesAP: React.FC<AssignmentProcessProps> = ({
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-
       } catch (error) {
         console.error("Error descargando los códigos: ", error);
+      }
     }
-  }
-};
+  };
 
   return (
     <div className="aps-wrapper">
@@ -330,40 +355,52 @@ const UploadFilesAP: React.FC<AssignmentProcessProps> = ({
         </SimpleModal>
       )}
 
-      {/* Modal de Análisis de Formato - NUEVO */}
+      {/* Modal de Análisis de Formato */}
       <SimpleModal
         open={showFormatAnalysis}
-        title="Análisis de Formato"
+        titleTooltip={
+          <div className="title-with-tooltip">
+            Análisis de Formato
+            <TooltipInfo
+              symbol="?"
+              title="Requisitos del Formato Excel"
+              description={
+                <>
+                  <strong>El archivo debe tener esta estructura exacta:</strong>
+                  <br />• <strong>Columnas en este orden:</strong> CODIGO,
+                  CREDITOS_APROBADOS, PROMEDIO_CARRERA, APROBADAS,
+                  PERIODOS_MATRICULADOS.
+                  <br />• <strong>Encabezados exactos</strong> (sin espacios
+                  extra o caracteres especiales).
+                  <br />• <strong>Datos numéricos</strong> en las columnas
+                  correspondientes.
+                  <br />• <strong>Sin filas vacías</strong> entre los datos.
+                  <br />• <strong>Sin formatos complejos</strong> como celdas
+                  combinadas.
+                  <br />• <strong>Tipos de datos correctos:</strong> números
+                  enteros donde corresponda.
+                </>
+              }
+              position="bottom"
+            />
+          </div>
+        }
         onClose={() => setShowFormatAnalysis(false)}
       >
         <div style={{ maxHeight: 400, overflowY: "auto" }}>
-          {formatResult?.cumple ? (
-            <div>
-              <p>
-                <strong>Formato Correcto</strong>
-              </p>
-              <p>
-                Los archivos han pasado la validación de formato exitosamente.
-              </p>
-            </div>
-          ) : (
-            <div>
-              <p>
-                <strong>Problemas de Formato Detectados</strong>
-              </p>
-              <p>
-                Se encontraron los siguientes problemas que deben corregirse:
-              </p>
-              <ul>
-                {formatResult?.mensajes.map((msg, i) => (
-                  <li key={i} style={{ color: "#dc3545", marginBottom: "8px" }}>
-                    {msg}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-
+          <div>
+            <p>
+              <strong>Problemas de Formato Detectados</strong>
+            </p>
+            <p>Se encontraron los siguientes problemas que deben corregirse:</p>
+            <ul>
+              {formatResult?.mensajes.map((msg, i) => (
+                <li key={i} style={{ color: "#dc3545", marginBottom: "8px" }}>
+                  {msg}
+                </li>
+              ))}
+            </ul>
+          </div>
           <div
             style={{
               display: "flex",
@@ -380,29 +417,9 @@ const UploadFilesAP: React.FC<AssignmentProcessProps> = ({
                 text="Volver"
               />
             </div>
-            <div style={{ width: "120px" }}>
-              <NextButton
-                onClick={() => {
-                  setShowFormatAnalysis(false);
-                  if (formatResult?.cumple && formatResult.resultado) {
-                    setSummaryResult(formatResult.resultado);
-                    setShowSummaryModal(true);
-                  }
-                }}
-                text="Siguiente"
-                disabled={!formatResult?.cumple}
-              />
-            </div>
           </div>
         </div>
       </SimpleModal>
-
-      {/* Modal de advertencia para errores de formato */}
-      <WarningModal
-        open={showWarningModal}
-        message={warningMessage}
-        onClose={() => setShowWarningModal(false)}
-      />
 
       {/* Modal de confirmación para continuar */}
       <ConfirmModal
@@ -415,7 +432,30 @@ const UploadFilesAP: React.FC<AssignmentProcessProps> = ({
       {/* Modal de resumen de validación */}
       <SimpleModal
         open={showSummaryModal}
-        title="Resumen de validación"
+        titleTooltip={
+          <div className="title-with-tooltip">
+            Análisis de Datos
+            <TooltipInfo
+              symbol="?"
+              title="¿Qué significan estos errores?"
+              description={
+                <>
+                  <strong>Estudiantes faltantes: </strong>
+                  son estudiantes que sí llenaron el formulario de inscripción
+                  pero no aparecen en el archivo Excel. Puede agregarlos al
+                  archivo con todos sus datos e intentar nuevamente.
+                  <br />
+                  <strong>Estudiantes sobrantes: </strong>
+                  son estudiantes que no llenaron el formulario de inscripción
+                  pero sí aparecen en el archivo Excel. Puede removerlos del
+                  archivo e intentar nuevamente.
+                  <br />
+                </>
+              }
+              position="right"
+            />
+          </div>
+        }
         onClose={() => {
           setShowSummaryModal(false);
         }}
@@ -447,10 +487,10 @@ const UploadFilesAP: React.FC<AssignmentProcessProps> = ({
 
           {/* Lógica para permitir continuar o no */}
           {summaryResult &&
-            summaryResult.faltantes &&
-            summaryResult.faltantes.length === 0 &&
-            summaryResult.sobrantes &&
-            summaryResult.sobrantes.length === 0 ? (
+          summaryResult.faltantes &&
+          summaryResult.faltantes.length === 0 &&
+          summaryResult.sobrantes &&
+          summaryResult.sobrantes.length === 0 ? (
             <div
               style={{
                 display: "flex",
@@ -462,7 +502,7 @@ const UploadFilesAP: React.FC<AssignmentProcessProps> = ({
                 <BackButton
                   onClick={() => {
                     setShowSummaryModal(false);
-                    setShowFormatAnalysis(true);
+                    setShowModal(true);
                   }}
                   text="Volver"
                 />
@@ -477,9 +517,10 @@ const UploadFilesAP: React.FC<AssignmentProcessProps> = ({
           ) : (
             <div style={{ marginTop: 12, color: "#a00" }}>
               <p>
-                No es posible continuar: existen filas faltantes o sobrantes.
-                Corrige los archivos y vuelve a validar.
+                No es posible continuar: corrige los archivos y vuelve a
+                validar.
               </p>
+
               <div
                 style={{
                   display: "flex",
@@ -491,15 +532,9 @@ const UploadFilesAP: React.FC<AssignmentProcessProps> = ({
                   <BackButton
                     onClick={() => {
                       setShowSummaryModal(false);
-                      setShowFormatAnalysis(true);
+                      setShowModal(true);
                     }}
                     text="Volver"
-                  />
-                </div>
-                <div style={{ width: "120px" }}>
-                  <NextButton
-                    onClick={() => setShowSummaryModal(false)}
-                    text="Cerrar"
                   />
                 </div>
               </div>
@@ -563,7 +598,6 @@ const UploadFilesAP: React.FC<AssignmentProcessProps> = ({
                 <Button variant="primary" onClick={handleDownloadCodesPDF}>
                   Descargar pdf
                 </Button>
-
               </div>
             </>
           )}

@@ -5,7 +5,7 @@ import WarningModal from "../../../../components/shared/WarningModal/WarningModa
 import ConfirmModal from "../../../../components/shared/ConfirmModal/ConfirmModal";
 import SuccessModal from "../../../../components/shared/SuccessModal/SuccessModal";
 import Button from "../../../../components/ui/Button/Button";
-
+import TooltipInfo from "../../../../components/ui/TooltipInfo/TooltipInfo";
 import { useAssignmentProcessStore } from "../../../../store/Assignment";
 import { useAssignmentFlowStore } from "../../../../store/Assignment";
 
@@ -81,14 +81,17 @@ const CreateAssignmentProcess: React.FC<AssignmentProcessProps> = ({
     } catch (error: any) {
       console.error("[CreateProcess] Error creando proceso:", error);
       const message = error.message;
-      if (message.includes("The fields pa_anio, pa_num_semestre must make a unique set.")) {
+      if (
+        message.includes(
+          "The fields pa_anio, pa_num_semestre must make a unique set."
+        )
+      ) {
         setWarning({
           open: true,
           message:
             "Ya existe un proceso de asignación para el año y semestre seleccionados.",
         });
       } else {
-
       }
     }
   };
@@ -160,7 +163,15 @@ const CreateAssignmentProcess: React.FC<AssignmentProcessProps> = ({
           </div>
         )}
 
-        <div className="form-create-actions" style={{ display: 'flex', justifyContent: 'center', gap: '10px', marginTop: '20px' }}>
+        <div
+          className="form-create-actions"
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            gap: "10px",
+            marginTop: "20px",
+          }}
+        >
           <Button
             variant="primary"
             onClick={handleSave}

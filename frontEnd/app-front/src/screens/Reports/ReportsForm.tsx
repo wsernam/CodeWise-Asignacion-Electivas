@@ -1,10 +1,11 @@
+// ReportsForm.tsx - ACTUALIZADO
 import React, { useEffect, useState } from "react";
-import Card from "../../../components/ui/Card/Card";
+import Card from "../../components/ui/Card/Card";
 import ReportFilters from "./ReportFilters";
-import { useReportStore } from "../../../store/Form/reportStore";
-import { selectionReportService } from "../../../services/Form/selectionReportService";
-import { offerReportService } from "../../../services/Form/offerReportService";
-import WarningModal from "../../../components/shared/WarningModal/WarningModal";
+import { useReportStore } from "../../store/Form/reportStore";
+import { selectionReportService } from "../../services/Form/selectionReportService";
+import { offerReportService } from "../../services/Form/offerReportService";
+import WarningModal from "../../components/shared/WarningModal/WarningModal";
 import "./ReportsAssignment.css";
 
 const ReportsForm: React.FC = () => {
@@ -136,14 +137,16 @@ const ReportsForm: React.FC = () => {
             selectedYear={selectedYear}
             selectedSemester={selectedSemester}
             selectedReportType={selectedReportType}
-            studentCode={studentCode}
+            studentCode={studentCode} // ← PASA el estado del store
             onYearChange={setSelectedYear}
             onSemesterChange={setSelectedSemester}
             onReportTypeChange={setSelectedReportType}
-            onStudentCodeChange={setStudentCode}
+            onStudentCodeChange={setStudentCode} // ← PASA el setter del store
             onGenerate={handleGenerateReport}
             isGenerating={isGenerating}
             isGenerateDisabled={isGenerateDisabled()}
+            module="form" // ← IMPORTANTE: indica que es de formularios
+            // Opciones personalizadas
             reportTypeOptions={[
               {
                 value: "student-elective-selection",

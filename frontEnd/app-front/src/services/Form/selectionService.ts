@@ -1,4 +1,4 @@
-import apiClient from "../apiClient";
+import apiClient from "../Auth/apiClient";
 import { SELECTION_URL_PRIVATE, SELECTION_URL_PUBLIC } from "../config/config";
 import type { ISelectionStudentElective } from "../../models/Form/selection";
 
@@ -43,9 +43,9 @@ export const getSelectionsByStudent = async (
   } catch (error: any) {
     console.error("[selectionService] Error obteniendo selecciones:", error);
     throw new Error(
-      error.response?.data?.detail || 
-      error?.message || 
-      "No se pudieron cargar las selecciones"
+      error.response?.data?.detail ||
+        error?.message ||
+        "No se pudieron cargar las selecciones"
     );
   }
 };
@@ -67,9 +67,9 @@ export const createSelectionService = async (
     console.log("JSON Enviado:", JSON.stringify(s));
     console.error("[selectionService] Error creando selección:", error);
     throw new Error(
-      error.response?.data?.detail || 
-      error?.message || 
-      "No se pudo crear la selección"
+      error.response?.data?.detail ||
+        error?.message ||
+        "No se pudo crear la selección"
     );
   }
 };

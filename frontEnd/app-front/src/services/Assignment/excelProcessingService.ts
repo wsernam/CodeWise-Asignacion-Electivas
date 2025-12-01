@@ -1,5 +1,8 @@
-import apiClient from "../apiClient";
-import { EXCEL_PROCESSING_URL_PRIVATE, ASSIGNMENT_API_BASE_URL_PRIVATE } from "../config/config";
+import apiClient from "../Auth/apiClient";
+import {
+  EXCEL_PROCESSING_URL_PRIVATE,
+  ASSIGNMENT_API_BASE_URL_PRIVATE,
+} from "../config/config";
 import type {
   ValidationResult,
   IncompleteRow,
@@ -27,7 +30,7 @@ export const excelProcessingService = {
 
       const response = await apiClient.post(url, formData, {
         headers: {
-          'Content-Type': 'multipart/form-data',
+          "Content-Type": "multipart/form-data",
         },
       });
 
@@ -38,7 +41,7 @@ export const excelProcessingService = {
       // Manejo de errores de Axios
       if (error.response) {
         const errorData = error.response.data;
-        
+
         if (errorData.error) {
           throw new Error(errorData.error);
         } else if (errorData.detail) {
@@ -46,10 +49,12 @@ export const excelProcessingService = {
         } else if (errorData.non_field_errors) {
           throw new Error(errorData.non_field_errors[0]);
         }
-        
-        throw new Error(`Error ${error.response.status}: ${error.response.statusText}`);
+
+        throw new Error(
+          `Error ${error.response.status}: ${error.response.statusText}`
+        );
       }
-      
+
       throw error;
     }
   },
@@ -71,7 +76,7 @@ export const excelProcessingService = {
         formData,
         {
           headers: {
-            'Content-Type': 'multipart/form-data',
+            "Content-Type": "multipart/form-data",
           },
         }
       );
@@ -80,8 +85,8 @@ export const excelProcessingService = {
     } catch (error: any) {
       console.error("[excelProcessingService] Error previsualizando:", error);
       throw new Error(
-        error.response?.data?.detail || 
-        `Error previsualizando: ${error.message}`
+        error.response?.data?.detail ||
+          `Error previsualizando: ${error.message}`
       );
     }
   },
@@ -109,8 +114,7 @@ export const excelProcessingService = {
     } catch (error: any) {
       console.error("[excelProcessingService] Error procesando:", error);
       throw new Error(
-        error.response?.data?.detail || 
-        `Error procesando: ${error.message}`
+        error.response?.data?.detail || `Error procesando: ${error.message}`
       );
     }
   },
@@ -130,7 +134,7 @@ export const excelProcessingService = {
         formData,
         {
           headers: {
-            'Content-Type': 'multipart/form-data',
+            "Content-Type": "multipart/form-data",
           },
         }
       );
@@ -139,8 +143,7 @@ export const excelProcessingService = {
     } catch (error: any) {
       console.error("[excelProcessingService] Error importando:", error);
       throw new Error(
-        error.response?.data?.detail || 
-        `Error importando: ${error.message}`
+        error.response?.data?.detail || `Error importando: ${error.message}`
       );
     }
   },

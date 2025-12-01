@@ -1,4 +1,4 @@
-import apiClient from "../apiClient";
+import apiClient from "../Auth/apiClient";
 import type { IOffer } from "../../models/Form/offer";
 import { OFFER_URL_PUBLIC, OFFER_URL_PRIVATE } from "../config/config";
 
@@ -16,9 +16,9 @@ export const createBulkOffer = async (offerData: IOffer): Promise<any> => {
   } catch (error: any) {
     console.log("[offerService] Error creando ofertas:", error.response?.data);
     throw new Error(
-      error.response?.data?.detail || 
-      error?.message || 
-      "No se pudieron crear las ofertas"
+      error.response?.data?.detail ||
+        error?.message ||
+        "No se pudieron crear las ofertas"
     );
   }
 };
@@ -36,7 +36,9 @@ export const getOffersByProgram = async (
       "[offerService] Ofertas obtenidas exitosamente: ",
       response.data
     );
-    console.log(`${OFFER_URL_PUBLIC}ofertas/${year}/${semester}/${programCode}/`)
+    console.log(
+      `${OFFER_URL_PUBLIC}ofertas/${year}/${semester}/${programCode}/`
+    );
     return response.data;
   } catch (error: any) {
     console.log(
@@ -44,9 +46,9 @@ export const getOffersByProgram = async (
       error.response?.data
     );
     throw new Error(
-      error.response?.data?.detail || 
-      error?.message || 
-      "No se pudieron obtener las ofertas"
+      error.response?.data?.detail ||
+        error?.message ||
+        "No se pudieron obtener las ofertas"
     );
   }
 };

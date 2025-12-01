@@ -6,11 +6,11 @@ import {
   FaFileAlt,
   FaClipboardList,
 } from "react-icons/fa";
-import Button from "../../../../components/ui/Button/Button";
 import BackButton from "../../../../components/ui/BackButton/BackButton";
 import NextButton from "../../../../components/ui/NextButton/NextButton";
 import SimpleModal from "../../../../components/shared/SimpleModal/SimpleModal";
 import ConfirmModal from "../../../../components/shared/ConfirmModal/ConfirmModal";
+import Button from "../../../../components/ui/Button/Button";
 import { useExcelProcessingStore } from "../../../../store/Assignment";
 import InactivesTable, { type InactiveRow } from "./InactivesTable";
 
@@ -58,7 +58,9 @@ const InactivesManagementAP: React.FC<AssignmentProcessProps> = ({
 }) => {
   const [showModal, setShowModal] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
-  const [confirmMessage, setConfirmMessage] = useState<string>("¿Está seguro de guardar este paso y continuar?");
+  const [confirmMessage, setConfirmMessage] = useState<string>(
+    "¿Está seguro de guardar este paso y continuar?"
+  );
 
   const [inactiveRows, setInactiveRows] = useState<InactiveRow[]>([]);
   const [nextId, setNextId] = useState(1);
@@ -160,13 +162,17 @@ const InactivesManagementAP: React.FC<AssignmentProcessProps> = ({
   const handleSave = async () => {
     try {
       if (inactiveRows.length === 0) {
-        setConfirmMessage("No hay estudiantes inactivos para procesar. ¿Desea continuar?");
+        setConfirmMessage(
+          "No hay estudiantes inactivos para procesar. ¿Desea continuar?"
+        );
         setShowConfirm(true);
         return;
       }
 
       if (hayEstudiantesInactivos()) {
-        setConfirmMessage("Hay estudiantes inactivos con datos incompletos o inválidos. ¿Desea continuar?");
+        setConfirmMessage(
+          "Hay estudiantes inactivos con datos incompletos o inválidos. ¿Desea continuar?"
+        );
         setShowConfirm(true);
         return;
       }
@@ -244,23 +250,18 @@ const InactivesManagementAP: React.FC<AssignmentProcessProps> = ({
                 <div
                   style={{
                     display: "flex",
-                    justifyContent: "space-between",
+                    justifyContent: "center",
                     marginTop: "20px",
                   }}
                 >
-                  <div style={{ width: "120px" }}>
-                    <BackButton
-                      onClick={() => setShowModal(false)}
-                      text="Volver"
-                    />
-                  </div>
-                  <div style={{ width: "120px" }}>
-                    <NextButton
-                      onClick={handleSave}
-                      text="Confirmar"
-                      disabled={loading}
-                    />
-                  </div>
+                  <Button
+                    variant="primary"
+                    size="medium"
+                    onClick={handleSave}
+                    disabled={loading}
+                  >
+                    Confirmar
+                  </Button>
                 </div>
               </div>
             ) : (

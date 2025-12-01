@@ -1,215 +1,392 @@
-/* Estructura principal */
 .form-page-content {
+  /* Modelo de caja */
   display: flex;
+
+  /* Flexbox y Grid */
   flex-direction: column;
   gap: 20px;
 }
 
 .main-card {
+  /* Dimensiones */
   width: 100%;
   max-width: 1200px;
+
+  /* Márgenes */
   margin: 0 auto;
+
+  /* Relleno */
   padding: 20px;
-  background: #ffffff;
+
+  /* Bordes */
   border-radius: 20px;
+
+  /* Fondos */
+  background: #ffffff;
+
+  /* Colores y efectos */
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .no-process-container {
-  text-align: center;
+  /* Relleno */
   padding: 40px 20px;
+
+  /* Tipografía */
+  text-align: center;
 }
 
 .info-icon {
-  font-size: 48px;
+  /* Márgenes */
   margin-bottom: 16px;
+
+  /* Tipografía */
+  font-size: 48px;
 }
 
 .no-process-container h3 {
-  color: #666;
+  /* Márgenes */
   margin-bottom: 24px;
+
+  /* Tipografía */
   font-weight: 500;
+
+  /* Colores y efectos */
+  color: #666;
 }
 
 .create-btn {
+  /* Dimensiones */
   min-width: 120px;
 }
 
-/* Header del proceso activo */
 .simple-process-header {
+  /* Modelo de caja */
   display: flex;
+
+  /* Flexbox y Grid */
   justify-content: space-between;
   align-items: center;
+
+  /* Márgenes */
   margin-bottom: 30px;
+
+  /* Relleno */
   padding-bottom: 20px;
+
+  /* Bordes */
   border-bottom: 1px solid #e0e0e0;
 }
 
 .process-title-section {
+  /* Modelo de caja */
   display: flex;
+
+  /* Flexbox y Grid */
   align-items: center;
   gap: 16px;
 }
 
 .simple-process-header h3 {
+  /* Márgenes */
   margin: 0;
-  color: #333;
+
+  /* Tipografía */
   font-size: 1.3rem;
   font-weight: 600;
+
+  /* Colores y efectos */
+  color: #333;
 }
 
 .process-status {
-  background: #28a745;
-  color: white;
+  /* Relleno */
   padding: 6px 16px;
+
+  /* Bordes */
   border-radius: 16px;
+
+  /* Fondos */
+  background: #28a745;
+
+  /* Tipografía */
   font-size: 0.9rem;
   font-weight: bold;
+
+  /* Colores y efectos */
+  color: white;
 }
 
 .final-step-actions {
-  text-align: center;
+  /* Relleno */
   padding: 40px 20px;
+
+  /* Tipografía */
+  text-align: center;
 }
 
 .success-message {
+  /* Márgenes */
   margin-bottom: 24px;
 }
 
 .success-message p {
-  color: #28a745;
+  /* Tipografía */
   font-size: 1.1rem;
   font-weight: 500;
+
+  /* Colores y efectos */
+  color: #28a745;
 }
 
 .view-assignment-btn {
+  /* Dimensiones */
   min-width: 160px;
+
+  /* Tipografía */
   font-size: 1rem;
 }
 
-/* Historial */
 .history-title {
-  color: #333;
+  /* Márgenes */
   margin-bottom: 20px;
+
+  /* Tipografía */
   font-size: 1.2rem;
   font-weight: 600;
+
+  /* Colores y efectos */
+  color: #333;
 }
 
 .process-history-item {
-  background: #f8f9fa;
+  /* Márgenes */
+  margin-bottom: 12px;
+
+  /* Relleno */
+  padding: 16px;
+
+  /* Bordes */
   border: 1px solid #e9ecef;
   border-radius: 8px;
-  padding: 16px;
-  margin-bottom: 12px;
+
+  /* Fondos */
+  background: #f8f9fa;
 }
 
 .process-period {
-  font-weight: 600;
-  color: #08326b;
-  font-size: 1.1rem;
+  /* Márgenes */
   margin-bottom: 8px;
+
+  /* Tipografía */
+  font-weight: 600;
+  font-size: 1.1rem;
+
+  /* Colores y efectos */
+  color: #08326b;
 }
 
 .process-details {
+  /* Modelo de caja */
   display: flex;
+
+  /* Flexbox y Grid */
   justify-content: space-between;
   align-items: center;
 }
 
 .process-date {
-  color: #6c757d;
+  /* Tipografía */
   font-size: 0.9rem;
+
+  /* Colores y efectos */
+  color: #6c757d;
 }
 
 .status {
-  background: #28a745;
-  color: white;
+  /* Relleno */
   padding: 4px 12px;
+
+  /* Bordes */
   border-radius: 12px;
+
+  /* Fondos */
+  background: #28a745;
+
+  /* Tipografía */
   font-size: 0.8rem;
   font-weight: bold;
+
+  /* Colores y efectos */
+  color: white;
 }
 
 .divider {
+  /* Dimensiones */
   height: 20px;
 }
 
-/* Botones base */
 .btn {
+  /* Modelo de caja */
   display: inline-flex;
+  box-sizing: border-box;
+
+  /* Flexbox y Grid */
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  font-size: 0.95rem;
-  border-radius: 8px;
-  border: none;
-  cursor: pointer;
+
+  /* Dimensiones */
   width: auto;
   min-width: 0;
-  box-sizing: border-box;
+
+  /* Relleno */
+  padding: 0.5rem 1rem;
+
+  /* Bordes */
+  border-radius: 8px;
+  border: none;
+
+  /* Tipografía */
+  font-size: 0.95rem;
+
+  /* Interactividad */
+  cursor: pointer;
 }
 
-/* NUEVO: Estilos para gestión de activos e inactivos */
 .im-modal-content {
-  max-height: 70vh;
+  /* Modelo de caja */
   overflow-y: auto;
+
+  /* Dimensiones */
+  max-height: 70vh;
 }
 
 .im-table {
+  /* Dimensiones */
   width: 100%;
-  border-collapse: collapse;
+
+  /* Márgenes */
   margin: 16px 0;
+
+  /* Otras propiedades */
+  border-collapse: collapse;
 }
 
 .im-th,
 .im-cell {
+  /* Relleno */
   padding: 8px 12px;
-  text-align: left;
+
+  /* Bordes */
   border-bottom: 1px solid #e0e0e0;
+
+  /* Tipografía */
+  text-align: left;
 }
 
 .im-th {
+  /* Fondos */
   background-color: #f8f9fa;
+
+  /* Tipografía */
   font-weight: 600;
+
+  /* Colores y efectos */
   color: #333;
 }
 
 .im-status-wrapper {
+  /* Modelo de caja */
   display: flex;
+
+  /* Flexbox y Grid */
   align-items: center;
   gap: 8px;
 }
 
 .tag--green {
-  background: #d4edda;
-  color: #155724;
+  /* Relleno */
   padding: 4px 8px;
+
+  /* Bordes */
   border-radius: 4px;
+
+  /* Fondos */
+  background: #d4edda;
+
+  /* Tipografía */
   font-size: 0.8rem;
+
+  /* Colores y efectos */
+  color: #155724;
 }
 
 .tag--default {
-  background: #e2e3e5;
-  color: #383d41;
+  /* Relleno */
   padding: 4px 8px;
+
+  /* Bordes */
   border-radius: 4px;
+
+  /* Fondos */
+  background: #e2e3e5;
+
+  /* Tipografía */
   font-size: 0.8rem;
+
+  /* Colores y efectos */
+  color: #383d41;
 }
 
 .im-small-actions {
+  /* Modelo de caja */
   display: flex;
+
+  /* Flexbox y Grid */
   justify-content: flex-end;
   gap: 8px;
+
+  /* Márgenes */
   margin-top: 16px;
 }
 
 .im-empty {
-  text-align: center;
+  /* Relleno */
   padding: 20px;
+
+  /* Tipografía */
+  text-align: center;
 }
 
 .im-empty p {
-  color: #666;
+  /* Márgenes */
   margin-bottom: 16px;
+
+  /* Colores y efectos */
+  color: #666;
+}
+
+.assignment-page-container {
+  /* Posicionamiento */
+  position: relative;
+
+  /* Modelo de caja */
+  overflow: visible !important;
+}
+
+.form-page-content {
+  /* Posicionamiento */
+  position: relative;
+
+  /* Modelo de caja */
+  overflow: visible !important;
+}
+
+.main-card.assignment-card {
+  /* Posicionamiento */
+  position: relative;
+
+  /* Modelo de caja */
+  overflow: visible !important;
 }

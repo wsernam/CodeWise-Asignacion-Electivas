@@ -1,5 +1,8 @@
-import apiClient from "../apiClient";
-import { FORM_STATUS_URL_PUBLIC, FORM_STATUS_URL_PRIVATE } from "../config/config";
+import apiClient from "../Auth/apiClient";
+import {
+  FORM_STATUS_URL_PUBLIC,
+  FORM_STATUS_URL_PRIVATE,
+} from "../config/config";
 
 export const getFormStatus = async (): Promise<boolean> => {
   console.log("[formStatusService] Obteniendo estado del formulario...");
@@ -15,9 +18,9 @@ export const getFormStatus = async (): Promise<boolean> => {
       error.response?.data
     );
     throw new Error(
-      error.response?.data?.detail || 
-      error?.message || 
-      "No se pudo obtener el estado del formulario"
+      error.response?.data?.detail ||
+        error?.message ||
+        "No se pudo obtener el estado del formulario"
     );
   }
 };
@@ -40,9 +43,9 @@ export const changeFormStatus = async (status: boolean): Promise<void> => {
       error.response?.data
     );
     throw new Error(
-      error.response?.data?.detail || 
-      error?.message || 
-      "No se pudo cambiar el estado del formulario"
+      error.response?.data?.detail ||
+        error?.message ||
+        "No se pudo cambiar el estado del formulario"
     );
   }
 };

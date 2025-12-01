@@ -10,8 +10,8 @@ import Card from "../../components/ui/Card/Card";
 import Button from "../../components/ui/Button/Button";
 import BackButton from "../../components/ui/BackButton/BackButton";
 
-// Servicio de autenticación
-import { login, getUserRole } from "../../services/authService";
+// Store de autenticación
+import { useAuthStore } from "../../store/Auth/authStore";
 
 /**
  * COMPONENTE: Login (Administrativo)
@@ -20,8 +20,7 @@ import { login, getUserRole } from "../../services/authService";
  */
 const LoginAdmin: React.FC = () => {
   const navigate = useNavigate();
-  const [error, setError] = useState<string | null>(null);
-
+  const { loginAdmin, loading, error } = useAuthStore();
   /**
    * handleBack - Volver a la selección de roles
    */
@@ -34,40 +33,30 @@ const LoginAdmin: React.FC = () => {
    * @param values - { username: string, password: string }
    */
   const onFinish = async (values: any) => {
-    // Limpiar errores previos al iniciar un nuevo intento
-    setError(null);
-
     try {
-      // Autenticar con el servicio
-      const result = await login(values.username, values.password);
-
+      // Autenticar
+      await loginAdmin(values.username, values.password);
       // Éxito en autenticación
       message.success("Inicio de sesión exitoso");
-      console.log("Tokens recibidos: ", result);
-      
-      // Decodificar el token para obtener el rol y redirigir
-      const role = getUserRole();
-      
+      // Se obtiene el rol desde el store
+      const { role } = useAuthStore.getState();
+
       if (role) {
         switch (role) {
-          case 'Asignador':
-            navigate('/assignment-module'); // TODO: Reemplazar con la ruta real del Asignador
+          case "asignador":
+            navigate("/assignment-module"); // TODO: Reemplazar con la ruta real del Asignador
             break;
-          case 'Administrador':
-            navigate('/dashboard'); // TODO: Reemplazar con la ruta real del Administrador
+          case "administrador":
+            navigate("/dashboard"); // TODO: Reemplazar con la ruta real del Administrador
             break;
           default:
             // Si el rol no es reconocido, redirigir a una página por defecto
-            navigate('/');
+            navigate("/");
         }
       }
     } catch (error) {
       // Error en autenticación
       console.error("Login. Error: ", error);
-      // Establecer el mensaje de error para mostrarlo en el formulario
-      setError(
-        "El usuario o la contraseña proporcionados no son válidos. Por favor, verifica tus credenciales."
-      );
     }
   };
 
@@ -110,7 +99,14 @@ const LoginAdmin: React.FC = () => {
               El componente Alert de Ant Design incluye un ícono por defecto.
             */}
             {error && (
-              <Alert message={error} type="error" showIcon closable onClose={() => setError(null)} style={{ marginBottom: '1rem' }} />
+              <Alert
+                message={error}
+                type="error"
+                showIcon
+                closable
+                onClose={() => (useAuthStore.getState().error = null)}
+                style={{ marginBottom: "1rem" }}
+              />
             )}
 
             {/* Campo de usuario */}
@@ -150,7 +146,7 @@ const LoginAdmin: React.FC = () => {
             {/* Botón de envío */}
             <Form.Item style={{ marginBottom: "1rem" }}>
               <Button type="submit" variant="primary" size="large">
-                Iniciar sesión
+                {loading ? "Iniciando sesión..." : "Iniciar sesión"}
               </Button>
             </Form.Item>
 
