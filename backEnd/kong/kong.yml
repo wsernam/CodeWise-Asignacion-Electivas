@@ -263,6 +263,7 @@ services:
           - ~/gestion-formulario/ofertas/(?<anio>\d+)/(?<semestre>\d+)/?
         strip_path: false
         preserve_host: true
+        regex_priority: 5
         plugins:
           - name: request-transformer
             enabled: true
@@ -281,6 +282,7 @@ services:
           - ~/gestion-formulario/ofertas/(?<anio>\d+)/(?<semestre>\d+)/(?<programa>[^/]+)/?
         strip_path: false
         preserve_host: true
+        regex_priority: 10 
         plugins:
           - name: request-transformer
             enabled: true
