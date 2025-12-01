@@ -353,27 +353,32 @@ const CreateProgram: React.FC = () => {
               </Select>
             </Form.Item>
 
-            {/* Botón de Guardar */}
+            {/* Botones */}
             <Form.Item>
-              <Button
-                type="submit"
-                variant="primary"
-                size="medium"
-                disabled={!isFormValid}
+              <div
+                style={{
+                  display: "flex",
+                  gap: "1rem",
+                  width: "100%",
+                }}
               >
-                Guardar
-              </Button>
-            </Form.Item>
-
-            {/* Botón de Volver */}
-            <Form.Item>
-              <Button
-                variant="ghost"
-                onClick={() => navigate("/programs")}
-                size="medium"
-              >
-                Volver
-              </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => navigate("/programs")}
+                  size="medium"
+                >
+                  Volver
+                </Button>
+                <Button
+                  type="submit"
+                  variant="primary"
+                  size="medium"
+                  disabled={!isFormValid}
+                >
+                  Guardar
+                </Button>
+              </div>
             </Form.Item>
           </Form>
         </Card>

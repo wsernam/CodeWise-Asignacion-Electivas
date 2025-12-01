@@ -258,25 +258,32 @@ const AddElective: React.FC = () => {
               </Select>
             </Form.Item>
 
+            {/* Botones */}
             <Form.Item>
-              <Button
-                type="submit"
-                variant="primary"
-                size="medium"
-                disabled={!isFormValid}
+              <div
+                style={{
+                  display: "flex",
+                  gap: "1rem",
+                  width: "100%",
+                }}
               >
-                Guardar
-              </Button>
-            </Form.Item>
-
-            <Form.Item>
-              <Button
-                variant="ghost"
-                onClick={() => navigate("/electives")}
-                size="medium"
-              >
-                Volver
-              </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => navigate("/electives")}
+                  size="medium"
+                >
+                  Volver
+                </Button>
+                <Button
+                  type="submit"
+                  variant="primary"
+                  size="medium"
+                  disabled={!isFormValid}
+                >
+                  Guardar
+                </Button>
+              </div>
             </Form.Item>
           </Form>
         </Card>

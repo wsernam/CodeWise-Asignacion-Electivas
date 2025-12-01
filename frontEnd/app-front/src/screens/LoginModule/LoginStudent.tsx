@@ -1,28 +1,21 @@
 import React from "react";
 import { useNavigate } from "react-router";
 import { Form, Input, message } from "antd";
-import { UserOutlined } from "@ant-design/icons"; // Iconos de Ant Design
+import { UserOutlined } from "@ant-design/icons";
 
-// Componentes reutilizables de nuestra aplicación
+// Componentes reutilizables
 import Header from "../../components/layout/Header/Header";
 import Footer from "../../components/layout/Footer/Footer";
 import Card from "../../components/ui/Card/Card";
 import Button from "../../components/ui/Button/Button";
-import BackButton from "../../components/ui/BackButton/BackButton";
 
 // Servicio de autenticación
 import { useStudentStore } from "../../store/Form/studentStore";
-// import { useAuthStore } from "../../store/authStore";
 
 const LoginStudent: React.FC = () => {
   const navigate = useNavigate();
-  // const { loginStudent, role, error } = useAuthStore();
   const { getStudentById } = useStudentStore();
-  /**
-   * Valida si el código del estudiante es correcto
-   * @param value
-   * @returns
-   */
+
   const validateCodigo = (value: string) => {
     if (!value) return "Por favor ingresa el código";
     if (!/^\d+$/.test(value)) return "El código debe contener solo números";
@@ -31,21 +24,11 @@ const LoginStudent: React.FC = () => {
     return null;
   };
 
-  /**
-   * handleBack - Navegar de vuelta a la selección de roles
-   * Se usa cuando el usuario hace clic en "Volver"
-   */
   const handleBack = () => {
-    navigate("/"); // Navega a la ruta raíz (PreLogin)
+    navigate("/");
   };
 
-  /**
-   * handleLogin - Manejar envío del formulario
-   * Se ejecuta cuando el formulario pasa todas las validaciones
-   * @param values - Objeto con los valores del formulario { username }
-   */
   const handleLogin = async (values: { code: string }) => {
-    /* Realiza el login del estudiante usando consulta, más no autorización */
     try {
       const code = parseInt(values.code);
       const student = await getStudentById(code);
@@ -56,7 +39,7 @@ const LoginStudent: React.FC = () => {
           email: student.est_correo,
           nombre: student.est_nombre,
           apellido: student.est_apellido,
-          programa: student.pro_codigo, // <-- o el campo correcto del backend
+          programa: student.pro_codigo,
         };
         navigate("/elective-selection", { state: studentState });
       } else {
@@ -70,36 +53,19 @@ const LoginStudent: React.FC = () => {
 
   return (
     <div className="auth-page">
-      {" "}
-      {/* Contenedor principal con clases de layout */}
       <Header />
-      {/* Contenedor del contenido de autenticación */}
       <div className="auth-page-content">
-        {" "}
-        {/* Centra el contenido vertical y horizontalmente */}
-        {/* Tarjeta que contiene el formulario */}
         <Card padding="xl" maxWidth="400px">
           <h2>Iniciar sesión Estudiante</h2>
 
-          {/*
-           * FORMULARIO DE ANT DESIGN
-           * name: identificador único del formulario
-           * onFinish: función que se ejecuta al enviar exitosamente
-           * style: ancho completo del contenedor
-           */}
           <Form
             name="login-student-form"
             onFinish={handleLogin}
             style={{ width: "100%" }}
           >
-            {/* Campo de usuario */}
             <Form.Item
               name="code"
               rules={[
-                {
-                  required: true,
-                  message: "Por favor ingresa tu código",
-                },
                 {
                   validator: (_, value) => {
                     const error = validateCodigo(value);
@@ -114,20 +80,26 @@ const LoginStudent: React.FC = () => {
                 prefix={<UserOutlined />}
                 placeholder="Código estudiante"
                 size="large"
-                maxLength={12} // <-- opcional para prevenir que escriba más
+                maxLength={12}
               />
             </Form.Item>
 
-            {/* Botón de envío */}
-            <Form.Item style={{ marginBottom: "1rem" }}>
+            {/* Botones en la misma fila - MISMA SOLUCIÓN */}
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                width: "100%",
+                marginTop: "2rem",
+              }}
+            >
+              <Button type="button" onClick={handleBack} size="large">
+                Volver
+              </Button>
+
               <Button type="submit" variant="primary" size="large">
                 Consultar
               </Button>
-            </Form.Item>
-
-            {/* Sección del botón volver */}
-            <div className="back-button-section">
-              <BackButton onClick={handleBack} text="Volver" />
             </div>
           </Form>
         </Card>

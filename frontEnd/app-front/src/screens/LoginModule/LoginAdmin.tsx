@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { useNavigate } from "react-router";
 import { Form, Input, message, Alert } from "antd";
 import { UserOutlined, LockOutlined } from "@ant-design/icons";
@@ -8,7 +8,6 @@ import Header from "../../components/layout/Header/Header";
 import Footer from "../../components/layout/Footer/Footer";
 import Card from "../../components/ui/Card/Card";
 import Button from "../../components/ui/Button/Button";
-import BackButton from "../../components/ui/BackButton/BackButton";
 
 // Store de autenticación
 import { useAuthStore } from "../../store/Auth/authStore";
@@ -21,6 +20,7 @@ import { useAuthStore } from "../../store/Auth/authStore";
 const LoginAdmin: React.FC = () => {
   const navigate = useNavigate();
   const { loginAdmin, loading, error } = useAuthStore();
+
   /**
    * handleBack - Volver a la selección de roles
    */
@@ -70,37 +70,22 @@ const LoginAdmin: React.FC = () => {
    */
   const onFinishFailed = (errorInfo: any) => {
     console.log("Failed:", errorInfo);
-    // Podríamos mostrar un mensaje más específico aquí
   };
 
   return (
     <div className="auth-page">
-      {" "}
-      {/* Layout de autenticación */}
       <Header />
       <div className="auth-page-content">
-        {" "}
-        {/* Contenedor centrado */}
         <Card padding="xl" maxWidth="400px">
           <h2>Iniciar sesión</h2>
 
-          {/*
-           * FORMULARIO COMPLETO
-           * initialValues: valores por defecto
-           * onFinish: éxito en validación + envío
-           * onFinishFailed: fallo en validación
-           */}
           <Form
             name="login-form"
-            initialValues={{ remember: true }} // Checkbox "recordarme" (no visible aquí)
+            initialValues={{ remember: true }}
             onFinish={onFinish}
             onFinishFailed={onFinishFailed}
             style={{ width: "100%" }}
           >
-            {/* 
-              Sección para mostrar el mensaje de error.
-              El componente Alert de Ant Design incluye un ícono por defecto.
-            */}
             {error && (
               <Alert
                 message={error}
@@ -129,7 +114,7 @@ const LoginAdmin: React.FC = () => {
               />
             </Form.Item>
 
-            {/* Campo de contraseña (con tipo password) */}
+            {/* Campo de contraseña */}
             <Form.Item
               name="password"
               rules={[
@@ -146,16 +131,22 @@ const LoginAdmin: React.FC = () => {
               />
             </Form.Item>
 
-            {/* Botón de envío */}
-            <Form.Item style={{ marginBottom: "1rem" }}>
-              <Button type="submit" variant="primary" size="large">
-                {loading ? "Iniciando sesión..." : "Iniciar sesión"}
+            {/* Botones en la misma fila - uno a cada lado */}
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                width: "100%",
+                marginTop: "2rem",
+              }}
+            >
+              <Button type="button" onClick={handleBack} size="large">
+                Volver
               </Button>
-            </Form.Item>
 
-            {/* Botón volver */}
-            <div className="back-button-section">
-              <BackButton onClick={handleBack} text="Volver" />
+              <Button type="submit" variant="primary" size="large">
+                Consultar
+              </Button>
             </div>
           </Form>
         </Card>
