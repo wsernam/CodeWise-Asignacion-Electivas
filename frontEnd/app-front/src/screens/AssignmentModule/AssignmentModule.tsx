@@ -150,6 +150,7 @@ const AssignmentModule: React.FC = () => {
   };
 
   const handleSeeReport = () => {
+    // NO finalizar proceso, aún está pendiente
     handleFinalizeProcess();
     navigate("/reports-assignment");
   };

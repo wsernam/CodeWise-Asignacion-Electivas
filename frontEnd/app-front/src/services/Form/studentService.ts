@@ -1,4 +1,4 @@
-import apiClient from "../apiClient";
+import apiClient from "../Auth/apiClient";
 import { STUDENT_URL_PUBLIC } from "../config/config";
 import type { IStudent } from "../../models/Form/student";
 
@@ -31,9 +31,9 @@ export const getStudentsService = async (): Promise<IStudent[]> => {
   } catch (error: any) {
     console.error("[studentService] Error obteniendo estudiantes:", error);
     throw new Error(
-      error.response?.data?.detail || 
-      error?.message || 
-      "No se pudieron cargar los estudiantes"
+      error.response?.data?.detail ||
+        error?.message ||
+        "No se pudieron cargar los estudiantes"
     );
   }
 };
@@ -46,7 +46,10 @@ export const getStudentById = async (
   codigo: number
 ): Promise<IStudent | null> => {
   try {
-    console.log("[studentService] Conectando a:", `${STUDENT_URL_PUBLIC}/${codigo}/`);
+    console.log(
+      "[studentService] Conectando a:",
+      `${STUDENT_URL_PUBLIC}/${codigo}/`
+    );
     const response = await apiClient.get(`${STUDENT_URL_PUBLIC}/${codigo}/`);
     const transformed = transformStudent(response.data);
     console.log("[studentService] Estudiante obtenido:", transformed);
@@ -59,9 +62,9 @@ export const getStudentById = async (
 
     console.error("[studentService] Error obteniendo estudiante:", error);
     throw new Error(
-      error.response?.data?.detail || 
-      error?.message || 
-      "No se pudo cargar el estudiante"
+      error.response?.data?.detail ||
+        error?.message ||
+        "No se pudo cargar el estudiante"
     );
   }
 };
@@ -80,9 +83,9 @@ export const createStudent = async (student: IStudent): Promise<IStudent> => {
   } catch (error: any) {
     console.error("[studentService] Error creando estudiante:", error);
     throw new Error(
-      error.response?.data?.detail || 
-      error?.message || 
-      "No se pudo crear el estudiante"
+      error.response?.data?.detail ||
+        error?.message ||
+        "No se pudo crear el estudiante"
     );
   }
 };
@@ -110,9 +113,9 @@ export const updateStudent = async (
   } catch (error: any) {
     console.error("[studentService] Error actualizando estudiante:", error);
     throw new Error(
-      error.response?.data?.detail || 
-      error?.message || 
-      "No se pudo actualizar el estudiante"
+      error.response?.data?.detail ||
+        error?.message ||
+        "No se pudo actualizar el estudiante"
     );
   }
 };
@@ -139,9 +142,9 @@ export const updateStudentStatus = async (
       error
     );
     throw new Error(
-      error.response?.data?.detail || 
-      error?.message || 
-      "No se pudo actualizar el estado del estudiante"
+      error.response?.data?.detail ||
+        error?.message ||
+        "No se pudo actualizar el estado del estudiante"
     );
   }
 };

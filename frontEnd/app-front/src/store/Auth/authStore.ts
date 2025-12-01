@@ -1,81 +1,104 @@
 import { create } from "zustand";
 import {
-  loginAdminService,
-  loginStudentService,
+  login,
+  logout,
+  getAccessToken,
+  getUserRole,
 } from "../../services/Auth/authService";
 
-type Role = "estudiante" | "administrador" | "asignador" | null;
+type Role = "administrador" | "asignador" | null;
 
 interface AuthState {
   token: string | null;
   role: Role;
-  userId: number | null; // Codigo del estudiante o ID del usuario
+  userId: string | null;
   loading: boolean;
   error: string | null;
 
-  // Métodos de autenticación
-  loginStudent: (code: string) => Promise<void>;
   loginAdmin: (username: string, password: string) => Promise<void>;
   logout: () => void;
+  initializeAuth: () => void;
 }
 
+/**
+ * Store de autenticación para usuarios Administrador y Asignador
+ */
 export const useAuthStore = create<AuthState>((set) => ({
+  // ESTADO INICIAL
   token: null,
   role: null,
   userId: null,
   loading: false,
   error: null,
 
-  loginStudent: async (code: string) => {
-    set({ loading: true, error: null });
-    try {
-      const data = await loginStudentService(code.toString());
-      if (!data) throw new Error("[authStore] Estudiante no encontrado");
+  /**
+   * Inicializa la autenticación desde localStorage
+   * Se ejecuta al cargar la aplicación
+   */
+  initializeAuth: () => {
+    const token = getAccessToken();
+    if (token) {
+      const backendRole = getUserRole(); // "Administrador" o "Asignador"
+      const mappedRole =
+        backendRole === "Administrador"
+          ? "administrador"
+          : backendRole === "Asignador"
+          ? "asignador"
+          : null;
 
       set({
-        token: data.token ?? null,
-        role: "estudiante",
-        userId: data.codigo ?? null,
-        loading: false,
+        token,
+        role: mappedRole,
+        userId: null, // Se puede extraer del token si es necesario
       });
-
-      // Almacena el token en localStorage
-      if (data.token) localStorage.setItem("authToken", data.token);
-    } catch (err: any) {
-      set({
-        error: "[authStore] Error en el inicio de sesión del estudiante",
-        loading: false,
-      });
-      throw err;
     }
   },
 
   loginAdmin: async (username: string, password: string) => {
     set({ loading: true, error: null });
+
     try {
-      const data = await loginAdminService(username, password);
-      if (!data || !data.token)
-        throw new Error("[authStore] Credenciales inválidas");
+      // Llamar al servicio de login
+      const data = await login(username, password);
 
+      // Obtener rol del token decodificado
+      const backendRole = getUserRole();
+      const mappedRole =
+        backendRole === "Administrador"
+          ? "administrador"
+          : backendRole === "Asignador"
+          ? "asignador"
+          : null;
+
+      // Actualizar estado
       set({
-        token: data.token,
-        role: data.role,
-        userId: data.userId ?? null,
+        token: data.access,
+        role: mappedRole,
+        userId: username,
         loading: false,
+        error: null,
       });
-
-      localStorage.setItem("authToken", data.token);
     } catch (err: any) {
+      console.error("[AuthStore] Error en login:", err);
       set({
-        error: "[authStore] Error en el inicio de sesión del administrador",
+        error: err.response?.data?.detail || "Credenciales inválidas",
         loading: false,
       });
       throw err;
     }
   },
 
+  /**
+   * Cierra la sesión y limpia todo el estado
+   */
   logout: () => {
-    localStorage.removeItem("authToken");
-    set({ token: null, role: null, userId: null, loading: false, error: null });
+    logout(); // Llama al servicio
+    set({
+      token: null,
+      role: null,
+      userId: null,
+      loading: false,
+      error: null,
+    });
   },
 }));

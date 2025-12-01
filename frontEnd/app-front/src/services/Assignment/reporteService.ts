@@ -1,8 +1,6 @@
-import apiClient from "../apiClient";
+import apiClient from "../Auth/apiClient";
 import { REPORTS_ASIGNACION_BASE_URL_PRIVATE } from "../config/config";
 import axios from "axios";
-
-
 
 async function fetchPdf(url: string): Promise<Blob> {
   try {
@@ -65,19 +63,21 @@ export const reporteService = {
       `${REPORTS_ASIGNACION_BASE_URL_PRIVATE}/asignacion-general/?anio=${anio}&semestre=${semestre}`
     );
   },
-  
+
   getElectivaBlob(eleCodigo: string, anio: number, semestre: number) {
     return fetchPdf(
-      `${REPORTS_ASIGNACION_BASE_URL_PRIVATE}/electiva/${encodeURIComponent(eleCodigo)}/?anio=${anio}&semestre=${semestre}`
+      `${REPORTS_ASIGNACION_BASE_URL_PRIVATE}/electiva/${encodeURIComponent(
+        eleCodigo
+      )}/?anio=${anio}&semestre=${semestre}`
     );
   },
-  
+
   getEstudianteBlob(estId: string | number, anio: number, semestre: number) {
     return fetchPdf(
       `${REPORTS_ASIGNACION_BASE_URL_PRIVATE}/estudiante/${estId}/?anio=${anio}&semestre=${semestre}`
     );
   },
-  
+
   getGeneralBlob(anio: number, semestre: number) {
     return fetchPdf(
       `${REPORTS_ASIGNACION_BASE_URL_PRIVATE}/reporte-asignacion-general/?anio=${anio}&semestre=${semestre}`

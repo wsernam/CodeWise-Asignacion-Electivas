@@ -1,4 +1,4 @@
-import apiClient from "../apiClient";
+import apiClient from "../Auth/apiClient";
 import type { IProgram as Program } from "../../models/Form/program";
 import { PROGRAMS_URL_PRIVATE, PROGRAMS_URL_PUBLIC } from "../config/config";
 
@@ -32,8 +32,7 @@ export const getPrograms = async (): Promise<Program[]> => {
   } catch (error: any) {
     console.error("[programService] Error obteniendo programas:", error);
     throw new Error(
-      error.response?.data?.detail || 
-      "No se pudieron cargar los programas"
+      error.response?.data?.detail || "No se pudieron cargar los programas"
     );
   }
 };
@@ -55,9 +54,9 @@ export const createProgram = async (program: Program): Promise<Program> => {
   } catch (error: any) {
     console.error("[programService] Error creando programa:", error);
     throw new Error(
-      error.response?.data?.detail || 
-      error?.message || 
-      "No se pudo crear el programa"
+      error.response?.data?.detail ||
+        error?.message ||
+        "No se pudo crear el programa"
     );
   }
 };
@@ -86,9 +85,9 @@ export const updateProgram = async (program: Program): Promise<Program> => {
   } catch (error: any) {
     console.error("[programService] Error actualizando programa:", error);
     throw new Error(
-      error.response?.data?.detail || 
-      error?.message || 
-      "No se pudo actualizar el programa"
+      error.response?.data?.detail ||
+        error?.message ||
+        "No se pudo actualizar el programa"
     );
   }
 };
@@ -114,12 +113,12 @@ export const getProgramByCode = async (
       console.warn("[programService] Programa no encontrado:", codigo);
       return null;
     }
-    
+
     console.error("[programService] Error buscando programa:", error);
     throw new Error(
-      error.response?.data?.detail || 
-      error?.message || 
-      "No se pudo buscar el programa"
+      error.response?.data?.detail ||
+        error?.message ||
+        "No se pudo buscar el programa"
     );
   }
 };

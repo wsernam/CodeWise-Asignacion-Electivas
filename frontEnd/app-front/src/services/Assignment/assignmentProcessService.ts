@@ -1,4 +1,4 @@
-import apiClient from "../apiClient";
+import apiClient from "../Auth/apiClient";
 import { ASSIGNMENT_API_BASE_URL_PRIVATE } from "../config/config";
 import type { AssignmentProcess } from "../../models/Assignment/assignmentProcess";
 import type { CodeBatchesResponse } from "../../models/Assignment/assignmentProcess";
@@ -32,7 +32,7 @@ export const assignmentProcessService = {
       if (error.response) {
         // El servidor respondió con un código de error
         const errorData = error.response.data;
-        
+
         if (errorData.non_field_errors) {
           throw new Error(errorData.non_field_errors[0]);
         } else if (errorData.detail) {
@@ -40,8 +40,10 @@ export const assignmentProcessService = {
         } else if (errorData.error) {
           throw new Error(errorData.error);
         }
-        
-        throw new Error(`Error ${error.response.status}: ${error.response.statusText}`);
+
+        throw new Error(
+          `Error ${error.response.status}: ${error.response.statusText}`
+        );
       } else if (error.request) {
         // La petición se hizo pero no hubo respuesta
         throw new Error(
@@ -70,7 +72,7 @@ export const assignmentProcessService = {
       if (error.response?.status === 204) {
         return null;
       }
-      
+
       console.error(
         "[assignmentProcessService] Error obteniendo proceso activo:",
         error
@@ -137,8 +139,13 @@ export const assignmentProcessService = {
    */
   async eliminarProceso(codigo: number): Promise<AssignmentProcess> {
     try {
-      const response = await apiClient.delete(`${ASSIGNMENT_API_BASE_URL_PRIVATE}api/asignacion/procesos/${codigo}/`);
-      console.log("[assignmentProcessService] Proceso eliminado:", response.data);
+      const response = await apiClient.delete(
+        `${ASSIGNMENT_API_BASE_URL_PRIVATE}api/asignacion/procesos/${codigo}/`
+      );
+      console.log(
+        "[assignmentProcessService] Proceso eliminado:",
+        response.data
+      );
       return response.data as AssignmentProcess;
     } catch (error: any) {
       console.error(
@@ -152,12 +159,12 @@ export const assignmentProcessService = {
   /**
    * EJECUTAR ASIGNACIÓN
    * Endpoint: POST /api/asignacion/ejecutar/
-   * 
-   * @param anio 
-   * @param semestre 
+   *
+   * @param anio
+   * @param semestre
    */
 
-  async ejecutarAsignacion(anio: number, semestre: number ): Promise<any> {
+  async ejecutarAsignacion(anio: number, semestre: number): Promise<any> {
     try {
       const response = await apiClient.post(
         `${ASSIGNMENT_API_BASE_URL_PRIVATE}api/asignacion/ejecutar/`,
@@ -166,7 +173,10 @@ export const assignmentProcessService = {
           semestre,
         }
       );
-      console.log("[assignmentProcessService] Asignación ejecutada:", response.data);
+      console.log(
+        "[assignmentProcessService] Asignación ejecutada:",
+        response.data
+      );
     } catch (error: any) {
       console.error(
         "[assignmentProcessService] Error ejecutando asignación:",
@@ -209,15 +219,12 @@ export const assignmentProcessService = {
    * @param semestre - Semestre (1 o 2)
    * @returns Información de lotes de códigos de estudiantes
    */
-  async downloadCodeBatches(
-    anio: number,
-    semestre: number
-  ): Promise<Blob> {
+  async downloadCodeBatches(anio: number, semestre: number): Promise<Blob> {
     const url = `${ASSIGNMENT_API_BASE_URL_PRIVATE}api/reporte-asignacion/pdf/lotes-selecciones/?anio={anio}&semestre={semestre}`;
     try {
       const resp = await apiClient.get(url, {
         params: { anio, semestre },
-        responseType: 'blob',
+        responseType: "blob",
       });
       console.log("[codeBatchService] getCodeBatches response:", resp.data);
       return resp.data as Blob;
