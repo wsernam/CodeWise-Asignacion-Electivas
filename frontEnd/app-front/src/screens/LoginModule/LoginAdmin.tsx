@@ -145,7 +145,7 @@ const LoginAdmin: React.FC = () => {
               </Button>
 
               <Button type="submit" variant="primary" size="large">
-                Consultar
+                Ingresar
               </Button>
             </div>
           </Form>
