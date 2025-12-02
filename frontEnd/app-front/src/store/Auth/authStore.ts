@@ -1,16 +1,13 @@
 import { create } from "zustand";
-import {
-  login,
-  logout,
-  getAccessToken,
-  getUserRole,
-} from "../../services/Auth/authService";
+import { login, logout, getAccessToken } from "../../services/Auth/authService";
+import { jwtDecode } from "jwt-decode";
 
 type Role = "administrador" | "asignador" | "ambos" | null;
 
 interface AuthState {
   token: string | null;
   role: Role;
+  username: string | null;
   userId: string | null;
   loading: boolean;
   error: string | null;
@@ -20,39 +17,49 @@ interface AuthState {
   initializeAuth: () => void;
 }
 
-/**
- * Store de autenticación para usuarios Administrador y Asignador
- */
 export const useAuthStore = create<AuthState>((set) => ({
   // ESTADO INICIAL
   token: null,
   role: null,
+  username: null,
   userId: null,
   loading: false,
   error: null,
 
   /**
    * Inicializa la autenticación desde localStorage
-   * Se ejecuta al cargar la aplicación
    */
   initializeAuth: () => {
     const token = getAccessToken();
     if (token) {
-      const backendRole = getUserRole(); // "Administrador" o "Asignador"
-      const mappedRole =
-        backendRole === "Administrador"
-          ? "administrador"
-          : backendRole === "Asignador"
-          ? "asignador"
-          : backendRole === "Ambos"
-          ? "ambos"
-          : null;
+      try {
+        const decodedToken: any = jwtDecode(token);
+        const backendRole = decodedToken.role;
 
-      set({
-        token,
-        role: mappedRole,
-        userId: null, // Se puede extraer del token si es necesario
-      });
+        // Normalizar a minúscula
+        let mappedRole: Role = null;
+        if (backendRole) {
+          const normalizedRole = backendRole.toLowerCase();
+
+          if (normalizedRole === "administrador") {
+            mappedRole = "administrador";
+          } else if (normalizedRole === "asignador") {
+            mappedRole = "asignador";
+          } else if (normalizedRole === "ambos") {
+            mappedRole = "ambos";
+          }
+        }
+
+        set({
+          token,
+          role: mappedRole,
+          username: decodedToken.username || null, // ← Usa username del token
+        });
+      } catch (error) {
+        console.error("[AuthStore] Error decodificando token:", error);
+        logout();
+        set({ token: null, role: null, username: null });
+      }
     }
   },
 
@@ -60,46 +67,53 @@ export const useAuthStore = create<AuthState>((set) => ({
     set({ loading: true, error: null });
 
     try {
-      // Llamar al servicio de login
       const data = await login(username, password);
+      const decodedToken: any = jwtDecode(data.access);
+      const backendRole = decodedToken.role;
 
-      // Obtener rol del token decodificado
-      const backendRole = getUserRole();
-      const mappedRole =
-        backendRole === "Administrador"
-          ? "administrador"
-          : backendRole === "Asignador"
-          ? "asignador"
-          : backendRole === "Ambos"
-          ? "ambos"
-          : null;
+      // Normalizar a minúscula
+      let mappedRole: Role = null;
+      if (backendRole) {
+        const normalizedRole = backendRole.toLowerCase();
+
+        if (normalizedRole === "administrador") {
+          mappedRole = "administrador";
+        } else if (normalizedRole === "asignador") {
+          mappedRole = "asignador";
+        } else if (normalizedRole === "ambos") {
+          mappedRole = "ambos";
+        }
+      }
 
       // Actualizar estado
       set({
         token: data.access,
         role: mappedRole,
-        userId: username,
+        username: username, // ← Guarda el username que usó para login
+        userId: decodedToken.user_id || null,
         loading: false,
         error: null,
       });
     } catch (err: any) {
       console.error("[AuthStore] Error en login:", err);
+      const errorMessage =
+        err.response?.data?.detail ||
+        err.response?.data?.message ||
+        "Credenciales inválidas";
       set({
-        error: err.response?.data?.detail || "Credenciales inválidas",
+        error: errorMessage,
         loading: false,
       });
       throw err;
     }
   },
 
-  /**
-   * Cierra la sesión y limpia todo el estado
-   */
   logout: () => {
-    logout(); // Llama al servicio
+    logout();
     set({
       token: null,
       role: null,
+      username: null,
       userId: null,
       loading: false,
       error: null,

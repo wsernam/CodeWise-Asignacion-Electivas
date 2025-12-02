@@ -36,13 +36,16 @@ class IsAsignador(BasePermission):
             user_role = decoded.get('role', None)
             user_id = decoded.get('user_id', None)
             
+            # Normalizar a minúscula para comparación
+            user_role_lower = user_role.lower() if user_role else None
+            
             # Guardar en request para usarlo en vistas
             request.user_id = user_id
-            request.user_role = user_role
+            request.user_role = user_role_lower
             
             logger.info(f"[Auth] Validando IsAsignador - Rol: '{user_role}', User ID: '{user_id}'")
             
-            if user_role not in ['Administrador', 'Ambos']:  # <-- AGREGAR 'Ambos'
+            if user_role not in ['asignador', 'ambos']:  
                 raise PermissionDenied({
                     "error": "Permiso denegado",
                     "message": f"Esta acción requiere el rol 'Administrador' o 'Ambos'. Tu rol actual es '{user_role}'."
@@ -69,7 +72,7 @@ class IsAsignador(BasePermission):
 
 class IsAdministrador(BasePermission):
     """
-    Permiso para usuarios con rol 'Administrador' o 'ambos'.
+    Permiso para usuarios con rol 'administrador' o 'ambos'.
     """
     
     def has_permission(self, request, view):
@@ -96,16 +99,19 @@ class IsAdministrador(BasePermission):
             user_role = decoded.get('role', None)
             user_id = decoded.get('user_id', None)
             
+            # Normalizar a minúscula
+            user_role_lower = user_role.lower() if user_role else None
+            
             request.user_id = user_id
-            request.user_role = user_role
+            request.user_role = user_role_lower
             
             logger.info(f"[Auth] Validando IsAdministrador - Rol: '{user_role}'")
             
-            if user_role not in ['Asignador', 'Ambos']:  # <-- AGREGAR 'Ambos'
-                logger.warning(f"[Auth] Acceso DENEGADO - Rol requerido: 'Asignador' o 'Ambos', Rol actual: '{user_role}'")
+            if user_role not in ['administrador', 'ambos']: 
+                logger.warning(f"[Auth] Acceso DENEGADO - Rol requerido: 'administrador' o 'ambos', Rol actual: '{user_role}'")
                 raise PermissionDenied({
                     "error": "Permiso denegado",
-                    "message": f"Esta acción requiere el rol 'Asignador' o 'Ambos'. Tu rol actual es '{user_role}'."
+                    "message": f"Esta acción requiere el rol 'asignador' o 'ambos'. Tu rol actual es '{user_role}'."
                 })
             
             logger.info(f"[Auth] Acceso PERMITIDO para usuario {user_id}")
@@ -179,7 +185,7 @@ class TieneRoles(BasePermission):
     Uso:
     class MiVista(APIView):
         permission_classes = [TieneRoles]
-        roles_permitidos = ['Asignador', 'Administrador']
+        roles_permitidos = ['asignador', 'administrador']
     """
     
     def has_permission(self, request, view):

@@ -14,7 +14,8 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         # pueda acceder al rol sin hacer una consulta adicional
         
         token['user_id'] = str(user.id)
-        token['role'] = user.role
+        token['username'] = user.username
+        token['role'] = user.role.lower()
         token['iss'] = 'auth-hs256'
         # Retorna el token modificado con el nuevo claim personalizado
 

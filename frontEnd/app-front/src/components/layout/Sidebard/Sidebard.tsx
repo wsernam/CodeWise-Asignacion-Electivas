@@ -78,7 +78,7 @@ const menuItems: MenuItem[] = [
 const Sidebar: React.FC<SidebardProps> = ({ onClose }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { role, userId } = useAuthStore();
+  const { role, userId, username } = useAuthStore();
   const [currentModule, setCurrentModule] = useState<"admin" | "asignador">(
     role === "asignador" ? "asignador" : "admin"
   );
@@ -182,7 +182,7 @@ const Sidebar: React.FC<SidebardProps> = ({ onClose }) => {
         />
 
         <div className="sidebard-profile-info">
-          <div className="sidebard-profile-name">{userId || "Usuario"}</div>
+          <div className="sidebard-profile-name">{username || "Usuario"}</div>
           <div className="sidebard-profile-role">
             {role === "ambos"
               ? currentModule === "admin"
