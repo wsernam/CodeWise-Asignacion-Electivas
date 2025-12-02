@@ -58,14 +58,6 @@ class SeleccionEstudianteElectivaViewSet(mixins.CreateModelMixin,
 
         # Usamos una transacción para asegurar que todas las selecciones se creen o ninguna.
         with transaction.atomic():
-            # Antes de crear nuevas selecciones, eliminamos las existentes para el mismo estudiante y período.
-            # Esto permite que el estudiante pueda corregir y reenviar su selección.
-            SeleccionEstudianteElectiva.objects.filter(
-                est_codigo_id=est_codigo,
-                sel_anio=sel_anio,
-                sel_num_semestre=sel_num_semestre
-            ).delete()
-
 
             # Creamos una lista de objetos para insertar en lote
             selecciones_a_crear = [
