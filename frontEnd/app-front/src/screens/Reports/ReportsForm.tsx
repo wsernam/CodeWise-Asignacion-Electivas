@@ -1,8 +1,7 @@
-// ReportsForm.tsx - ACTUALIZADO
 import React, { useEffect, useState, useMemo } from "react";
 import Card from "../../components/ui/Card/Card";
 import ReportFilters from "./ReportFilters";
-import { useReportStore } from "../../store/Form/reportStore";
+import { useReportStore } from "../../store/Reports/reportStore";
 import { useAssignmentProcessStore } from "../../store/Assignment";
 import { selectionReportService } from "../../services/Form/selectionReportService";
 import { offerReportService } from "../../services/Form/offerReportService";
@@ -32,7 +31,6 @@ const ReportsForm: React.FC = () => {
   const [showWarningModal, setShowWarningModal] = useState(false);
   const [warningMessage, setWarningMessage] = useState("");
 
-  // Cargar procesos al inicio
   useEffect(() => {
     obtenerTodosLosProcesos();
   }, [obtenerTodosLosProcesos]);

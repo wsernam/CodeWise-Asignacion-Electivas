@@ -13,7 +13,7 @@ async function fetchPdf(url: string): Promise<Blob> {
     console.error("[reporteService] Error obteniendo PDF:", error);
 
     if (axios.isAxiosError(error) && error.response) {
-      const { status, statusText, data } = error.response;
+      const { data } = error.response;
       let msg = "No fue posible generar el reporte.";
 
       // data viene como Blob por responseType:'blob'
@@ -41,16 +41,6 @@ async function fetchPdf(url: string): Promise<Blob> {
       } else if (typeof data === "object" && data !== null) {
         msg = (data as any).detail || msg;
       }
-
-      // 🔥 Mensaje final para el usuario
-      // - Si es 404: mostramos "Error 404 – <detalle>"
-      // - Otros códigos: "Error <status> (<statusText>) – <detalle>"
-      const userMessage =
-        status === 404
-          ? `Error 404 – ${msg}`
-          : `Error ${status} (${statusText}) – ${msg}`;
-
-      throw new Error(userMessage);
     }
 
     throw new Error("Error inesperado. Intenta nuevamente.");
