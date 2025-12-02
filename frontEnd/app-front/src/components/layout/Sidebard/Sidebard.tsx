@@ -78,7 +78,7 @@ const menuItems: MenuItem[] = [
 const Sidebar: React.FC<SidebardProps> = ({ onClose }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { role, userId, username } = useAuthStore();
+  const { role, username } = useAuthStore();
   const [currentModule, setCurrentModule] = useState<"admin" | "asignador">(
     role === "asignador" ? "asignador" : "admin"
   );

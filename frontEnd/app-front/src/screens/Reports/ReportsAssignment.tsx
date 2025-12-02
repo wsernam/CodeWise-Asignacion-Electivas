@@ -4,7 +4,7 @@ import Card from "../../components/ui/Card/Card";
 import ReportFilters from "./ReportFilters";
 import WarningModal from "../../components/shared/WarningModal/WarningModal";
 import { useAssignmentProcessStore } from "../../store/Assignment";
-import { reporteService } from "../../services/Assignment/reportService";
+import { reporteService } from "../../services/Reports/reportService";
 import "./ReportsAssignment.css";
 
 const ReportsAssignment: React.FC = () => {
