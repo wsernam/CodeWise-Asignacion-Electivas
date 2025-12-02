@@ -10,12 +10,24 @@ from .services.proceso_asignacion_reset import (
     eliminar_todo_del_proceso,
 )
 from core.permissions import IsAsignador
+from rest_framework.permissions import AllowAny
 from django.core.exceptions import ValidationError as DjangoValidationError
 
 class ProcesoCRUDViewSet(viewsets.ModelViewSet):
     queryset = ProcesoAsignacion.objects.all().order_by("-pa_fecha_creacion")
     serializer_class = ProcesoSerializer
     permission_classes = [IsAsignador]
+
+    def get_permissions(self):
+        """
+        Permite el acceso público para las acciones de solo lectura (GET)
+        y requiere permisos de 'IsAsignador' para las demás acciones.
+        """
+        if self.action in ["list", "retrieve", "ultimos", "periodo_activo"]:
+            self.permission_classes = [AllowAny]
+        else:
+            self.permission_classes = [IsAsignador]
+        return super().get_permissions()
 
     # Crear: bloquear si ya hay ACTIVO
     def perform_create(self, serializer):
