@@ -48,7 +48,7 @@ class IsAsignador(BasePermission):
             if user_role not in ['asignador', 'ambos']:  
                 raise PermissionDenied({
                     "error": "Permiso denegado",
-                    "message": f"Esta acción requiere el rol 'Administrador' o 'Ambos'. Tu rol actual es '{user_role}'."
+                    "message": f"Esta acción requiere el rol 'asignador' o 'Ambos'. Tu rol actual es '{user_role}'."
                 })
             
             logger.info(f"[Auth] Acceso PERMITIDO para usuario {user_id}")
@@ -111,7 +111,7 @@ class IsAdministrador(BasePermission):
                 logger.warning(f"[Auth] Acceso DENEGADO - Rol requerido: 'administrador' o 'ambos', Rol actual: '{user_role}'")
                 raise PermissionDenied({
                     "error": "Permiso denegado",
-                    "message": f"Esta acción requiere el rol 'asignador' o 'ambos'. Tu rol actual es '{user_role}'."
+                    "message": f"Esta acción requiere el rol 'administrador' o 'ambos'. Tu rol actual es '{user_role}'."
                 })
             
             logger.info(f"[Auth] Acceso PERMITIDO para usuario {user_id}")
