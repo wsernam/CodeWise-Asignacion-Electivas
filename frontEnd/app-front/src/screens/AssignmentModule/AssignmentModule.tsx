@@ -5,8 +5,10 @@ import Card from "../../components/ui/Card/Card";
 import Button from "../../components/ui/Button/Button";
 import SimpleModal from "../../components/shared/SimpleModal/SimpleModal";
 import CreateAssignmentProcess from "./Steps/CreateProcess/CreateAssignmentProcess";
+import ConfirmModal from "../../components/shared/ConfirmModal/ConfirmModal";
 import UploadFilesAP from "./Steps/FirstStep/UploadFilesAP";
 import InactivesManagementAP from "./Steps/SecondStep/InactivesManagementAP";
+import { useAssignmentProcessStore } from "../../store/Assignment";
 import LevelsManagementAP from "./Steps/ThirdStep/LevelsManagementAP";
 import AssignmentManagementAP from "./Steps/FourStep/AssignmentManagementAP";
 import TooltipInfo from "../../components/ui/TooltipInfo/TooltipInfo";
@@ -14,7 +16,6 @@ import {
   getFechaFinalizacion,
   setFechaFinalizacion,
 } from "../../utils/dateUtils";
-import { useAssignmentProcessStore } from "../../store/Assignment";
 
 type ProcessData = {
   year: number;
@@ -38,7 +39,8 @@ const AssignmentModule: React.FC = () => {
   const [completedSteps, setCompletedSteps] = useState<number[]>([]);
   const [processData, setProcessData] = useState<ProcessData | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-
+  const [showFinalizeConfirm, setShowFinalizeConfirm] = useState(false);
+  const [showConfirmDelete, setShowConfirmDelete] = useState(false);
   const navigate = useNavigate();
   // Helpers para persistir paso por roceso
   const storageKeyForProcess = (codigo: number) =>
@@ -73,8 +75,9 @@ const AssignmentModule: React.FC = () => {
   };
 
   // Estados para el manejo del proceso
-  const { finalizarProceso, eliminarProceso } = useAssignmentProcessStore();
   const {
+    finalizarProceso,
+    eliminarProcesoCompleto,
     obtenerProcesoActivo,
     obtenerTodosLosProcesos,
     currentProcess,
@@ -84,6 +87,7 @@ const AssignmentModule: React.FC = () => {
   // Manejadores
   const handleProcessCreated = (year: number, semester: 1 | 2) => {
     setShowCreateModal(false);
+    setCurrentStepLocal(1);
     setCompletedSteps([]);
     setProcessData({ year, semester });
   };
@@ -93,17 +97,42 @@ const AssignmentModule: React.FC = () => {
     setCurrentStepLocal(null);
     setCompletedSteps([]);
     setProcessData(null);
+    setShowFinalizeConfirm(false);
+    setShowDeleteConfirm(false);
+    setShowConfirmDelete(false);
   };
 
   const handleConfirmDelete = async () => {
-    setShowDeleteConfirm(false);
+    setShowConfirmDelete(false);
     if (!currentProcess) return;
+    console.log("DEBUG: Eliminando proceso", currentProcess.pa_codigo);
     try {
-      await eliminarProceso(currentProcess.pa_codigo);
-      handleCancelProcess();
+      await eliminarProcesoCompleto(currentProcess.pa_codigo);
+      console.log("DEBUG: elimininarProcesoCompleto ejecutado");
+      await obtenerTodosLosProcesos();
+      console.log("DEBUG: Procesos refrescados después de eliminar");
       try {
+        // Limpiar paso del proceso
         localStorage.removeItem(storageKeyForProcess(currentProcess.pa_codigo));
-      } catch {}
+        // Limpiar fecha de finalización
+        localStorage.removeItem(
+          `process_${currentProcess.pa_codigo}_finalization`
+        );
+        // Limpiar cualquier otro dato relacionado
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (
+            key &&
+            (key.includes(`assignment_process_${currentProcess.pa_codigo}`) ||
+              key.includes(`_${currentProcess.pa_codigo}_`))
+          ) {
+            localStorage.removeItem(key);
+          }
+        }
+      } catch (storageError) {
+        console.error("Error limpiando el almacenamiento local:", storageError);
+      }
+      handleCancelProcess();
     } catch (error) {
       console.error("Error eliminando proceso:", error);
       throw error;
@@ -112,7 +141,7 @@ const AssignmentModule: React.FC = () => {
 
   const handleDeleteProcess = () => {
     if (currentProcess) {
-      setShowDeleteConfirm(true);
+      setShowConfirmDelete(true);
     }
   };
 
@@ -145,9 +174,14 @@ const AssignmentModule: React.FC = () => {
   const handleFinalizeProcess = async () => {
     if (currentProcess) {
       try {
+        console.log("DEBUG handleFinalizeProcess: Iniciando");
+
         await finalizarProceso(currentProcess.pa_codigo);
         setFechaFinalizacion(currentProcess.pa_codigo);
         await obtenerTodosLosProcesos();
+        setShowFinalizeConfirm(false);
+        handleCancelProcess();
+        console.log("DEBUG handleFinalizeProcess: Completado");
       } catch (error) {
         console.error("Error finalizando proceso:", error);
       }
@@ -360,18 +394,33 @@ const AssignmentModule: React.FC = () => {
 
                 {currentStepLocal === 5 && (
                   <div className="final-step-actions">
-                    <p>Los datos fueron guardados correctamente.</p>
+                    <p>La asignación se ha realizado correctamente.</p>
                     <div className="final-buttons">
-                      <Button
-                        variant="primary"
-                        className="view-assignment-btn"
-                        onClick={handleFinalizeProcess}
+                      <p
+                        style={{
+                          color: "#666",
+                          marginBottom: "20px",
+                        }}
                       >
-                        Finalizar Proceso
-                      </Button>
-                      <Button variant="secondary" onClick={handleSeeReport}>
-                        Ver asignación
-                      </Button>
+                        Puedes revisar los resultados antes de marcar el proceso
+                        como finalizado.
+                        <br />
+                      </p>
+                      <div className="final-buttons">
+                        <Button
+                          variant="primary"
+                          className="view-assignment-btn"
+                          onClick={handleSeeReport}
+                        >
+                          Ver asignación
+                        </Button>
+                        <Button
+                          variant="primary"
+                          onClick={() => setShowFinalizeConfirm(true)}
+                        >
+                          Finalizar Proceso
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 )}
@@ -400,11 +449,21 @@ const AssignmentModule: React.FC = () => {
             {/* Procesos finalizados desde el backend */}
             {allProcess &&
               (allProcess as ProcessHistory[])
-                .filter(
-                  (proceso) =>
-                    !proceso.pa_activo &&
-                    proceso.pa_codigo !== currentProcess?.pa_codigo
-                )
+                .filter((proceso) => {
+                  const fechaFinalizacion = getFechaFinalizacion(
+                    proceso.pa_codigo
+                  );
+
+                  // SOLO mostrar procesos que:
+                  // 1. NO son el proceso actual
+                  // 2. TIENEN fecha de finalización (fueron finalizados por el usuario)
+
+                  return (
+                    proceso.pa_codigo !== currentProcess?.pa_codigo &&
+                    fechaFinalizacion &&
+                    fechaFinalizacion !== "Fecha no disponible"
+                  );
+                })
                 .map((proceso) => {
                   const fechaFinalizacion = getFechaFinalizacion(
                     proceso.pa_codigo
@@ -432,6 +491,7 @@ const AssignmentModule: React.FC = () => {
         </div>
       </div>
 
+      {/* Modal para CREAR nuevo proceso */}
       <SimpleModal
         open={showCreateModal}
         onClose={() => setShowCreateModal(false)}
@@ -442,37 +502,20 @@ const AssignmentModule: React.FC = () => {
           onNext={handleProcessCreated}
         />
       </SimpleModal>
-
-      <SimpleModal
-        open={showDeleteConfirm}
-        onClose={() => setShowDeleteConfirm(false)}
-        title="Confirmar Eliminación"
-      >
-        <div style={{ minWidth: "360" }}>
-          <p>
-            ¿Está seguro de eliminar el proceso de asignación activo? Esta
-            acción no se puede deshacer
-          </p>
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "center",
-              gap: "10px",
-              marginTop: "20px",
-            }}
-          >
-            <Button
-              variant="primary"
-              onClick={() => setShowDeleteConfirm(false)}
-            >
-              Cancelar
-            </Button>
-            <Button variant="secondary" onClick={handleConfirmDelete}>
-              Eliminar
-            </Button>
-          </div>
-        </div>
-      </SimpleModal>
+      {/* Modal de confirmación para FINALIZAR proceso */}
+      <ConfirmModal
+        open={showFinalizeConfirm}
+        message="¿Está seguro de finalizar el proceso de asignación? Esta acción no se puede deshacer."
+        onConfirm={handleFinalizeProcess}
+        onCancel={() => setShowFinalizeConfirm(false)}
+      />
+      {/* Modal de confirmación para ELIMINAR proceso */}
+      <ConfirmModal
+        open={showConfirmDelete}
+        message="¿Está seguro de eliminar el proceso de asignación activo? Esta acción no se puede deshacer."
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setShowConfirmDelete(false)}
+      />
     </>
   );
 };

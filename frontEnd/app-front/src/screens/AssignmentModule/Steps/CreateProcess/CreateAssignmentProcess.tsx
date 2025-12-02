@@ -5,7 +5,6 @@ import WarningModal from "../../../../components/shared/WarningModal/WarningModa
 import ConfirmModal from "../../../../components/shared/ConfirmModal/ConfirmModal";
 import SuccessModal from "../../../../components/shared/SuccessModal/SuccessModal";
 import Button from "../../../../components/ui/Button/Button";
-import TooltipInfo from "../../../../components/ui/TooltipInfo/TooltipInfo";
 import { useAssignmentProcessStore } from "../../../../store/Assignment";
 import { useAssignmentFlowStore } from "../../../../store/Assignment";
 

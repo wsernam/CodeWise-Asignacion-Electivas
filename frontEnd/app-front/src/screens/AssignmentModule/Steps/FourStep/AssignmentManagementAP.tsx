@@ -10,7 +10,6 @@ import Button from "../../../../components/ui/Button/Button";
 import SimpleModal from "../../../../components/shared/SimpleModal/SimpleModal";
 import ConfirmModal from "../../../../components/shared/ConfirmModal/ConfirmModal";
 import { useAssignmentProcessStore } from "../../../../store/Assignment";
-import RoleCard from "../../../../components/shared/RoleCard/RoleCard";
 
 type AssignmentProcessProps = {
   onNext: () => void;
@@ -19,6 +18,7 @@ type AssignmentProcessProps = {
   currentStep: number;
   completedSteps: number[];
   getStepBorderClass: (stepNumber: number) => string;
+  // No necesitamos processData aquí, solo en AssignmentModule
 };
 
 const cards = [
@@ -56,11 +56,12 @@ const AssignmentManagementAP: React.FC<AssignmentProcessProps> = ({
 }) => {
   const [showModal, setShowModal] = React.useState(false);
   const [showConfirm, setShowConfirm] = React.useState(false);
-  // NEW: traemos del store la acción y el loading (opcional para deshabilitar botón)
+
+  // Acciones del store
   const ejecutarAsignacion = useAssignmentProcessStore(
     (s: any) => s.ejecutarAsignacion
-  ); // NEW
-  const loading = useAssignmentProcessStore((s) => s.loading); // NEW
+  );
+  const loading = useAssignmentProcessStore((s) => s.loading);
 
   const handleCardClick = (stepNumber: number) => {
     if (stepNumber === currentStep) {
@@ -70,14 +71,12 @@ const AssignmentManagementAP: React.FC<AssignmentProcessProps> = ({
     }
   };
 
-  const handleSave = () => setShowConfirm(true);
-  // NEW: ahora es async y llama al endpoint vía store
-  const handleConfirmSave = async () => {
+  // FUNCIÓN: Solo ejecutar asignación y avanzar al paso 5
+  const handleExecuteAssignment = async () => {
     try {
-      await ejecutarAsignacion();
-      setShowConfirm(false);
+      await ejecutarAsignacion(); // Solo ejecuta la asignación
       setShowModal(false);
-      onNext(); // avanza al siguiente paso
+      onNext(); // ✅ Avanza al paso 5 (para ver asignación y finalizar proceso)
     } catch (e: any) {
       console.error("Error ejecutando la asignación:", e?.message || e);
     }
@@ -104,32 +103,33 @@ const AssignmentManagementAP: React.FC<AssignmentProcessProps> = ({
       </div>
 
       {currentStep === 4 && (
-        <SimpleModal
-          open={showModal}
-          title="Asignación de electivas"
-          onClose={() => setShowModal(false)}
-        >
-          <div className="assignment-content">
-            <p>Proceso de asignación automática de electivas...</p>
-            <p>Se asignarán las electivas según los criterios establecidos.</p>
-          </div>
-          <div className="aps-step-buttons">
-            <Button variant="primary" onClick={handleSave}>
-              Finalizar asignación
-            </Button>
-          </div>
-        </SimpleModal>
-      )}
+        <>
+          <SimpleModal
+            open={showModal}
+            title="Asignación de electivas"
+            onClose={() => setShowModal(false)}
+          >
+            <div className="assignment-content">
+              <p>Proceso de asignación automática de electivas...</p>
+              <p>
+                Se asignarán las electivas según los criterios establecidos.
+              </p>
 
-      <ConfirmModal
-        open={showConfirm}
-        message="¿Está seguro de finalizar el proceso de asignación?"
-        onConfirm={handleConfirmSave}
-        onCancel={() => setShowConfirm(false)}
-        confirmDisabled={loading} // deshabilita el botón "Sí"
-        cancelDisabled={loading} // deshabilita "No" mientras carga (opcional)
-        confirmLoading={loading} // muestra spinner en "Sí" (opcional)
-      />
+              <div className="aps-step-buttons">
+                <Button
+                  variant="primary"
+                  onClick={handleExecuteAssignment}
+                  disabled={loading}
+                >
+                  {loading
+                    ? "Ejecutando asignación..."
+                    : "Finalizar asignación"}
+                </Button>
+              </div>
+            </div>
+          </SimpleModal>
+        </>
+      )}
     </div>
   );
 };

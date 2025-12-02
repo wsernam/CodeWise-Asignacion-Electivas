@@ -233,4 +233,32 @@ export const assignmentProcessService = {
       throw err;
     }
   },
+  /**
+   * Elimina las asignaciones de un período específico.
+   */
+  async purgarAsignaciones(anio: number, semestre: number): Promise<void> {
+    try {
+      await apiClient.delete(
+        `${ASSIGNMENT_API_BASE_URL_PRIVATE}api/asignacion/purgar/`,
+        {
+          params: {
+            anio,
+            semestre,
+            dry_run: 0, // 0 para borrar realmente (no dry run)
+          },
+        }
+      );
+      console.log(
+        "[assignmentProcessService] Asignaciones purgadas para:",
+        anio,
+        semestre
+      );
+    } catch (error: any) {
+      console.error(
+        "[assignmentProcessService] Error purgando asignaciones:",
+        error
+      );
+      throw error;
+    }
+  },
 };
