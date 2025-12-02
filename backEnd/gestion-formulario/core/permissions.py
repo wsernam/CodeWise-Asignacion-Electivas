@@ -214,7 +214,7 @@ class TieneRoles(BasePermission):
             user_id = decoded.get('user_id', None)
             
             request.user_id = user_id
-            request.user_role = user_role
+            request.user_role = user_role_lower
             
             logger.info(f"[Auth] Validando TieneRoles - Rol: '{user_role}', Permitidos: {roles_permitidos}")
             

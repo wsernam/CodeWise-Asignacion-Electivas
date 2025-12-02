@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 class IsAsignador(BasePermission):
     """
-    Permiso personalizado para permitir el acceso solo a usuarios con el rol 'Asignador'.
+    Permiso personalizado para permitir el acceso solo a usuarios con el rol 'asignador' o 'ambos'.
     """
     
     def has_permission(self, request, view):
@@ -35,18 +35,20 @@ class IsAsignador(BasePermission):
             
             user_role = decoded.get('role', None)
             user_id = decoded.get('user_id', None)
+
+            user_role_lower = user_role.lower() 
             
             # Guardar en request para usarlo en vistas
             request.user_id = user_id
-            request.user_role = user_role
+            request.user_role = user_role_lower
             
             logger.info(f"[Auth] Validando IsAsignador - Rol: '{user_role}', User ID: '{user_id}'")
             
-            if user_role != 'Asignador':
-                logger.warning(f"[Auth] Acceso DENEGADO - Rol requerido: 'Asignador', Rol actual: '{user_role}'")
+            if user_role != 'asignador':
+                logger.warning(f"[Auth] Acceso DENEGADO - Rol requerido: 'asignador', Rol actual: '{user_role}'")
                 raise PermissionDenied({
                     "error": "Permiso denegado",
-                    "message": f"Esta acción requiere el rol 'Asignador'. Tu rol actual es '{user_role}'."
+                    "message": f"Esta acción requiere el rol 'asignador'. Tu rol actual es '{user_role}'."
                 })
             
             logger.info(f"[Auth] Acceso PERMITIDO para usuario {user_id}")
@@ -70,7 +72,7 @@ class IsAsignador(BasePermission):
 
 class IsAdministrador(BasePermission):
     """
-    Permiso para usuarios con rol 'Administrador'.
+    Permiso para usuarios con rol 'administrador' o 'ambos'.
     """
     
     def has_permission(self, request, view):
@@ -96,16 +98,18 @@ class IsAdministrador(BasePermission):
             
             user_role = decoded.get('role', None)
             user_id = decoded.get('user_id', None)
+
+            user_role_lower = user_role.lower() 
             
             request.user_id = user_id
-            request.user_role = user_role
+            request.user_role = user_role_lower
             
             logger.info(f"[Auth] Validando IsAdministrador - Rol: '{user_role}'")
             
-            if user_role != 'Administrador':
+            if user_role != 'administrador':
                 raise PermissionDenied({
                     "error": "Permiso denegado",
-                    "message": f"Esta acción requiere el rol 'Administrador'. Tu rol actual es '{user_role}'."
+                    "message": f"Esta acción requiere el rol 'administrador'. Tu rol actual es '{user_role}'."
                 })
             
             return True
@@ -177,7 +181,7 @@ class TieneRoles(BasePermission):
     Uso:
     class MiVista(APIView):
         permission_classes = [TieneRoles]
-        roles_permitidos = ['Asignador', 'Administrador']
+        roles_permitidos = ['asignador', 'administrador']
     """
     
     def has_permission(self, request, view):
