@@ -54,6 +54,9 @@ export const getSelectionsByStudent = async (
 /**
  * Crear una selección de electiva para un estudiante
  */
+/**
+ * Crear una selección de electiva para un estudiante
+ */
 export const createSelectionService = async (
   s: ISelectionStudentElective
 ): Promise<ISelectionStudentElective> => {
@@ -64,12 +67,11 @@ export const createSelectionService = async (
     console.log("[selectionService] Selección creada:", created);
     return created;
   } catch (error: any) {
-    console.log("JSON Enviado:", JSON.stringify(s));
+    console.log("[selectionService] JSON Enviado:", JSON.stringify(s));
     console.error("[selectionService] Error creando selección:", error);
-    throw new Error(
-      error.response?.data?.detail ||
-        error?.message ||
-        "No se pudo crear la selección"
-    );
+    console.error("[selectionService] Error response data:", error?.response?.data);
+    
+    // NO crear un nuevo Error, solo propagar el error original de Axios
+    throw error;
   }
 };

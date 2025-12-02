@@ -2,19 +2,20 @@ from django.db import IntegrityError
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import ValidationError, PermissionDenied
 
 from .models import ProcesoAsignacion
 from .serializers import ProcesoSerializer, ProcesoCambiarEstadoIn
 from .services.proceso_asignacion_reset import (
     eliminar_todo_del_proceso,
 )
+from core.permissions import IsAsignador
+from django.core.exceptions import ValidationError as DjangoValidationError
 
 class ProcesoCRUDViewSet(viewsets.ModelViewSet):
     queryset = ProcesoAsignacion.objects.all().order_by("-pa_fecha_creacion")
     serializer_class = ProcesoSerializer
-    authentication_classes = []  # sin auth por ahora
-    permission_classes = []
+    permission_classes = [IsAsignador]
 
     # Crear: bloquear si ya hay ACTIVO
     def perform_create(self, serializer):

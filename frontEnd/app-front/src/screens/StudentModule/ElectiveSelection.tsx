@@ -132,17 +132,21 @@ const ElectiveSelection: React.FC = () => {
     };
 
     try {
-      await addSelection(selectionsPayload);
-      setShowSuccess(true);
-    } catch (error) {
-      console.log("[ElectiveSelection] Error al registrar selección:", error);
-      setWarning({
-        open: true,
-        message:
-          "Error al registrar la selección de electivas. Por favor, intenta nuevamente.",
-      });
-    }
-  };
+    await addSelection(selectionsPayload);
+    setShowSuccess(true);
+  } catch (error: any) {
+    console.log("[ElectiveSelection] Error al registrar selección:", error);
+    
+    // Usar el mensaje del error capturado
+    const errorMessage = error.message || 
+      "Error al registrar la selección de electivas. Por favor, intenta nuevamente.";
+    
+    setWarning({
+      open: true,
+      message: errorMessage,
+    });
+  }
+};
 
   const handleBack = () => {
     navigate("/personal-info");
