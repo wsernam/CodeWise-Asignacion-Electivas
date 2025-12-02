@@ -1,8 +1,9 @@
 // ReportsForm.tsx - ACTUALIZADO
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import Card from "../../components/ui/Card/Card";
 import ReportFilters from "./ReportFilters";
 import { useReportStore } from "../../store/Form/reportStore";
+import { useAssignmentProcessStore } from "../../store/Assignment";
 import { selectionReportService } from "../../services/Form/selectionReportService";
 import { offerReportService } from "../../services/Form/offerReportService";
 import WarningModal from "../../components/shared/WarningModal/WarningModal";
@@ -25,8 +26,29 @@ const ReportsForm: React.FC = () => {
     clearReport,
   } = useReportStore();
 
+  // Obtener procesos para años disponibles
+  const { allProcess, obtenerTodosLosProcesos } = useAssignmentProcessStore();
+
   const [showWarningModal, setShowWarningModal] = useState(false);
   const [warningMessage, setWarningMessage] = useState("");
+
+  // Cargar procesos al inicio
+  useEffect(() => {
+    obtenerTodosLosProcesos();
+  }, [obtenerTodosLosProcesos]);
+
+  // Calcular años disponibles de procesos
+  const availableYears = useMemo(() => {
+    const years = new Set<number>();
+    allProcess.forEach((process) => {
+      years.add(process.pa_anio);
+    });
+    return Array.from(years).sort((a, b) => b - a); // Orden descendente
+  }, [allProcess]);
+
+  // Si no hay procesos, usar año actual
+  const finalYears =
+    availableYears.length > 0 ? availableYears : [new Date().getFullYear()];
 
   useEffect(() => {
     return () => {
@@ -137,15 +159,15 @@ const ReportsForm: React.FC = () => {
             selectedYear={selectedYear}
             selectedSemester={selectedSemester}
             selectedReportType={selectedReportType}
-            studentCode={studentCode} // ← PASA el estado del store
+            studentCode={studentCode} // Pasa el estado del store
             onYearChange={setSelectedYear}
             onSemesterChange={setSelectedSemester}
             onReportTypeChange={setSelectedReportType}
-            onStudentCodeChange={setStudentCode} // ← PASA el setter del store
+            onStudentCodeChange={setStudentCode} //  Pasa el setter del store
             onGenerate={handleGenerateReport}
             isGenerating={isGenerating}
             isGenerateDisabled={isGenerateDisabled()}
-            module="form" // ← IMPORTANTE: indica que es de formularios
+            module="form" //  IMPORTANTE: indica que es de formularios
             // Opciones personalizadas
             reportTypeOptions={[
               {
@@ -157,6 +179,7 @@ const ReportsForm: React.FC = () => {
                 label: "Reporte de Oferta de Electivas",
               },
             ]}
+            availableYears={finalYears} // Pasa los años disponibles
           />
 
           <div className="pdf-viewer-section">

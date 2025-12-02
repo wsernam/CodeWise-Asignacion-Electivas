@@ -22,6 +22,7 @@ interface IReportFiltersProps {
   isGenerateDisabled: boolean;
   reportTypeOptions?: IReportTypeOption[];
   module?: "form" | "assignment"; // de qué módulo proviene
+  availableYears?: number[]; // años disponibles para el filtro
 }
 
 const ReportFilters: React.FC<IReportFiltersProps> = ({
@@ -40,8 +41,11 @@ const ReportFilters: React.FC<IReportFiltersProps> = ({
   isGenerateDisabled,
   reportTypeOptions,
   module = "form",
+  availableYears = [],
 }) => {
-  const yearOptions = [2024, 2025, 2026];
+  //const yearOptions = [2024, 2025, 2026];
+  const yearOptions =
+    availableYears.length > 0 ? availableYears : [new Date().getFullYear()];
 
   // Opciones según módulo
   const defaultReportTypeOptions =

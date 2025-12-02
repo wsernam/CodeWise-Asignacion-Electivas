@@ -1,12 +1,17 @@
-// ReportsAssignment.tsx - COMPLETO Y CORREGIDO
-import React, { useEffect, useState } from "react";
+import { useLocation } from "react-router";
+import React, { useEffect, useState, useMemo } from "react";
 import Card from "../../components/ui/Card/Card";
 import ReportFilters from "./ReportFilters";
 import WarningModal from "../../components/shared/WarningModal/WarningModal";
-import { reporteService } from "../../services/Assignment/reporteService";
+import { useAssignmentProcessStore } from "../../store/Assignment";
+import { reporteService } from "../../services/Assignment/reportService";
 import "./ReportsAssignment.css";
 
 const ReportsAssignment: React.FC = () => {
+  const location = useLocation();
+  const isPreview = location.state?.isPreview || false;
+  const previewProcessId = location.state?.processId;
+
   const [selectedYear, setSelectedYear] = useState<number>(2025);
   const [selectedSemester, setSelectedSemester] = useState<1 | 2>(1);
   const [selectedReportType, setSelectedReportType] =
@@ -22,6 +27,26 @@ const ReportsAssignment: React.FC = () => {
     open: false,
     message: "",
   });
+  // Obtener procesos para años disponibles
+  const { allProcess, obtenerTodosLosProcesos } = useAssignmentProcessStore();
+
+  // Cargar procesos al inicio
+  useEffect(() => {
+    obtenerTodosLosProcesos();
+  }, [obtenerTodosLosProcesos]);
+
+  // Calcular años disponibles de procesos
+  const availableYears = useMemo(() => {
+    const years = new Set<number>();
+    allProcess.forEach((process) => {
+      years.add(process.pa_anio);
+    });
+    return Array.from(years).sort((a, b) => b - a); // Orden descendente
+  }, [allProcess]);
+
+  // Si no hay procesos, usar año actual
+  const finalYears =
+    availableYears.length > 0 ? availableYears : [new Date().getFullYear()];
 
   // Validación centralizada - MUY IMPORTANTE
   const isGenerateDisabled =
@@ -40,6 +65,23 @@ const ReportsAssignment: React.FC = () => {
     setIsGenerating(true);
     try {
       let blob: Blob;
+
+      if (isPreview && previewProcessId) {
+        // Verificar si el proceso aún existe en la lista
+        const procesoExiste = allProcess.some(
+          (p) => p.pa_codigo === previewProcessId
+        );
+
+        if (!procesoExiste) {
+          setShowWarningModal({
+            open: true,
+            message:
+              "El proceso de asignación ha sido eliminado. No se pueden visualizar los reportes.",
+          });
+          setIsGenerating(false);
+          return;
+        }
+      }
 
       switch (selectedReportType) {
         case "listas":
@@ -103,17 +145,18 @@ const ReportsAssignment: React.FC = () => {
             selectedYear={selectedYear}
             selectedSemester={selectedSemester}
             selectedReportType={selectedReportType}
-            studentCode={estId} // ← PASA el estado
-            electiveCode={eleCodigo} // ← PASA el estado
+            studentCode={estId} //  Pasa el estado
+            electiveCode={eleCodigo} //  Pasa el estado
             onYearChange={setSelectedYear}
             onSemesterChange={setSelectedSemester}
             onReportTypeChange={setSelectedReportType}
-            onStudentCodeChange={setEstId} // ← PASA el setter
-            onElectiveCodeChange={setEleCodigo} // ← PASA el setter
+            onStudentCodeChange={setEstId} //  Pasa el setter
+            onElectiveCodeChange={setEleCodigo} //  Pasa el setter
             onGenerate={handleGenerateReport}
             isGenerating={isGenerating}
             isGenerateDisabled={isGenerateDisabled}
-            module="assignment" // ← IMPORTANTE: indica que es de asignación
+            module="assignment" //  IMPORTANTE: indica que es de asignación
+            availableYears={finalYears} // Pasa los años disponibles
           />
           {/* Visor PDF */}
           <div className="pdf-viewer-section">
