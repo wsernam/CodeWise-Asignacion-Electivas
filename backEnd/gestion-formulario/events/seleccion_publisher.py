@@ -1,21 +1,23 @@
-from .publisher import Publisher
+# seleccion_publisher.py
+from common.rabbit import get_publisher
 import logging
 
 logger = logging.getLogger(__name__)
 
-def publish_seleccion_creada(body):
+def publish_seleccion_creada(seleccion: dict):
     """
     Publica un evento cuando se crea una selección.
-    (Actualmente no se usa, pero se mantiene por si es necesario en el futuro).
     """
-    publisher = Publisher()
-    publisher.publish(routing_key='seleccion.creada', body=body)
-    publisher.close()
+    get_publisher().publish("seleccion.creada", "seleccion.creada", seleccion)
 
-def publish_seleccion_actualizada(body):
+def publish_seleccion_actualizada(seleccion: dict):
     """
-    Publica un evento cuando la selección de un estudiante es actualizada.
+    Publica un evento cuando se actualiza una selección.
     """
-    publisher = Publisher()
-    publisher.publish(routing_key='seleccion.actualizada', body=body)
-    publisher.close()
+    get_publisher().publish("seleccion.actualizada", "seleccion.actualizada", seleccion)
+
+def publish_seleccion_eliminada(seleccion: dict):
+    """
+    Publica un evento cuando se elimina una selección.
+    """
+    get_publisher().publish("seleccion.eliminada", "seleccion.eliminada", seleccion)

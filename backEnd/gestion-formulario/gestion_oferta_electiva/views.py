@@ -28,15 +28,37 @@ class OfertaElectivaBulkCreateView(generics.CreateAPIView):
     serializer_class = OfertaElectivaBulkCreateSerializer
     permission_classes = [IsAdministrador]
 
+class OfertaElectivaBulkCreateView(generics.CreateAPIView):
+    serializer_class = OfertaElectivaBulkCreateSerializer
+    permission_classes = [IsAdministrador]
+
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        result = serializer.save()
+        result = serializer.save()  # {'creadas': [...], 'existentes': [...]}
 
-        # Si se creó al menos una oferta, devolvemos 201.
-        # Si todas ya existían, devolvemos 200.
-        response_status = status.HTTP_201_CREATED if result['creadas'] else status.HTTP_200_OK
+        creadas = result.get("creadas", [])
+
+        # Solo publicamos si realmente se creó algo nuevo
+        if creadas:
+            def publish_all():
+                for o in creadas:
+                    # Armamos el payload que el consumer espera:
+                    payload = {
+                        "ofe_codigo": o["ofe_codigo"],
+                        "ofe_anio": o["ofe_anio"],
+                        "ofe_num_semestre": o["ofe_num_semestre"],
+                        "ele_codigo": o["ele_codigo"],
+                        "pro_codigo": o["pro_codigo"],
+                    }
+                    publish_oferta_creada(payload)
+
+            transaction.on_commit(publish_all)
+
+        # Status HTTP según si hubo nuevas ofertas o no
+        response_status = status.HTTP_201_CREATED if creadas else status.HTTP_200_OK
         return Response(result, status=response_status)
+
 
 # Endpoint para editar y eliminar
 # Este maneja 'Editar oferta_electiva'
@@ -124,9 +146,4 @@ def _serialize_oferta(o: Oferta_electiva) -> dict:
         "ofe_num_semestre": getattr(o, "ofe_num_semestre", None),
         "ele_codigo": getattr(getattr(o, "ele_codigo", None), "ele_codigo", None),
         "pro_codigo": getattr(getattr(o, "pro_codigo", None), "pro_codigo", None),
-        # Ejemplos opcionales (si existen en tu modelo):
-        "cupos": getattr(o, "ofe_cupos", None),
-        "docente": getattr(o, "ofe_docente", None),
-        "horario": getattr(o, "ofe_horario", None),
-        "activo": getattr(o, "ofe_activo", True),
     }

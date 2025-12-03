@@ -14,7 +14,11 @@ QUEUES = {
     # Routing Key: Queue Name
     "estudiante.creado": os.getenv("Q_EST", "ms.asignacion.estudiantes"),
     "programa.creado":   os.getenv("Q_PROG", "ms.asignacion.programas"),
+    "programa.actualizado": os.getenv("Q_PROG_UPD", "ms.asignacion.programas.upd"),  
     "electiva.creada":   os.getenv("Q_ELEC", "ms.asignacion.electivas"),
+    "electiva.estado_cambiado": os.getenv("Q_ELEC_EC", "ms.asignacion.electivas.ec"),
+    "electiva.eliminada": os.getenv("Q_ELEC_DEL", "ms.asignacion.electivas.del"),
+    "electiva.actualizada": os.getenv("Q_ELEC_UPD", "ms.asignacion.electivas.upd"),
     "oferta.creada":     os.getenv("Q_OFER", "ms.asignacion.ofertas"),
     "oferta.actualizada": os.getenv("Q_OFER_UPD", "ms.asignacion.ofertas.upd"),
     "oferta.eliminada":  os.getenv("Q_OFER_DEL", "ms.asignacion.ofertas.del"),
@@ -34,19 +38,130 @@ def _process_estudiante(data):
     )
     logger.info(f"Estudiante {data['est_codigo']} procesado.")
 
-def _process_programa(data):
-    Programa.objects.update_or_create(
-        pro_codigo=data['pro_codigo'],
-        defaults=data
-    )
-    logger.info(f"Programa {data['pro_codigo']} procesado.")
+def _process_programa(data: dict):
+    """
+    Sincroniza un Programa a partir del evento recibido.
+    data típico:
+    {
+        "pro_codigo": "PIAI",
+        "pro_nombre": "Ingeniería Automática",
+        "fac_codigo": 1,
+        "fac_nombre": "Facultad de Ingeniería",
+        "pro_activo": true
+    }
+    """
+    # 1) Quitar campos que NO existen en el modelo Programa de este micro
+    data.pop("fac_nombre", None)   # 👈 ESTE CAMPO NO EXISTE AQUÍ
 
-def _process_electiva(data):
-    Electiva.objects.update_or_create(
-        ele_codigo=data['ele_codigo'],
-        defaults=data
+    pro_codigo = data.get("pro_codigo")
+    if not pro_codigo:
+        logger.error(f"[programa.creado] Evento sin pro_codigo: {data}")
+        return
+
+    Programa.objects.update_or_create(
+        pro_codigo=pro_codigo,
+        defaults=data,
     )
-    logger.info(f"Electiva {data['ele_codigo']} procesada.")
+    logger.info(f"[programa.creado] Programa {pro_codigo} procesado.")
+
+def _process_electiva(data: dict):
+    """
+    Sincroniza una Electiva a partir del evento recibido.
+    data = {
+        'ele_codigo': '121AA',
+        'ele_nombre': 'adwadawd',
+        'ele_estado': True,
+        'pro_codigo': 'PIAI'
+    }
+    """
+    ele_codigo = data.get("ele_codigo")
+    if not ele_codigo:
+        logger.error(f"[electiva.creada] Evento sin ele_codigo: {data}")
+        return
+
+    # Armamos defaults sin meter todo el dict a lo loco
+    defaults = {
+        "ele_nombre": data.get("ele_nombre", ""),
+        "ele_estado": data.get("ele_estado", True),
+    }
+
+    # Resolver el Programa a partir de pro_codigo (string)
+    pro_codigo = data.get("pro_codigo")
+    if pro_codigo:
+        try:
+            programa = Programa.objects.get(pro_codigo=pro_codigo)
+            defaults["pro_codigo"] = programa  # 👈 instancia, no string
+        except Programa.DoesNotExist:
+            logger.error(
+                f"[electiva.creada] Programa con código {pro_codigo} no existe en este microservicio. "
+                f"Evento: {data}"
+            )
+            # puedes decidir: return, o dejar la Electiva sin programa
+            return
+
+    Electiva.objects.update_or_create(
+        ele_codigo=ele_codigo,
+        defaults=defaults,
+    )
+
+    logger.info(f"[electiva.creada] Electiva {ele_codigo} procesada correctamente.")
+
+def _process_electiva_estado_cambiado(data: dict):
+    """
+    Handler para electiva.estado_cambiado
+    Solo actualiza ele_estado de una electiva existente.
+    """
+    ele_codigo = data.get("ele_codigo")
+    ele_estado = data.get("ele_estado")
+
+    if not ele_codigo:
+        logger.error(f"[electiva.estado_cambiado] Evento sin ele_codigo: {data}")
+        return
+
+    if ele_estado is None:
+        logger.error(f"[electiva.estado_cambiado] Evento sin ele_estado: {data}")
+        return
+
+    try:
+        electiva = Electiva.objects.get(ele_codigo=ele_codigo)
+    except Electiva.DoesNotExist:
+        logger.error(
+            f"[electiva.estado_cambiado] Electiva {ele_codigo} no existe en asignación. Evento: {data}"
+        )
+        return
+
+    electiva.ele_estado = ele_estado
+    electiva.save()
+
+    logger.info(
+        f"[electiva.estado_cambiado] Electiva {ele_codigo} ahora tiene ele_estado={ele_estado}"
+    )
+
+def _process_electiva_eliminada(data: dict):
+    """
+    Handler para electiva.eliminada.
+    Elimina la electiva en el microservicio de asignación si existe.
+    data = { "ele_codigo": "121AA", ... }
+    """
+    ele_codigo = data.get("ele_codigo")
+
+    if not ele_codigo:
+        logger.error(f"[electiva.eliminada] Evento sin ele_codigo: {data}")
+        return
+
+    try:
+        electiva = Electiva.objects.get(ele_codigo=ele_codigo)
+    except Electiva.DoesNotExist:
+        logger.warning(
+            f"[electiva.eliminada] Se intentó eliminar la electiva {ele_codigo}, "
+            f"pero no existe en este microservicio. Evento: {data}"
+        )
+        return
+
+    # Si hay FKs con on_delete=CASCADE (Ofertas, Selecciones, etc.),
+    # Django se encargará de eliminarlas.
+    electiva.delete()
+    logger.info(f"[electiva.eliminada] Electiva {ele_codigo} eliminada correctamente.")
 
 def _process_oferta(data):
     # Manejamos los FKs para que no intente asignar un objeto completo.
@@ -86,7 +201,11 @@ def _process_seleccion(data):
 EVENT_HANDLERS = {
     "estudiante.creado": _process_estudiante,
     "programa.creado": _process_programa,
+    "programa.actualizado": _process_programa,
     "electiva.creada": _process_electiva,
+    "electiva.actualizada": _process_electiva,
+    "electiva.estado_cambiado": _process_electiva_estado_cambiado,
+    "electiva.eliminada": _process_electiva_eliminada,
     "oferta.creada": _process_oferta,
     "oferta.actualizada": _process_oferta,
     "oferta.eliminada": _process_oferta_eliminada,

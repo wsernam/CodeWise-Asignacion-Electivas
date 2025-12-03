@@ -5,7 +5,7 @@ from .models import Electiva
 from .serializers import ElectivaSerializer
 from rest_framework.exceptions import NotFound
 from django.db import transaction
-from events.electiva_publisher import publish_electiva_creada, publish_electiva_actualizada, publish_electiva_eliminada
+from events.electiva_publisher import publish_electiva_creada, publish_electiva_actualizada, publish_electiva_eliminada, publish_electiva_estado_cambiado
 import logging
 from core.permissions import IsAdministrador
 from rest_framework.permissions import AllowAny
@@ -62,12 +62,24 @@ class ElectivaViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['patch'])  # endpoint: PATCH /electivas/<pk>/toggle_estado/
     def toggle_estado(self, request, pk=None):
         electiva = self.get_object()
-        electiva.ele_estado = not bool(electiva.ele_estado) # cambia de True→False o False→True
-        logger.info("El estado de la electiva {electiva.ele_codigo} fue cambiado a ",electiva.ele_estado)
+
+        # 1) Cambiar el estado
+        electiva.ele_estado = not bool(electiva.ele_estado)  # True→False o False→True
         electiva.save()
+
+        logger.info(
+            f"El estado de la electiva {electiva.ele_codigo} fue cambiado a {electiva.ele_estado}"
+        )
+
+        # 2) Armar payload y publicar evento cuando la transacción se confirme
+        payload = _serialize_electiva(electiva)
+        transaction.on_commit(
+            lambda: publish_electiva_estado_cambiado(payload)
+        )
+
+        # 3) Responder al cliente
         serializer = self.get_serializer(electiva)
         return Response(serializer.data)
-    
         # Helper local para armar el payload del evento
 def _serialize_electiva(e: Electiva) -> dict:
     """
@@ -75,7 +87,7 @@ def _serialize_electiva(e: Electiva) -> dict:
     Usa los nombres REALES del modelo (según tu POST en Postman).
     """
     return {
-        "ele_codigo": getattr(e.ele_codigo, "ele_codigo", None),
+        "ele_codigo": getattr(e, "ele_codigo", None),
         "ele_nombre": e.ele_nombre,
         "ele_estado": e.ele_estado,
         "pro_codigo": getattr(e.pro_codigo, "pro_codigo", None)

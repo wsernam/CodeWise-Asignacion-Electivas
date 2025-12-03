@@ -64,16 +64,12 @@ class ProgramaViewSet(viewsets.ModelViewSet):
         return Response({"mensaje": "Programa reactivado."}, status=status.HTTP_200_OK)
     
 def _serialize_programa(p: Programa) -> dict:
-    """
-    Convierte el objeto Programa en un dict JSON listo para enviar a RabbitMQ.
-    Usa los nombres REALES del modelo (según tu POST en Postman).
-    """
     return {
-        "pro_codigo": getattr(p.pro_codigo, "pro_codigo", None),
+        "pro_codigo": getattr(p, "pro_codigo", None),   # 👈 BIEN
         "pro_nombre": p.pro_nombre,
+        "pro_activo": p.pro_activo,
         "fac_codigo": getattr(p.fac_codigo, "fac_codigo", None),
-        "fac_nombre": getattr(p.fac_codigo, "fac_nombre", None),
-        "pro_activo": p.pro_activo
+        "fac_nombre": getattr(p.fac_codigo, "fac_nombre", None),  # solo como info
     }
 
 class FacultadViewSet(viewsets.ModelViewSet): 

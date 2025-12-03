@@ -6,47 +6,19 @@ from .models import SeleccionEstudianteElectiva
 from .serializers import CrearSeleccionElectivaDTO, SeleccionEstudianteElectivaSerializer, ConsultaElectivaEstudianteDTO
 from gestion_electivas.models import Electiva
 from django.db import transaction
-from events.seleccion_publisher import publish_seleccion_actualizada
+from events.seleccion_publisher import publish_seleccion_creada
 from core.permissions import IsAdministrador
 from rest_framework.permissions import AllowAny
+
+from events.seleccion_publisher import publish_seleccion_creada
 
 class SeleccionEstudianteElectivaViewSet(mixins.CreateModelMixin,
                                        mixins.ListModelMixin,
                                        mixins.RetrieveModelMixin,
                                        viewsets.GenericViewSet):
-    """
-    ViewSet que solo permite crear, listar y ver detalles de las selecciones.
-    No se permite la edición ni la eliminación.
-    """
-    queryset = SeleccionEstudianteElectiva.objects.all()
-    # El serializer por defecto se usa para list/retrieve. Para 'create' usamos otro.
-    serializer_class = SeleccionEstudianteElectivaSerializer   
+    ...
 
-    def get_permissions(self):
-        """
-        Asigna permisos basados en la acción.
-        """
-        if self.action in ['list', 'electivas_por_estudiante']:
-            self.permission_classes = [IsAdministrador]
-        else:
-            self.permission_classes = [AllowAny]
-        return super().get_permissions()
-   
     def create(self, request):
-        """
-        Crea una selección de electivas para un estudiante.
-        Recibe:
-        {
-            "est_codigo": 123,
-            "sel_anio": 2025,
-            "sel_num_semestre": 1,
-            "est_correo": "ashleecampaz"
-            "electivas": [
-                {"ele_codigo": 101, "sel_prioridad": 1, "ele_nombre": "Matemáticas"},
-                {"ele_codigo": 102, "sel_prioridad": 2, "ele_nombre": "Física"},
-            ]
-        }
-        """
         serializer = CrearSeleccionElectivaDTO(data=request.data)
         serializer.is_valid(raise_exception=True)
 
@@ -56,10 +28,7 @@ class SeleccionEstudianteElectivaViewSet(mixins.CreateModelMixin,
         sel_num_semestre = validated_data["sel_num_semestre"]
         electivas_data = validated_data["electivas"]
 
-        # Usamos una transacción para asegurar que todas las selecciones se creen o ninguna.
         with transaction.atomic():
-
-            # Creamos una lista de objetos para insertar en lote
             selecciones_a_crear = [
                 SeleccionEstudianteElectiva(
                     est_codigo_id=est_codigo,
@@ -71,58 +40,32 @@ class SeleccionEstudianteElectivaViewSet(mixins.CreateModelMixin,
                 for electiva in electivas_data
             ]
 
-            # Usamos bulk_create para una inserción eficiente en la base de datos
-            created_instances = SeleccionEstudianteElectiva.objects.bulk_create(selecciones_a_crear)
+            created_instances = SeleccionEstudianteElectiva.objects.bulk_create(
+                selecciones_a_crear
+            )
 
-            # Preparamos el payload para el evento
-            payload_evento = {
-                "est_codigo": est_codigo,
-                "sel_anio": sel_anio,
-                "sel_num_semestre": sel_num_semestre,
-                "detail": "La selección de electivas ha sido actualizada."
-            }
+            # 👉 Publicar UN evento por cada selección creada
+            def publicar_eventos():
+                for sel in created_instances:
+                    payload = {
+                        "sel_codigo": sel.sel_codigo,
+                        "est_codigo": sel.est_codigo_id,
+                        "sel_anio": sel.sel_anio,
+                        "sel_num_semestre": sel.sel_num_semestre,
+                        "sel_prioridad": sel.sel_prioridad,
+                        "ele_codigo": sel.ele_codigo_id,
+                    }
+                    publish_seleccion_creada(payload)
 
-            # Publicamos un único evento para notificar que la selección del estudiante ha sido actualizada.
-            # El servicio consumidor (ej. gestion-asignacion) será responsable de obtener los datos actualizados si los necesita.
-            transaction.on_commit(lambda: publish_seleccion_actualizada(payload_evento))
-            
+            transaction.on_commit(publicar_eventos)
+
         return Response(
             {
                 "detail": f"Se han registrado {len(created_instances)} electivas para el estudiante {est_codigo}."
             },
             status=status.HTTP_201_CREATED,
         )
-    
-    @action(
-        detail=False,
-        methods=["get"],
-        url_path=r"consulta/(?P<est_codigo>\d+)/(?P<sel_anio>\d+)/(?P<sel_num_semestre>\d+)"
-    )
-    def electivas_por_estudiante(self, request, est_codigo=None, sel_anio=None, sel_num_semestre=None):
-        """
-        Obtiene todas las electivas seleccionadas por un estudiante 
-        en un año y semestre específicos.
-        URL de ejemplo:
-        GET /consulta/1/2025/1/
-        """
-        queryset = SeleccionEstudianteElectiva.objects.filter(
-            est_codigo=est_codigo,
-            sel_anio=sel_anio,
-            sel_num_semestre=sel_num_semestre
-        ).select_related('ele_codigo').order_by('sel_prioridad')
 
-        if not queryset.exists():
-            return Response(
-                {"detail": "No se encontraron selecciones para los criterios especificados."},
-                status=status.HTTP_404_NOT_FOUND,
-            )
-        
-        # Usamos un serializador para formatear la respuesta, es más limpio.
-        # select_related optimiza la consulta para evitar N+1 queries.
-        data = ConsultaElectivaEstudianteDTO(queryset, many=True).data
-        
-        return Response(data, status=status.HTTP_200_OK)
-    
     
     
 def _serialize_seleccion(s: SeleccionEstudianteElectiva) -> dict:

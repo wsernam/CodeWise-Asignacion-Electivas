@@ -106,9 +106,17 @@ class OfertaElectivaBulkCreateSerializer(serializers.Serializer):
             ofe_num_semestre=semestre,
             ele_codigo__in=[pk[0] for pk in pks_creadas],
             pro_codigo__in=[pk[1] for pk in pks_creadas]
-        ).values('ofe_codigo', 'ele_codigo__ele_nombre', 'pro_codigo__pro_nombre')
+        ).values(
+            'ofe_codigo',
+            'ofe_anio',
+            'ofe_num_semestre',
+            'ele_codigo',              # 👈 PK de la electiva (para FK en asignación)
+            'pro_codigo',              # 👈 PK del programa
+            'ele_codigo__ele_nombre',
+            'pro_codigo__pro_nombre',
+        )
 
         return {
             'creadas': list(objetos_creados),
-            'existentes': ofertas_existentes
+            'existentes': ofertas_existentes,
         }
