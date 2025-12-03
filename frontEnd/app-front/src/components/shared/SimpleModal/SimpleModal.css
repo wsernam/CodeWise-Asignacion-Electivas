@@ -1,99 +1,45 @@
 .sm-backdrop {
-  /* Posicionamiento */
   position: fixed;
-  z-index: 1000;
-
-  /* Modelo de caja */
+  inset: 0;
+  background: rgba(0,0,0,0.25);
   display: flex;
-
-  /* Flexbox y Grid */
   align-items: center;
   justify-content: center;
-
-  /* Relleno */
+  z-index: 1000;
   padding: 20px;
-
-  /* Fondos */
-  background: rgba(0, 0, 0, 0.25);
-
-  /* Otras propiedades */
-  inset: 0;
 }
 
 .sm-card {
-  /* Posicionamiento */
-  position: relative;
-
-  /* Modelo de caja */
-  display: flex;
-  overflow: hidden;
-
-  /* Flexbox y Grid */
-  flex-direction: column;
-
-  /* Dimensiones */
+  background: #fff;
+  border-radius: 14px;
   width: 820px;
   max-width: 100%;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.12);
+  position: relative;
   max-height: 85vh;
-
-  /* Bordes */
-  border-radius: 14px;
-
-  /* Fondos */
-  background: #fff;
-
-  /* Colores y efectos */
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .sm-close {
-  /* Posicionamiento */
   position: absolute;
   right: 16px;
   top: 12px;
-
-  /* Bordes */
-  border: none;
-
-  /* Fondos */
   background: transparent;
-
-  /* Tipografía */
+  border: none;
   font-size: 20px;
-
-  /* Colores y efectos */
-  color: #111;
-
-  /* Interactividad */
   cursor: pointer;
+  color: #111;
 }
 
 .sm-body {
-  /* Modelo de caja */
-  overflow: auto;
-
-  /* Relleno */
   padding: 24px;
+  overflow: auto;
 }
 
 .sm-title {
-  /* Márgenes */
   margin: 0 0 12px 0;
-
-  /* Tipografía */
   font-size: 18px;
-
-  /* Colores y efectos */
-  color: #0b2a66;
-}
-
-.sm-titleytooltip {
-  /* Márgenes */
-  margin: 0 0 12px 0;
-
-  /* Tipografía */
-  font-size: 18px;
-
-  /* Colores y efectos */
   color: #0b2a66;
 }

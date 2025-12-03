@@ -6,8 +6,6 @@ from .serializers import ProgramaSerializer, FacultadSerializer
 import logging
 from django.db import transaction
 from events.programa_publisher import publish_programa_creado, publish_programa_actualizado, publish_programa_eliminado
-from core.permissions import IsAdministrador
-from rest_framework.permissions import AllowAny
 logger = logging.getLogger(__name__)
 
 class ProgramaViewSet(viewsets.ModelViewSet):
@@ -17,18 +15,6 @@ class ProgramaViewSet(viewsets.ModelViewSet):
     queryset = Programa.objects.select_related('fac_codigo').all()
     serializer_class = ProgramaSerializer
     
-    def get_permissions(self):
-        """
-        Asigna permisos basados en la acción.
-        - Permite acceso público para consultas (list, retrieve).
-        - Requiere rol de Administrador para todas las demás acciones.
-        """
-        if self.action in ['list', 'retrieve']:
-            self.permission_classes = [AllowAny]
-        else:
-            self.permission_classes = [IsAdministrador]
-        return super().get_permissions()
-
     def perform_create(self, serializer):
         instance = serializer.save()
         transaction.on_commit(lambda: publish_programa_creado(_serialize_programa(instance)))

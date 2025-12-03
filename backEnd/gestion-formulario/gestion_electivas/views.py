@@ -7,26 +7,12 @@ from rest_framework.exceptions import NotFound
 from django.db import transaction
 from events.electiva_publisher import publish_electiva_creada, publish_electiva_actualizada, publish_electiva_eliminada
 import logging
-from core.permissions import IsAdministrador
-from rest_framework.permissions import AllowAny
 
 logger = logging.getLogger(__name__)
 
 class ElectivaViewSet(viewsets.ModelViewSet):
     queryset = Electiva.objects.all()
     serializer_class = ElectivaSerializer
-
-    def get_permissions(self):
-        """
-        Asigna permisos basados en la acción.
-        - Permite acceso público para consultas (list, retrieve).
-        - Requiere rol de Administrador para todas las demás acciones.
-        """
-        if self.action in ['list', 'retrieve']:
-            self.permission_classes = [AllowAny]
-        else:
-            self.permission_classes = [IsAdministrador]
-        return super().get_permissions()
 
     def perform_create(self, serializer):
         instance = serializer.save()
@@ -80,3 +66,4 @@ def _serialize_electiva(e: Electiva) -> dict:
         "ele_estado": e.ele_estado,
         "pro_codigo": getattr(e.pro_codigo, "pro_codigo", None)
     }   
+

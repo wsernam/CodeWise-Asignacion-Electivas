@@ -1,141 +1,94 @@
 .dashboard-layout {
-/* Posicionamiento */
-  position: relative;
-
-  /* Modelo de caja */
+  height: 100vh;
   display: flex;
-  overflow: hidden;
-
-  /* Flexbox y Grid */
   flex-direction: column;
-
-  /* Dimensiones */
-  height: 100vh;}
+  overflow: hidden;
+  position: relative;
+}
 
 .dashboard-content {
-/* Modelo de caja */
   display: flex;
-
-  /* Flexbox y Grid */
   flex: 1;
-
-  /* Dimensiones */
-  min-height: 0;}
+  min-height: 0;
+}
 
 .sidebar-hamburger-btn {
-/* Posicionamiento */
   position: absolute;
   top: 20px;
   left: 20px;
   z-index: 1001;
-
-  /* Modelo de caja */
-  display: flex;
-
-  /* Flexbox y Grid */
-  align-items: center;
-  justify-content: center;
-
-  /* Dimensiones */
+  background: none;
+  color: var(--primary-blue);
+  border: none;
+  padding: 10px;
+  cursor: pointer;
+  font-size: 1.4rem;
+  border-radius: 50%;
   width: 40px;
   height: 40px;
-
-  /* Relleno */
-  padding: 10px;
-
-  /* Bordes */
-  border: none;
-  border-radius: 50%;
-
-  /* Fondos */
-  background: none;
-
-  /* Tipografía */
-  font-size: 1.4rem;
-
-  /* Colores y efectos */
-  color: var(--primary-blue);
-
-  /* Transiciones y animaciones */
+  display: flex;
+  align-items: center;
+  justify-content: center;
   transition: all 0.3s ease;
-
-  /* Interactividad */
-  cursor: pointer;}
+}
 
 .sidebar-hamburger-btn:hover {
-/* Fondos */
-  background: rgba(30, 64, 175, 0.1);}
+  background: rgba(30, 64, 175, 0.1);
+}
 
 .dashboard-sidebar {
-/* Posicionamiento */
   position: fixed;
   top: 0;
   left: -300px;
-  z-index: 1000;
-
-  /* Dimensiones */
   width: 280px;
   height: 100vh;
-
-  /* Bordes */
-  border-right: 1px solid var(--gray-medium);
-
-  /* Fondos */
   background: var(--gray-light);
-
-  /* Colores y efectos */
+  border-right: 1px solid var(--gray-medium);
+  z-index: 1000;
+  transition: left 0.3s ease;
   box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
-
-  /* Transiciones y animaciones */
-  transition: left 0.3s ease;}
+}
 
 .dashboard-sidebar.open {
-/* Posicionamiento */
-  left: 0;}
+  left: 0;
+}
 
 .sidebar-overlay {
-/* Posicionamiento */
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  z-index: 999;
-
-  /* Fondos */
   background: rgba(0, 0, 0, 0.3);
+  z-index: 999;
+  backdrop-filter: blur(2px);
+}
 
-  /* Otras propiedades */
-  backdrop-filter: blur(2px);}
-
+/* Contenido principal */
 .dashboard-main {
-/* Modelo de caja */
-  overflow-y: auto;
-  display: flex;
-
-  /* Flexbox y Grid */
-  flex: 1;
-  flex-direction: column;
-  align-items: center;
-
-  /* Dimensiones */
   width: 100%;
   max-width: none;
-
-  /* Relleno */
-  padding: 2rem;}
+  flex: 1;
+  padding: 2rem;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
 
 .dashboard-main-inner {
-/* Dimensiones */
   width: 100%;
   max-width: 1200px;
-
-  /* Márgenes */
-  margin: 0 auto;}
+  margin: 0 auto;
+}
 
 .dashboard-sidebar.open ~ .sidebar-hamburger-btn {
-/* Colores y efectos */
   opacity: 0;
+  visibility: hidden;
+}
 
-  /* Otras propiedades */
-  visibility: hidden;}
+@media (max-width: 768px) {
+  .sidebar-hamburger-btn {
+    top: 90px;
+  }
+}

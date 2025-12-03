@@ -7,9 +7,8 @@ class User(AbstractUser):
     # Definición de los roles disponibles en la plataforma
     # Cada tupla contiene: (valor almacenado en la base de datos, etiqueta legible para el administrador)
     ROLE_CHOICES = (
-        ('asignador', 'Asignador'),         # Usuario encargado de asignar tareas o recursos
-        ('administrador', 'Administrador'),  # Usuario que Administra electivas
-        ('ambos', 'Ambos')  # Usuario con todos los privilegios
+        ('Asignador', 'Asignador'),         # Usuario encargado de asignar tareas o recursos
+        ('Administrador', 'Administrador')  # Usuario que Administra electivas
     )
 
     # Campo adicional que define el rol del usuario dentro de la aplicación
@@ -18,5 +17,5 @@ class User(AbstractUser):
     role = models.CharField(
         max_length=20,
         choices=ROLE_CHOICES,
-        default='asignador'
+        default='Asignador'
     )

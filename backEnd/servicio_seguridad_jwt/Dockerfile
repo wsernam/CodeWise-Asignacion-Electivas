@@ -32,7 +32,7 @@ RUN dos2unix /usr/local/bin/cargarUsuarios.sh && \
 COPY . .
 
 # 7. Exponer el puerto
-EXPOSE 8000
+EXPOSE 8001
 
 # 8. Corregir el punto de entrada (ENTRYPOINT)
 # Aquí es donde se hace el cambio crucial. El ENTRYPOINT es el comando
@@ -43,4 +43,4 @@ ENTRYPOINT ["/usr/local/bin/cargarUsuarios.sh"]
 # 9. Comando por defecto (CMD)
 # El CMD especifica los argumentos por defecto que se le pasarán al ENTRYPOINT.
 # En este caso, le decimos a nuestro script que ejecute el servidor de Django.
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8001"]

@@ -1,392 +1,215 @@
+/* Estructura principal */
 .form-page-content {
-  /* Modelo de caja */
   display: flex;
-
-  /* Flexbox y Grid */
   flex-direction: column;
   gap: 20px;
 }
 
 .main-card {
-  /* Dimensiones */
   width: 100%;
   max-width: 1200px;
-
-  /* Márgenes */
   margin: 0 auto;
-
-  /* Relleno */
   padding: 20px;
-
-  /* Bordes */
-  border-radius: 20px;
-
-  /* Fondos */
   background: #ffffff;
-
-  /* Colores y efectos */
+  border-radius: 20px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .no-process-container {
-  /* Relleno */
-  padding: 40px 20px;
-
-  /* Tipografía */
   text-align: center;
+  padding: 40px 20px;
 }
 
 .info-icon {
-  /* Márgenes */
-  margin-bottom: 16px;
-
-  /* Tipografía */
   font-size: 48px;
+  margin-bottom: 16px;
 }
 
 .no-process-container h3 {
-  /* Márgenes */
-  margin-bottom: 24px;
-
-  /* Tipografía */
-  font-weight: 500;
-
-  /* Colores y efectos */
   color: #666;
+  margin-bottom: 24px;
+  font-weight: 500;
 }
 
 .create-btn {
-  /* Dimensiones */
   min-width: 120px;
 }
 
+/* Header del proceso activo */
 .simple-process-header {
-  /* Modelo de caja */
   display: flex;
-
-  /* Flexbox y Grid */
   justify-content: space-between;
   align-items: center;
-
-  /* Márgenes */
   margin-bottom: 30px;
-
-  /* Relleno */
   padding-bottom: 20px;
-
-  /* Bordes */
   border-bottom: 1px solid #e0e0e0;
 }
 
 .process-title-section {
-  /* Modelo de caja */
   display: flex;
-
-  /* Flexbox y Grid */
   align-items: center;
   gap: 16px;
 }
 
 .simple-process-header h3 {
-  /* Márgenes */
   margin: 0;
-
-  /* Tipografía */
+  color: #333;
   font-size: 1.3rem;
   font-weight: 600;
-
-  /* Colores y efectos */
-  color: #333;
 }
 
 .process-status {
-  /* Relleno */
-  padding: 6px 16px;
-
-  /* Bordes */
-  border-radius: 16px;
-
-  /* Fondos */
   background: #28a745;
-
-  /* Tipografía */
+  color: white;
+  padding: 6px 16px;
+  border-radius: 16px;
   font-size: 0.9rem;
   font-weight: bold;
-
-  /* Colores y efectos */
-  color: white;
 }
 
 .final-step-actions {
-  /* Relleno */
-  padding: 40px 20px;
-
-  /* Tipografía */
   text-align: center;
+  padding: 40px 20px;
 }
 
 .success-message {
-  /* Márgenes */
   margin-bottom: 24px;
 }
 
 .success-message p {
-  /* Tipografía */
+  color: #28a745;
   font-size: 1.1rem;
   font-weight: 500;
-
-  /* Colores y efectos */
-  color: #28a745;
 }
 
 .view-assignment-btn {
-  /* Dimensiones */
   min-width: 160px;
-
-  /* Tipografía */
   font-size: 1rem;
 }
 
+/* Historial */
 .history-title {
-  /* Márgenes */
+  color: #333;
   margin-bottom: 20px;
-
-  /* Tipografía */
   font-size: 1.2rem;
   font-weight: 600;
-
-  /* Colores y efectos */
-  color: #333;
 }
 
 .process-history-item {
-  /* Márgenes */
-  margin-bottom: 12px;
-
-  /* Relleno */
-  padding: 16px;
-
-  /* Bordes */
+  background: #f8f9fa;
   border: 1px solid #e9ecef;
   border-radius: 8px;
-
-  /* Fondos */
-  background: #f8f9fa;
+  padding: 16px;
+  margin-bottom: 12px;
 }
 
 .process-period {
-  /* Márgenes */
-  margin-bottom: 8px;
-
-  /* Tipografía */
   font-weight: 600;
-  font-size: 1.1rem;
-
-  /* Colores y efectos */
   color: #08326b;
+  font-size: 1.1rem;
+  margin-bottom: 8px;
 }
 
 .process-details {
-  /* Modelo de caja */
   display: flex;
-
-  /* Flexbox y Grid */
   justify-content: space-between;
   align-items: center;
 }
 
 .process-date {
-  /* Tipografía */
-  font-size: 0.9rem;
-
-  /* Colores y efectos */
   color: #6c757d;
+  font-size: 0.9rem;
 }
 
 .status {
-  /* Relleno */
-  padding: 4px 12px;
-
-  /* Bordes */
-  border-radius: 12px;
-
-  /* Fondos */
   background: #28a745;
-
-  /* Tipografía */
+  color: white;
+  padding: 4px 12px;
+  border-radius: 12px;
   font-size: 0.8rem;
   font-weight: bold;
-
-  /* Colores y efectos */
-  color: white;
 }
 
 .divider {
-  /* Dimensiones */
   height: 20px;
 }
 
+/* Botones base */
 .btn {
-  /* Modelo de caja */
   display: inline-flex;
-  box-sizing: border-box;
-
-  /* Flexbox y Grid */
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-
-  /* Dimensiones */
-  width: auto;
-  min-width: 0;
-
-  /* Relleno */
   padding: 0.5rem 1rem;
-
-  /* Bordes */
+  font-size: 0.95rem;
   border-radius: 8px;
   border: none;
-
-  /* Tipografía */
-  font-size: 0.95rem;
-
-  /* Interactividad */
   cursor: pointer;
+  width: auto;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
+/* NUEVO: Estilos para gestión de activos e inactivos */
 .im-modal-content {
-  /* Modelo de caja */
-  overflow-y: auto;
-
-  /* Dimensiones */
   max-height: 70vh;
+  overflow-y: auto;
 }
 
 .im-table {
-  /* Dimensiones */
   width: 100%;
-
-  /* Márgenes */
-  margin: 16px 0;
-
-  /* Otras propiedades */
   border-collapse: collapse;
+  margin: 16px 0;
 }
 
 .im-th,
 .im-cell {
-  /* Relleno */
   padding: 8px 12px;
-
-  /* Bordes */
-  border-bottom: 1px solid #e0e0e0;
-
-  /* Tipografía */
   text-align: left;
+  border-bottom: 1px solid #e0e0e0;
 }
 
 .im-th {
-  /* Fondos */
   background-color: #f8f9fa;
-
-  /* Tipografía */
   font-weight: 600;
-
-  /* Colores y efectos */
   color: #333;
 }
 
 .im-status-wrapper {
-  /* Modelo de caja */
   display: flex;
-
-  /* Flexbox y Grid */
   align-items: center;
   gap: 8px;
 }
 
 .tag--green {
-  /* Relleno */
-  padding: 4px 8px;
-
-  /* Bordes */
-  border-radius: 4px;
-
-  /* Fondos */
   background: #d4edda;
-
-  /* Tipografía */
-  font-size: 0.8rem;
-
-  /* Colores y efectos */
   color: #155724;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.8rem;
 }
 
 .tag--default {
-  /* Relleno */
-  padding: 4px 8px;
-
-  /* Bordes */
-  border-radius: 4px;
-
-  /* Fondos */
   background: #e2e3e5;
-
-  /* Tipografía */
-  font-size: 0.8rem;
-
-  /* Colores y efectos */
   color: #383d41;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.8rem;
 }
 
 .im-small-actions {
-  /* Modelo de caja */
   display: flex;
-
-  /* Flexbox y Grid */
   justify-content: flex-end;
   gap: 8px;
-
-  /* Márgenes */
   margin-top: 16px;
 }
 
 .im-empty {
-  /* Relleno */
-  padding: 20px;
-
-  /* Tipografía */
   text-align: center;
+  padding: 20px;
 }
 
 .im-empty p {
-  /* Márgenes */
-  margin-bottom: 16px;
-
-  /* Colores y efectos */
   color: #666;
-}
-
-.assignment-page-container {
-  /* Posicionamiento */
-  position: relative;
-
-  /* Modelo de caja */
-  overflow: visible !important;
-}
-
-.form-page-content {
-  /* Posicionamiento */
-  position: relative;
-
-  /* Modelo de caja */
-  overflow: visible !important;
-}
-
-.main-card.assignment-card {
-  /* Posicionamiento */
-  position: relative;
-
-  /* Modelo de caja */
-  overflow: visible !important;
+  margin-bottom: 16px;
 }

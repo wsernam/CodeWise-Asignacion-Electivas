@@ -1,7 +1,6 @@
 import { create } from "zustand";
 import { assignmentProcessService } from "../../services/Assignment";
 import type { AssignmentProcess } from "../../models/Assignment/assignmentProcess";
-import type { CodeBatchesResponse } from "../../models/Assignment/assignmentProcess";
 
 interface AssignmentProcessState {
   // ========== ESTADO ==========
@@ -15,23 +14,8 @@ interface AssignmentProcessState {
   obtenerProcesoActivo: () => Promise<AssignmentProcess | null>;
   obtenerTodosLosProcesos: () => Promise<AssignmentProcess[]>;
   finalizarProceso: (procesoId: number) => Promise<void>;
-  eliminarProceso: (procesoId: number) => Promise<void>;
-  eliminarProcesoCompleto: (procesoId: number) => Promise<void>;
-  ejecutarAsignacion: () => Promise<any>;
   clearError: () => void;
   reset: () => void;
-}
-
-interface CodeBatchState {
-  loading: boolean;
-  error: string | null;
-  data: CodeBatchesResponse | null;
-  fetchCodeBatches: (
-    anio: number,
-    semestre: number
-  ) => Promise<CodeBatchesResponse>;
-  downloadCodeBatchesPDF: (anio: number, semestre: number) => Promise<Blob>;
-  clear: () => void;
 }
 
 /**
@@ -40,7 +24,7 @@ interface CodeBatchState {
  * Se usa en el componente CreateProcess para iniciar nuevos procesos.
  */
 export const useAssignmentProcessStore = create<AssignmentProcessState>(
-  (set, get) => ({
+  (set) => ({
     // ========== ESTADO INICIAL ==========
     currentProcess: null,
     allProcess: [],
@@ -91,6 +75,21 @@ export const useAssignmentProcessStore = create<AssignmentProcessState>(
     },
 
     /**
+     * LIMPIAR MENSAJES DE ERROR
+     */
+    clearError: () => set({ error: null }),
+
+    /**
+     * REINICIAR STORE A ESTADO INICIAL
+     */
+    reset: () =>
+      set({
+        currentProcess: null,
+        loading: false,
+        error: null,
+      }),
+
+    /**
      * OBTENER TODOS LOS PROCESOS DE ASIGNACIÓN
      * Se conecta con: assignmentProcessService.obtenerTodosLosProcesos()
      * @returns Lista completa de procesos
@@ -127,132 +126,5 @@ export const useAssignmentProcessStore = create<AssignmentProcessState>(
         throw error;
       }
     },
-
-    /**
-     * ELIMINAR PROCESO DE ASIGNACIÓN
-     * @param codigo - Código del proceso a eliminar
-     */
-
-    eliminarProceso: async (codigo: number) => {
-      set({ loading: true, error: null });
-      try {
-        await assignmentProcessService.eliminarProceso(codigo);
-        console.log("Proceso eliminado:", codigo);
-        set({
-          currentProcess: null,
-          loading: false,
-        });
-      } catch (error: any) {
-        set({
-          loading: false,
-          error: error.message,
-        });
-        throw error;
-      }
-    },
-    /**
-     * ELIMINAR PROCESO Y ASIGNACIONES RELACIONADAS
-     * @param codigo - Código del proceso a eliminar completamente
-     */
-    eliminarProcesoCompleto: async (codigo: number) => {
-      set({ loading: true, error: null });
-      try {
-        const proc = get().currentProcess;
-        if (!proc || proc.pa_codigo !== codigo) {
-          throw new Error("Proceso no encontrado o no es el actual.");
-        }
-
-        // Purgar asignaciones del periodo
-        await assignmentProcessService.purgarAsignaciones(
-          proc.pa_anio,
-          proc.pa_num_semestre
-        );
-
-        console.log(
-          "STORE DEBUG: Asignaciones purgadas. Eliminando proceso",
-          codigo
-        );
-        // Eliminar el proceso
-        await assignmentProcessService.eliminarProceso(codigo);
-
-        console.log("STORE DEBUG: Proceso eliminado");
-        // Actualizar estado
-        set({ currentProcess: null, loading: false });
-
-        console.log("Proceso y asignaciones eliminados completamente:", codigo);
-      } catch (error: any) {
-        console.error("STORE DEBUG: Error:", error);
-        set({ loading: false, error: error.message });
-        throw error;
-      }
-    },
-
-    /**
-     * EJECUTAR ASIGNACIÓN DE ESTUDIANTES A CURSOS
-     * Se conecta con: assignmentProcessService.ejecutarAsignacion()
-     * @returns Resultado del proceso de asignación
-     */
-
-    ejecutarAsignacion: async (): Promise<any> => {
-      set({ loading: true, error: null });
-      try {
-        const proc = get().currentProcess;
-        if (!proc) throw new Error("No hay proceso activo.");
-
-        const result = await assignmentProcessService.ejecutarAsignacion(
-          proc.pa_anio,
-          proc.pa_num_semestre
-        );
-        set({ loading: false });
-        return result;
-      } catch (error: any) {
-        set({ loading: false, error: error.message });
-        throw error;
-      }
-    },
-
-    clearError: () => set({ error: null }),
-
-    reset: () =>
-      set({
-        currentProcess: null,
-        loading: false,
-        error: null,
-      }),
   })
 );
-
-export const useCodeBatchStore = create<CodeBatchState>((set) => ({
-  loading: false,
-  error: null,
-  data: null,
-  fetchCodeBatches: async (anio: number, semestre: number) => {
-    set({ loading: true, error: null });
-    try {
-      const data = await assignmentProcessService.getCodeBatches(
-        anio,
-        semestre
-      );
-      set({ data, loading: false });
-      return data;
-    } catch (error: any) {
-      set({ loading: false, error: error.message });
-      throw error;
-    }
-  },
-  downloadCodeBatchesPDF: async (anio: number, semestre: number) => {
-    set({ loading: true, error: null });
-    try {
-      const data = await assignmentProcessService.downloadCodeBatches(
-        anio,
-        semestre
-      );
-      set({ loading: false });
-      return data;
-    } catch (error: any) {
-      set({ loading: false, error: error.message });
-      throw error;
-    }
-  },
-  clear: () => set({ data: null, error: null }),
-}));

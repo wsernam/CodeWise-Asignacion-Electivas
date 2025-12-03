@@ -1,100 +1,55 @@
-// TODO VERIFICAR
-//Este servicio manejará toda la lógica relacionada con el login, logout y el almacenamiento de tokens.
-
-import axios from "axios";
-import { AUTH_API_BASE_URL } from "../config/config";
-import { jwtDecode } from "jwt-decode";
-
-interface AuthResponse {
-  access: string;
-  refresh: string;
-}
-
-interface DecodedToken {
-  role: string;
-  // Aquí puedes añadir otros campos que esperes en el token, como user_id, exp, etc.
-}
-
+import { LOGIN_URL } from "../config/config";
 /**
- * Almacena los tokens de autenticación en localStorage.
- * @param access - El token de acceso.
- * @param refresh - El token de refresco.
+ * @brief Servicio de autenticacion del administrador y asignador.
+ *
+ * Envia credenciales al backend y retorna el token JWT en caso de exito.
+ *
+ * @param username - Nombre de usuario del administrador / asignador.
+ * @param password - Contraseña del administrador / asignador.
+ * @returns Objeto JSON con el token de sesion.
+ * @throws Error si la peticion falla.
  */
-const setAuthTokens = (access: string, refresh: string): void => {
-  localStorage.setItem("accessToken", access);
-  localStorage.setItem("refreshToken", refresh);
-};
-
-/**
- * Elimina los tokens de autenticación de localStorage.
- */
-const removeAuthTokens = (): void => {
-  localStorage.removeItem("accessToken");
-  localStorage.removeItem("refreshToken");
-};
-
-/**
- * Realiza la petición de login al backend.
- * @param username - El nombre de usuario (o email).
- * @param password - La contraseña.
- * @returns Una promesa que se resuelve con la respuesta de autenticación.
- */
-export const login = async (
-  username: any,
-  password: any
-): Promise<AuthResponse> => {
+export const loginAdminService = async (username: string, password: string) => {
   try {
-    const response = await axios.post<AuthResponse>(AUTH_API_BASE_URL, {
-      // El backend espera 'username', si usas email, cámbialo aquí.
-      username,
-      password,
+    const response = await fetch(LOGIN_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ username, password }),
     });
-
-    const { access, refresh } = response.data;
-    setAuthTokens(access, refresh);
-
-    return response.data;
+    if (!response.ok) {
+      throw new Error("Network response was not ok");
+    }
+    return await response.json();
   } catch (error) {
-    console.error("Error durante el login:", error);
-    // Propaga el error para que el componente que llama pueda manejarlo (e.g., mostrar un mensaje al usuario)
-    throw error;
+    console.error("There was a problem with the fetch operation:", error);
   }
 };
 
 /**
- * Cierra la sesión del usuario eliminando los tokens.
+ * @brief Servicio de autenticacion del estudiante.
+ *
+ * Envia identificador al backend y retorna la informacion correspondiente en caso de exito.
+ *
+ * @param username - El nombre de usuario del estudiante.
+ * @returns Datos del estudiante o undefined en caso de error.
  */
-export const logout = (): void => {
-  removeAuthTokens();
-  window.location.href = "/";
-};
-
-/**
- * Obtiene el token de acceso almacenado.
- */
-export const getAccessToken = (): string | null =>
-  localStorage.getItem("accessToken");
-
-/**
- * Obtiene el token de refresco almacenado.
- */
-export const getRefreshToken = (): string | null =>
-  localStorage.getItem("refreshToken");
-
-/**
- * Decodifica el token de acceso y devuelve el rol del usuario.
- * @returns El rol del usuario (ej. "Asignador") o null si no hay token o este es inválido.
- */
-export const getUserRole = (): string | null => {
-  const token = getAccessToken();
-  if (!token) {
-    return null;
-  }
+export const loginStudentService = async (username: string) => {
   try {
-    const decodedToken: DecodedToken = jwtDecode(token);
-    return decodedToken.role;
+    const response = await fetch(LOGIN_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ username }),
+    });
+    if (!response.ok) {
+      throw new Error("Network response was not ok");
+      return await response.json();
+    }
   } catch (error) {
-    console.error("Error al decodificar el token:", error);
-    return null;
+    console.error("There was a problem with the fetch operation:", error);
+    throw error;
   }
 };

@@ -1,11 +1,9 @@
-import React, { useEffect, useState, useMemo } from "react";
-import Card from "../../components/ui/Card/Card";
+import React, { useEffect, useState } from "react";
+import Card from "../../../components/ui/Card/Card";
 import ReportFilters from "./ReportFilters";
-import { useReportStore } from "../../store/Reports/reportStore";
-import { useAssignmentProcessStore } from "../../store/Assignment";
-import { selectionReportService } from "../../services/Form/selectionReportService";
-import { offerReportService } from "../../services/Form/offerReportService";
-import WarningModal from "../../components/shared/WarningModal/WarningModal";
+import { useReportStore } from "../../../store/Form/reportStore";
+import { selectionReportService } from "../../../services/Form/selectionReportService";
+import { offerReportService } from "../../../services/Form/offerReportService";
 import "./ReportsAssignment.css";
 
 const ReportsForm: React.FC = () => {
@@ -25,29 +23,11 @@ const ReportsForm: React.FC = () => {
     clearReport,
   } = useReportStore();
 
-  // Obtener procesos para años disponibles
-  const { allProcess, obtenerTodosLosProcesos } = useAssignmentProcessStore();
-
+  // Estado para modal de advertencia
   const [showWarningModal, setShowWarningModal] = useState(false);
   const [warningMessage, setWarningMessage] = useState("");
 
-  useEffect(() => {
-    obtenerTodosLosProcesos();
-  }, [obtenerTodosLosProcesos]);
-
-  // Calcular años disponibles de procesos
-  const availableYears = useMemo(() => {
-    const years = new Set<number>();
-    allProcess.forEach((process) => {
-      years.add(process.pa_anio);
-    });
-    return Array.from(years).sort((a, b) => b - a); // Orden descendente
-  }, [allProcess]);
-
-  // Si no hay procesos, usar año actual
-  const finalYears =
-    availableYears.length > 0 ? availableYears : [new Date().getFullYear()];
-
+  // Limpia el blob anterior al desmontar
   useEffect(() => {
     return () => {
       if (generatedReport) {
@@ -56,6 +36,7 @@ const ReportsForm: React.FC = () => {
     };
   }, [generatedReport]);
 
+  // Validar si el botón debe estar deshabilitado
   const isGenerateDisabled = () => {
     if (!selectedYear || !selectedSemester) return true;
     if (selectedReportType === "student-elective-selection" && !studentCode)
@@ -69,6 +50,7 @@ const ReportsForm: React.FC = () => {
   };
 
   const handleGenerateReport = async () => {
+    // Validaciones
     if (!selectedYear || !selectedSemester) {
       showWarning("Por favor selecciona año y semestre");
       return;
@@ -110,38 +92,12 @@ const ReportsForm: React.FC = () => {
       );
       setGeneratedReport(url);
     } catch (error: any) {
+      // Alert mientras separo warning
+      alert(error.message || "Error generando el reporte");
       console.error("Error generando el reporte:", error);
-
-      // Manejo específico de errores
-      if (error.message?.includes("404")) {
-        if (selectedReportType === "student-elective-selection") {
-          showWarning(
-            `No se encontró información para el estudiante ${studentCode} en el período ${selectedYear}-${selectedSemester}`
-          );
-        } else {
-          showWarning(
-            `No se encontró información para el período ${selectedYear}-${selectedSemester}`
-          );
-        }
-      } else if (error.message?.includes("500")) {
-        showWarning(
-          "Error interno del servidor. Por favor, intenta nuevamente más tarde."
-        );
-      } else if (error.message?.includes("403")) {
-        showWarning("No tienes permisos para acceder a este reporte.");
-      } else {
-        showWarning(
-          error.message || "Error al generar el reporte. Intenta nuevamente."
-        );
-      }
     } finally {
       setIsGenerating(false);
     }
-  };
-
-  const handleWarningClose = () => {
-    setShowWarningModal(false);
-    setWarningMessage("");
   };
 
   return (
@@ -153,20 +109,19 @@ const ReportsForm: React.FC = () => {
             <p>Seleccione los filtros y genere el reporte deseado</p>
           </div>
 
+          {/* Filtros con campo integrado para estudiante */}
           <ReportFilters
             selectedYear={selectedYear}
             selectedSemester={selectedSemester}
             selectedReportType={selectedReportType}
-            studentCode={studentCode} // Pasa el estado del store
+            studentCode={studentCode}
             onYearChange={setSelectedYear}
             onSemesterChange={setSelectedSemester}
             onReportTypeChange={setSelectedReportType}
-            onStudentCodeChange={setStudentCode} //  Pasa el setter del store
+            onStudentCodeChange={setStudentCode}
             onGenerate={handleGenerateReport}
             isGenerating={isGenerating}
             isGenerateDisabled={isGenerateDisabled()}
-            module="form" //  IMPORTANTE: indica que es de formularios
-            // Opciones personalizadas
             reportTypeOptions={[
               {
                 value: "student-elective-selection",
@@ -177,9 +132,9 @@ const ReportsForm: React.FC = () => {
                 label: "Reporte de Oferta de Electivas",
               },
             ]}
-            availableYears={finalYears} // Pasa los años disponibles
           />
 
+          {/* Visor PDF */}
           <div className="pdf-viewer-section">
             <h3>Vista Previa del Reporte</h3>
             <div className={`pdf-viewer ${generatedReport ? "has-pdf" : ""}`}>
@@ -201,12 +156,6 @@ const ReportsForm: React.FC = () => {
           </div>
         </Card>
       </div>
-
-      <WarningModal
-        open={showWarningModal}
-        message={warningMessage}
-        onClose={handleWarningClose}
-      />
     </div>
   );
 };

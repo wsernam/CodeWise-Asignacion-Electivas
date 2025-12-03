@@ -13,8 +13,8 @@ import ListProgram from "./screens/FormModule/Program/ListProgram.tsx";
 import EditProgram from "./screens/FormModule/Program/EditProgram.tsx";
 import Offer from "./screens/FormModule/Offer/Offer.tsx";
 import AssignmentModule from "./screens/AssignmentModule/AssignmentModule.tsx";
-import ReportsAssignment from "./screens/Reports/ReportsAssignment.tsx";
-import ReportsForm from "./screens/Reports/ReportsForm.tsx";
+import ReportsAssignment from "./screens/FormModule/Reports/ReportsAssignment.tsx";
+import ReportsForm from "./screens/FormModule/Reports/ReportsForm.tsx";
 // ---------------------- IMPORTS DE ROUTER ----------------------
 import { createBrowserRouter } from "react-router";
 import DashboardLayout from "./components/layout/DashboardLayout/DashboardLayout.tsx";
@@ -22,16 +22,14 @@ import DashboardLayout from "./components/layout/DashboardLayout/DashboardLayout
 // ---------------------- CONFIGURACIÓN DEL ROUTER ----------------------
 
 // Componente wrapper para aplicar DashboardLayout
-const withDashboardLayout = (
-  Component: React.ComponentType,
-  allowedRoles?: Array<"administrador" | "asignador" | "ambos">
-) => {
+const withDashboardLayout = (Component: React.ComponentType) => {
   return (
-    <DashboardLayout allowedRoles={allowedRoles}>
+    <DashboardLayout>
       <Component />
     </DashboardLayout>
   );
 };
+
 const router = createBrowserRouter([
   // Estudiantes y Login sin Layout
   {
@@ -54,51 +52,50 @@ const router = createBrowserRouter([
     path: "/login-admin",
     element: <LoginAdmin />,
   },
-  // Con Dashboard Layout (admin, asignador y ambos)
+  // Con Dashboard Layout (admin y asignador)
   {
     path: "/dashboard",
-    element: withDashboardLayout(Dashboard, ["administrador", "ambos"]),
+    element: withDashboardLayout(Dashboard),
   },
   {
     path: "/electives",
-    element: withDashboardLayout(Electives, ["administrador", "ambos"]),
+    element: withDashboardLayout(Electives),
   },
   {
     path: "/electives/add",
-    element: withDashboardLayout(AddElective, ["administrador", "ambos"]),
+    element: withDashboardLayout(AddElective),
   },
   {
     path: "/electives/edit/:ele_codigo",
-    element: withDashboardLayout(EditElective, ["administrador", "ambos"]),
+    element: withDashboardLayout(EditElective),
   },
   {
     path: "/programs",
-    element: withDashboardLayout(ListProgram, ["administrador", "ambos"]),
+    element: withDashboardLayout(ListProgram),
   },
   {
     path: "/programs/create",
-    element: withDashboardLayout(CreateProgram, ["administrador", "ambos"]),
+    element: withDashboardLayout(CreateProgram),
   },
   {
     path: "/programs/edit/:codigo",
-    element: withDashboardLayout(EditProgram, ["administrador", "ambos"]),
+    element: withDashboardLayout(EditProgram),
   },
-
   {
     path: "/offer",
-    element: withDashboardLayout(Offer, ["administrador", "ambos"]),
+    element: withDashboardLayout(Offer),
   },
   {
     path: "/assignment-module",
-    element: withDashboardLayout(AssignmentModule, ["asignador", "ambos"]),
+    element: withDashboardLayout(AssignmentModule),
   },
   {
     path: "/reports-assignment",
-    element: withDashboardLayout(ReportsAssignment, ["asignador", "ambos"]),
+    element: withDashboardLayout(ReportsAssignment),
   },
   {
     path: "/reports-form",
-    element: withDashboardLayout(ReportsForm, ["administrador", "ambos"]),
+    element: withDashboardLayout(ReportsForm),
   },
 ]);
 

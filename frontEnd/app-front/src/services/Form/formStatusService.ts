@@ -1,14 +1,11 @@
-import apiClient from "../Auth/apiClient";
-import {
-  FORM_STATUS_URL_PUBLIC,
-  FORM_STATUS_URL_PRIVATE,
-} from "../config/config";
+import axios from "../../api/axiosInstance";
+import { FORM_STATUS_URL } from "../config/config";
 
 export const getFormStatus = async (): Promise<boolean> => {
   console.log("[formStatusService] Obteniendo estado del formulario...");
   try {
-    const response = await apiClient.get(
-      `${FORM_STATUS_URL_PUBLIC}estado-formulario/estado/estado-formulario/`
+    const response = await axios.get(
+      `${FORM_STATUS_URL}/get_estado-formulario/`
     );
     console.log("[formStatusService] Estado obtenido:", response.data);
     return response.data.estado;
@@ -17,11 +14,7 @@ export const getFormStatus = async (): Promise<boolean> => {
       "[formStatusService] Error obteniendo estado:",
       error.response?.data
     );
-    throw new Error(
-      error.response?.data?.detail ||
-        error?.message ||
-        "No se pudo obtener el estado del formulario"
-    );
+    throw error;
   }
 };
 
@@ -29,8 +22,8 @@ export const changeFormStatus = async (status: boolean): Promise<void> => {
   console.log("[formStatusService] Cambiando estado del formulario a:", status);
   try {
     const formStatus = { estado: status };
-    const response = await apiClient.post(
-      `${FORM_STATUS_URL_PRIVATE}toggle-formulario/estado/toggle-formulario/`,
+    const response = await axios.post(
+      `${FORM_STATUS_URL}/toggle-formulario/`,
       formStatus
     );
     console.log(
@@ -42,10 +35,6 @@ export const changeFormStatus = async (status: boolean): Promise<void> => {
       "[formStatusService] Error cambiando estado:",
       error.response?.data
     );
-    throw new Error(
-      error.response?.data?.detail ||
-        error?.message ||
-        "No se pudo cambiar el estado del formulario"
-    );
+    throw error;
   }
 };

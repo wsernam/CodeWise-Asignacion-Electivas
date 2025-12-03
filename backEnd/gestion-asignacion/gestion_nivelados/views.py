@@ -79,27 +79,13 @@ class GestionNiveladosViewSet(viewsets.ViewSet):
             perfil_anio=anio,
             perfil_semestre=semestre
         )
-        
-        actualizados_count = 0
-        no_encontrados = []
-
         for estudiante in data:
-            try:
-                # Usamos .get() dentro de un try-except para manejar el caso de que no exista
-                perfil = perfiles_academicos.get(est_codigo__est_codigo=estudiante['est_codigo'])
-                perfil.nivelado = bool(estudiante['nivelado'])
-                if estudiante['nivelado']:
-                    perfil.porcentaje_avance = 100.0
-                perfil.save()
-                actualizados_count += 1
-            except PerfilAcademico.DoesNotExist:
-                # Si el perfil no existe, guardamos el código del estudiante para informarlo
-                no_encontrados.append(estudiante.get('est_codigo'))
-
-        mensaje = f"Se confirmaron {actualizados_count} perfiles de nivelados correctamente."
-        if no_encontrados:
-            mensaje += f" No se encontraron perfiles para los siguientes estudiantes: {no_encontrados}."
+            perfil = perfiles_academicos.get(est_codigo__est_codigo=estudiante['est_codigo'])
+            perfil.nivelado = bool(estudiante['nivelado'])
+            if estudiante['nivelado']:
+                perfil.porcentaje_avance = 100.0
+            perfil.save()
         
         return Response(
-            {"message": mensaje},
+            {"message": "Los nivelados fueron confirmados correctamente"},
             status=status.HTTP_200_OK)

@@ -1,7 +1,6 @@
 from collections import defaultdict
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from .services.priority_service import construir_lista_prioridad
 from asignacion.services.asignador_Service import AsignadorService
@@ -9,13 +8,10 @@ from asignacion.services.asignador_Service import AsignadorService
 from referencias.models import SeleccionEstudianteElectiva as Sel, Oferta as Oferta
 from gestion_hojas_de_calculo.models import PerfilAcademico
 from asignacion.models import Asignacion
-from core.permissions import IsAsignador
 from asignacion.variables import ELECTIVAS_DEBE_VER
 from django.db import transaction
 
 class PrioridadViewSet(viewsets.ViewSet):
-    permission_classes = [IsAsignador]
-
     @action(detail=False, methods=["get"], url_path="")
     def prioridad(self, request):
         try:
@@ -67,7 +63,6 @@ class AsignacionOrquestadorViewSet(viewsets.ViewSet):
       "debug": false           # opcional
     }
     """
-    permission_classes = [IsAsignador]
 
     @action(detail=False, methods=["post"], url_path="ejecutar")
     def ejecutar(self, request):
@@ -137,8 +132,6 @@ class AsignacionOrquestadorViewSet(viewsets.ViewSet):
         """
         GET /api/asignacion/resumen-estudiantes/?anio=2025&semestre=2[&pro_codigo=PIS][&est_codigo=...]
         """
-        permission_classes = [IsAsignador]
-
         try:
             anio = int(request.query_params["anio"])
             semestre = int(request.query_params["semestre"])
@@ -278,8 +271,6 @@ class AsignacionOrquestadorViewSet(viewsets.ViewSet):
           - solo_firmes=1         (solo filas con cupo firme)
           - dry_run=1             (no borra; solo devuelve cuántas borraría)
         """
-        permission_classes = [IsAsignador]
-
         try:
             anio = int(request.query_params["anio"])
             semestre = int(request.query_params["semestre"])
@@ -349,8 +340,6 @@ class AsignacionOrquestadorViewSet(viewsets.ViewSet):
         Lista SOLO estudiantes que YA están asignados a esa electiva (FIRME o ESPERA),
         ordenados por el ranking oficial.
         """
-        permission_classes = [IsAsignador]
-
         try:
             anio = int(request.query_params["anio"])
             semestre = int(request.query_params["semestre"])

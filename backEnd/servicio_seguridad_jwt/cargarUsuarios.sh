@@ -12,24 +12,17 @@ from django.contrib.auth import get_user_model
 User = get_user_model()
 # Verifica si el usuario 'Asignador' ya existe antes de crearlo
 if not User.objects.filter(username='asignador').exists():
-    user = User.objects.create_user(username='asignador', password='contraseña_asignador', email='asignador@example.com', role='asignador')
+    user = User.objects.create_user(username='asignador', password='contraseña_asignador', email='asignador@example.com', role='Asignador')
     print("Usuario 'asignador' creado.")
 else:
     print("El usuario 'asignador' ya existe.")
 
 # Verifica si el usuario 'Administrador' ya existe antes de crearlo
 if not User.objects.filter(username='administrador').exists():
-    user = User.objects.create_user(username='administrador', password='contraseña_administrador', email='administrador@example.com', role='administrador')
+    user = User.objects.create_user(username='administrador', password='contraseña_administrador', email='administrador@example.com', role='Administrador')
     print("Usuario 'administrador' creado.")
 else:
     print("El usuario 'administrador' ya existe.")
-
-# Verifica si el usuario 'Ambos' ya existe antes de crearlo
-if not User.objects.filter(username='ambos').exists():
-    user = User.objects.create_user(username='ambos', password='contraseña_ambos', email='ambos@example.com', role='ambos')
-    print("Usuario 'ambos' creado.")
-else:
-    print("El usuario 'ambos' ya existe.")
 EOF
 
 # Ejecuta el servidor de Django

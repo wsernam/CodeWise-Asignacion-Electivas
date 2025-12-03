@@ -121,16 +121,3 @@
 .inactives-table td:nth-child(9) {
   display: none;
 }
-.input-invalid {
-  border-color: #dc3545;
-  background-color: #fff8f8;
-}
-.input-wrapper {
-  position: relative;
-}
-.validation-icon {
-  position: absolute;
-  right: 8px;
-  top: 50%;
-  transform: translateY(-50%);
-}

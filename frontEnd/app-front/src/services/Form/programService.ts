@@ -1,6 +1,5 @@
-import apiClient from "../Auth/apiClient";
 import type { IProgram as Program } from "../../models/Form/program";
-import { PROGRAMS_URL_PRIVATE, PROGRAMS_URL_PUBLIC } from "../config/config";
+import { PROGRAMS_URL } from "../config/config";
 
 // ========== FUNCIONES DE CONEXIÓN CON BACKEND ==========
 
@@ -10,12 +9,16 @@ import { PROGRAMS_URL_PRIVATE, PROGRAMS_URL_PUBLIC } from "../config/config";
  */
 export const getPrograms = async (): Promise<Program[]> => {
   try {
-    console.log("[programService] Conectando a:", `${PROGRAMS_URL_PUBLIC}/`);
+    console.log("[programService] Conectando a:", `${PROGRAMS_URL}/`);
 
-    const response = await apiClient.get(`${PROGRAMS_URL_PUBLIC}/`);
+    const response = await fetch(`${PROGRAMS_URL}/`);
+
+    if (!response.ok) {
+      throw new Error(`Error: ${response.statusText}`);
+    }
 
     // Obtener datos crudos del backend
-    const backendData = response.data;
+    const backendData = await response.json();
     console.log("[programService] Datos CRUDOS del backend:", backendData);
 
     // Transformar datos al formato de nuestra interfaz Program
@@ -29,11 +32,9 @@ export const getPrograms = async (): Promise<Program[]> => {
 
     console.log("[programService] Datos transformados:", transformedData);
     return transformedData;
-  } catch (error: any) {
+  } catch (error) {
     console.error("[programService] Error obteniendo programas:", error);
-    throw new Error(
-      error.response?.data?.detail || "No se pudieron cargar los programas"
-    );
+    throw new Error("No se pudieron cargar los programas");
   }
 };
 
@@ -46,18 +47,22 @@ export const createProgram = async (program: Program): Promise<Program> => {
   try {
     console.log("[programService] Creando programa:", program);
 
-    const response = await apiClient.post(`${PROGRAMS_URL_PRIVATE}/`, program);
+    const response = await fetch(`${PROGRAMS_URL}/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(program), // Envía fac_codigo al backend
+    });
 
-    const createdProgram = response.data;
+    if (!response.ok) {
+      throw new Error(`Error: ${response.statusText}`);
+    }
+
+    const createdProgram = await response.json();
     console.log("[programService] Programa creado:", createdProgram);
     return createdProgram;
-  } catch (error: any) {
+  } catch (error) {
     console.error("[programService] Error creando programa:", error);
-    throw new Error(
-      error.response?.data?.detail ||
-        error?.message ||
-        "No se pudo crear el programa"
-    );
+    throw error;
   }
 };
 
@@ -74,21 +79,22 @@ export const updateProgram = async (program: Program): Promise<Program> => {
       JSON.stringify(program)
     );
 
-    const response = await apiClient.patch(
-      `${PROGRAMS_URL_PRIVATE}/${program.pro_codigo}/`,
-      program
-    );
+    const response = await fetch(`${PROGRAMS_URL}/${program.pro_codigo}/`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(program), // Envía fac_codigo al backend
+    });
 
-    const updatedProgram = response.data;
+    if (!response.ok) {
+      throw new Error(`Error: ${response.statusText}`);
+    }
+
+    const updatedProgram = await response.json();
     console.log("[programService] Programa actualizado:", updatedProgram);
     return updatedProgram;
-  } catch (error: any) {
+  } catch (error) {
     console.error("[programService] Error actualizando programa:", error);
-    throw new Error(
-      error.response?.data?.detail ||
-        error?.message ||
-        "No se pudo actualizar el programa"
-    );
+    throw error;
   }
 };
 
@@ -98,28 +104,23 @@ export const updateProgram = async (program: Program): Promise<Program> => {
  * @returns Promise<Program | null> - Programa encontrado o null si no existe
  */
 export const getProgramByCode = async (
-  codigo: string
+  codigo: number
 ): Promise<Program | null> => {
   try {
     console.log(`[programService] Buscando programa: ${codigo}`);
 
-    const response = await apiClient.get(`${PROGRAMS_URL_PUBLIC}/${codigo}/`);
+    const response = await fetch(`${PROGRAMS_URL}/${codigo}/`);
 
-    const program: Program = response.data;
-    return program;
-  } catch (error: any) {
-    // Si es un 404, retornar null
-    if (error.response?.status === 404) {
-      console.warn("[programService] Programa no encontrado:", codigo);
-      return null;
+    if (!response.ok) {
+      if (response.status === 404) return null;
+      throw new Error(`Error: ${response.statusText}`);
     }
 
+    const program: Program = await response.json();
+    return program;
+  } catch (error) {
     console.error("[programService] Error buscando programa:", error);
-    throw new Error(
-      error.response?.data?.detail ||
-        error?.message ||
-        "No se pudo buscar el programa"
-    );
+    throw error;
   }
 };
 

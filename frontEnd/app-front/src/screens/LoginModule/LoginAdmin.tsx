@@ -1,6 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router";
-import { Form, Input, message, Alert } from "antd";
+import { Form, Input, message } from "antd";
 import { UserOutlined, LockOutlined } from "@ant-design/icons";
 
 // Componentes reutilizables
@@ -8,9 +8,10 @@ import Header from "../../components/layout/Header/Header";
 import Footer from "../../components/layout/Footer/Footer";
 import Card from "../../components/ui/Card/Card";
 import Button from "../../components/ui/Button/Button";
+import BackButton from "../../components/ui/BackButton/BackButton";
 
-// Store de autenticación
-import { useAuthStore } from "../../store/Auth/authStore";
+// Servicio de autenticación
+import { loginAdminService } from "../../services/Auth/authService";
 
 /**
  * COMPONENTE: Login (Administrativo)
@@ -19,7 +20,6 @@ import { useAuthStore } from "../../store/Auth/authStore";
  */
 const LoginAdmin: React.FC = () => {
   const navigate = useNavigate();
-  const { loginAdmin, loading, error } = useAuthStore();
 
   /**
    * handleBack - Volver a la selección de roles
@@ -34,31 +34,20 @@ const LoginAdmin: React.FC = () => {
    */
   const onFinish = async (values: any) => {
     try {
-      // Autenticar
-      await loginAdmin(values.username, values.password);
+      // Autenticar con el servicio
+      const result = await loginAdminService(values.username, values.password);
+
       // Éxito en autenticación
       message.success("Inicio de sesión exitoso");
-      // Se obtiene el rol desde el store
-      const { role } = useAuthStore.getState();
+      console.log("Login. Respuesta del backend: ", result);
 
-      if (role) {
-        switch (role) {
-          case "asignador":
-            navigate("/assignment-module");
-            break;
-          case "administrador":
-            navigate("/dashboard");
-            break;
-          case "ambos":
-            navigate("/dashboard");
-            break;
-          default:
-            // Si el rol no es reconocido, redirigir a una página por defecto
-            navigate("/");
-        }
-      }
+      // En producción aquí:
+      // 1. Guardar token de sesión
+      // 2. Actualizar contexto de autenticación
+      // 3. Redirigir al dashboard administrativo
     } catch (error) {
       // Error en autenticación
+      message.error("Error en el inicio de sesión");
       console.error("Login. Error: ", error);
     }
   };
@@ -70,33 +59,33 @@ const LoginAdmin: React.FC = () => {
    */
   const onFinishFailed = (errorInfo: any) => {
     console.log("Failed:", errorInfo);
+    // Podríamos mostrar un mensaje más específico aquí
   };
 
   return (
     <div className="auth-page">
+      {" "}
+      {/* Layout de autenticación */}
       <Header />
       <div className="auth-page-content">
+        {" "}
+        {/* Contenedor centrado */}
         <Card padding="xl" maxWidth="400px">
           <h2>Iniciar sesión</h2>
 
+          {/*
+           * FORMULARIO COMPLETO
+           * initialValues: valores por defecto
+           * onFinish: éxito en validación + envío
+           * onFinishFailed: fallo en validación
+           */}
           <Form
             name="login-form"
-            initialValues={{ remember: true }}
+            initialValues={{ remember: true }} // Checkbox "recordarme" (no visible aquí)
             onFinish={onFinish}
             onFinishFailed={onFinishFailed}
             style={{ width: "100%" }}
           >
-            {error && (
-              <Alert
-                message={error}
-                type="error"
-                showIcon
-                closable
-                onClose={() => (useAuthStore.getState().error = null)}
-                style={{ marginBottom: "1rem" }}
-              />
-            )}
-
             {/* Campo de usuario */}
             <Form.Item
               name="username"
@@ -114,7 +103,7 @@ const LoginAdmin: React.FC = () => {
               />
             </Form.Item>
 
-            {/* Campo de contraseña */}
+            {/* Campo de contraseña (con tipo password) */}
             <Form.Item
               name="password"
               rules={[
@@ -131,22 +120,16 @@ const LoginAdmin: React.FC = () => {
               />
             </Form.Item>
 
-            {/* Botones en la misma fila - uno a cada lado */}
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                width: "100%",
-                marginTop: "2rem",
-              }}
-            >
-              <Button type="button" onClick={handleBack} size="large">
-                Volver
-              </Button>
-
+            {/* Botón de envío */}
+            <Form.Item style={{ marginBottom: "1rem" }}>
               <Button type="submit" variant="primary" size="large">
-                Ingresar
+                Iniciar sesión
               </Button>
+            </Form.Item>
+
+            {/* Botón volver */}
+            <div className="back-button-section">
+              <BackButton onClick={handleBack} text="Volver" />
             </div>
           </Form>
         </Card>

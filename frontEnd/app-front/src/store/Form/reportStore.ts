@@ -23,7 +23,7 @@ export const useReportStore = create<ReportState>((set) => ({
   // Estado inicial
   selectedYear: 2025,
   selectedSemester: 1,
-  selectedReportType: "offer-report",
+  selectedReportType: "general-selection",
   studentCode: "",
   isGenerating: false,
   generatedReport: null,

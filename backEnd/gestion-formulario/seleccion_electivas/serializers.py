@@ -112,19 +112,6 @@ class CrearSeleccionElectivaDTO(serializers.Serializer):
         1. Que todas las electivas existan en la base de datos.
         2. Conflictos de duplicados (electivas y prioridades) con registros existentes en la BD.
         """
-        est_codigo = data["est_codigo"]
-        sel_anio = data["sel_anio"]
-        sel_num_semestre = data["sel_num_semestre"]
-
-        # Verificamos si ya existe una selección para este estudiante en este período.
-        if SeleccionEstudianteElectiva.objects.filter(
-            est_codigo=est_codigo, sel_anio=sel_anio, sel_num_semestre=sel_num_semestre
-        ).exists():
-            raise serializers.ValidationError({
-                "non_field_errors": ["Ya has registrado tu selección de electivas para este período."]
-            })
-
-        # Validaciones que solo deben correr si NO existe una selección previa.
         electivas_data = data["electivas"]
         codigos_nuevos = {e['ele_codigo'] for e in electivas_data}
 
@@ -135,6 +122,43 @@ class CrearSeleccionElectivaDTO(serializers.Serializer):
 
         # 2. Validar que las electivas esten ofertadas para el periodo y programa del estudiante
         self.validate_oferta(data)
+
+        est_codigo = data["est_codigo"]
+        sel_anio = data["sel_anio"]
+        sel_num_semestre = data["sel_num_semestre"]
+
+        prioridades_nuevas = {e['sel_prioridad'] for e in electivas_data}
+
+        # Hacemos una única consulta a la BD para buscar todos los posibles conflictos
+        selecciones_existentes = SeleccionEstudianteElectiva.objects.filter(
+            est_codigo=est_codigo,
+            sel_anio=sel_anio,
+            sel_num_semestre=sel_num_semestre
+        ).values_list('ele_codigo_id', 'sel_prioridad')
+        # ele_codigo_id es el nombre de la columna en la BD, que es un CharField.
+
+        codigos_existentes = set()
+        prioridades_existentes = set()
+        for ele_id, prio in selecciones_existentes:
+            codigos_existentes.add(ele_id)
+            prioridades_existentes.add(prio)
+
+        # Comparamos los conjuntos para encontrar conflictos
+        conflictos_electivas = codigos_nuevos.intersection(codigos_existentes)
+        conflictos_prioridades = prioridades_nuevas.intersection(prioridades_existentes)
+
+        errores = {}
+        if conflictos_electivas:
+            errores["electivas"] = (
+                f"El estudiante ya tiene registradas una o más de las siguientes electivas para este periodo: {list(conflictos_electivas)}."
+            )
+        if conflictos_prioridades:
+            errores["prioridades"] = (
+                f"El estudiante ya tiene en uso una o más de las siguientes prioridades para este periodo: {list(conflictos_prioridades)}."
+            )
+
+        if errores:
+            raise serializers.ValidationError(errores)
 
         return data
 
