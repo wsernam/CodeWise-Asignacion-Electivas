@@ -1,4 +1,8 @@
-import { EXCEL_PROCESSING_URL, ASSIGNMENT_BASE_URL } from "../config/config";
+import apiClient from "../Auth/apiClient";
+import {
+  EXCEL_PROCESSING_URL_PRIVATE,
+  ASSIGNMENT_API_BASE_URL_PRIVATE,
+} from "../config/config";
 import type {
   ValidationResult,
   IncompleteRow,
@@ -18,42 +22,41 @@ export const excelProcessingService = {
    * @returns Resultado de validación con estudiantes faltantes/sobrantes
    */
   async validarExcel(files: File[]): Promise<ValidationResult> {
-    const formData = new FormData();
-    files.forEach((file) => formData.append("files", file));
+    try {
+      const formData = new FormData();
+      files.forEach((file) => formData.append("files", file));
 
-    const url = "http://localhost:8002/inventario/api/excel/validar/";
+      const url = `${EXCEL_PROCESSING_URL_PRIVATE}/validar/`;
 
-    const response = await fetch(url, {
-      method: "POST",
-      body: formData,
-    });
+      const response = await apiClient.post(url, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
 
-    // AGREGAR manejo de errores del backend
-    if (!response.ok) {
-      // Intentar obtener el mensaje de error del backend
-      let errorMessage = `Error ${response.status}: ${response.statusText}`;
+      return response.data as ValidationResult;
+    } catch (error: any) {
+      console.error("[excelProcessingService] Error validando Excel:", error);
 
-      try {
-        const errorData = await response.json();
+      // Manejo de errores de Axios
+      if (error.response) {
+        const errorData = error.response.data;
+
         if (errorData.error) {
-          errorMessage = errorData.error;
+          throw new Error(errorData.error);
         } else if (errorData.detail) {
-          errorMessage = errorData.detail;
+          throw new Error(errorData.detail);
         } else if (errorData.non_field_errors) {
-          errorMessage = errorData.non_field_errors[0];
+          throw new Error(errorData.non_field_errors[0]);
         }
-      } catch {
-        // Si no se puede parsear JSON, usar el texto plano
-        const errorText = await response.text();
-        if (errorText) {
-          errorMessage = errorText;
-        }
+
+        throw new Error(
+          `Error ${error.response.status}: ${error.response.statusText}`
+        );
       }
 
-      throw new Error(errorMessage);
+      throw error;
     }
-
-    return (await response.json()) as ValidationResult;
   },
 
   /**
@@ -64,17 +67,28 @@ export const excelProcessingService = {
   async previsualizarIncompletos(
     files: File[]
   ): Promise<{ filas_incompletas: IncompleteRow[]; advertencias: string[] }> {
-    const formData = new FormData();
-    files.forEach((file) => formData.append("files", file));
+    try {
+      const formData = new FormData();
+      files.forEach((file) => formData.append("files", file));
 
-    const response = await fetch(`${EXCEL_PROCESSING_URL}/previsualizar/`, {
-      method: "POST",
-      body: formData,
-    });
+      const response = await apiClient.post(
+        `${EXCEL_PROCESSING_URL_PRIVATE}/previsualizar/`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
 
-    if (!response.ok)
-      throw new Error(`Error previsualizando: ${response.statusText}`);
-    return await response.json();
+      return response.data;
+    } catch (error: any) {
+      console.error("[excelProcessingService] Error previsualizando:", error);
+      throw new Error(
+        error.response?.data?.detail ||
+          `Error previsualizando: ${error.message}`
+      );
+    }
   },
 
   /**
@@ -87,21 +101,22 @@ export const excelProcessingService = {
     cacheKey: string,
     filasACompletar: FilaACompletar[] = []
   ): Promise<any> {
-    const response = await fetch(
-      `${EXCEL_PROCESSING_URL}/completar-y-procesar/`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+    try {
+      const response = await apiClient.post(
+        `${EXCEL_PROCESSING_URL_PRIVATE}/completar-y-procesar/`,
+        {
           cache_key: cacheKey,
           filas_a_completar: filasACompletar,
-        }),
-      }
-    );
+        }
+      );
 
-    if (!response.ok)
-      throw new Error(`Error procesando: ${response.statusText}`);
-    return await response.json();
+      return response.data;
+    } catch (error: any) {
+      console.error("[excelProcessingService] Error procesando:", error);
+      throw new Error(
+        error.response?.data?.detail || `Error procesando: ${error.message}`
+      );
+    }
   },
 
   /**
@@ -110,16 +125,26 @@ export const excelProcessingService = {
    * @returns Resultado de la importación
    */
   async importarPerfiles(files: File[]): Promise<any> {
-    const formData = new FormData();
-    files.forEach((file) => formData.append("files", file));
+    try {
+      const formData = new FormData();
+      files.forEach((file) => formData.append("files", file));
 
-    const response = await fetch(`${ASSIGNMENT_BASE_URL}/importar-perfiles/`, {
-      method: "POST",
-      body: formData,
-    });
+      const response = await apiClient.post(
+        `${ASSIGNMENT_API_BASE_URL_PRIVATE}/importar-perfiles/`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
 
-    if (!response.ok)
-      throw new Error(`Error importando: ${response.statusText}`);
-    return await response.json();
+      return response.data;
+    } catch (error: any) {
+      console.error("[excelProcessingService] Error importando:", error);
+      throw new Error(
+        error.response?.data?.detail || `Error importando: ${error.message}`
+      );
+    }
   },
 };

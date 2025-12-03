@@ -80,10 +80,11 @@ const ElectiveSelection: React.FC = () => {
   };
 
   const handleSubmit = () => {
-    if (selectedElectives.some((elective) => elective === "")) {
+    const selectedCount = selectedElectives.filter((e) => e !== "").length;
+    if (selectedCount === 0) {
       setWarning({
         open: true,
-        message: "Debes seleccionar 5 electivas en orden de prioridad.",
+        message: "Debes seleccionar al menos una electiva.",
       });
       return;
     }
@@ -102,35 +103,50 @@ const ElectiveSelection: React.FC = () => {
   const handleConfirmSubmit = async () => {
     setShowConfirm(false);
 
+    // Filtrar electivas no vacías
+    const nonEmpty = selectedElectives
+      .map((ele_codigo, idx) => ({ ele_codigo, originalIndex: idx }))
+      .filter((x) => x.ele_codigo !== "");
+
+    const electivesPayload = nonEmpty.map((intem, i) => {
+      const elective = activeElectives.find(
+        (e: IElective) => e.ele_codigo === intem.ele_codigo
+      );
+      if (!elective) {
+        throw new Error(`Electiva con código ${intem.ele_codigo} no encontrada`);
+      }
+      return {
+        ele_codigo: elective.ele_codigo,
+        sel_prioridad: i + 1,
+        ele_nombre: elective.ele_nombre,
+      }
+    })
+
     // Construir ISelectionStudentElective
     const selectionsPayload: ISelectionStudentElective = {
       est_codigo: Number(studentData.codigo),
       est_correo: studentData.email || "",
       sel_anio: year,
       sel_num_semestre: semester,
-      electivas: selectedElectives.map((ele_codigo, index) => {
-        const elective = activeElectives.find(
-          (e: IElective) => e.ele_codigo === ele_codigo
-        );
-        return {
-          ele_codigo: elective.ele_codigo,
-          sel_prioridad: index + 1,
-          ele_nombre: elective.ele_nombre,
-        };
-      }),
+      electivas: electivesPayload,
     };
 
     try {
-      await addSelection(selectionsPayload);
-      setShowSuccess(true);
-    } catch (error) {
-      setWarning({
-        open: true,
-        message:
-          "Error al registrar la selección de electivas. Por favor, intenta nuevamente.",
-      });
-    }
-  };
+    await addSelection(selectionsPayload);
+    setShowSuccess(true);
+  } catch (error: any) {
+    console.log("[ElectiveSelection] Error al registrar selección:", error);
+    
+    // Usar el mensaje del error capturado
+    const errorMessage = error.message || 
+      "Error al registrar la selección de electivas. Por favor, intenta nuevamente.";
+    
+    setWarning({
+      open: true,
+      message: errorMessage,
+    });
+  }
+};
 
   const handleBack = () => {
     navigate("/personal-info");
@@ -141,10 +157,20 @@ const ElectiveSelection: React.FC = () => {
   }
 
   return (
-    <div className="form-page-container">
+    <div className="form-page-container" style={{
+      display: "flex",
+      flexDirection: "column",
+      height: "100vh"
+    }}>
       <Header />
 
-      <div className="form-page-content">
+      <div
+        className="form-page-content"
+        style={{
+          flex: 1,
+          overflowY: "auto"
+        }}
+      >
         <div style={{ maxWidth: "800px", width: "100%" }}>
           <Card className="form-card" padding="xl">
             <h2 className="form-title">Selección de Electivas</h2>
@@ -247,7 +273,7 @@ const ElectiveSelection: React.FC = () => {
               </p>
               {hasDuplicateElectives() && (
                 <p style={{ color: "var(--primary-red)", fontSize: "0.9rem" }}>
-                  ⚠️ Tienes electivas duplicadas. Por favor selecciona electivas
+                  Tienes electivas duplicadas. Por favor selecciona electivas
                   diferentes.
                 </p>
               )}
@@ -272,7 +298,6 @@ const ElectiveSelection: React.FC = () => {
                 variant="primary"
                 onClick={handleSubmit}
                 disabled={
-                  selectedElectives.some((e) => e === "") ||
                   hasDuplicateElectives()
                 }
               >

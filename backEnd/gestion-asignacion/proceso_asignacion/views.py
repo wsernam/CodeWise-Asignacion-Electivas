@@ -2,16 +2,32 @@ from django.db import IntegrityError
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import ValidationError, PermissionDenied
 
 from .models import ProcesoAsignacion
 from .serializers import ProcesoSerializer, ProcesoCambiarEstadoIn
+from .services.proceso_asignacion_reset import (
+    eliminar_todo_del_proceso,
+)
+from core.permissions import IsAsignador
+from rest_framework.permissions import AllowAny
+from django.core.exceptions import ValidationError as DjangoValidationError
 
 class ProcesoCRUDViewSet(viewsets.ModelViewSet):
     queryset = ProcesoAsignacion.objects.all().order_by("-pa_fecha_creacion")
     serializer_class = ProcesoSerializer
-    authentication_classes = []  # sin auth por ahora
-    permission_classes = []
+    permission_classes = [IsAsignador]
+
+    def get_permissions(self):
+        """
+        Permite el acceso público para las acciones de solo lectura (GET)
+        y requiere permisos de 'IsAsignador' para las demás acciones.
+        """
+        if self.action in ["list", "retrieve", "ultimos", "periodo_activo"]:
+            self.permission_classes = [AllowAny]
+        else:
+            self.permission_classes = [IsAsignador]
+        return super().get_permissions()
 
     # Crear: bloquear si ya hay ACTIVO
     def perform_create(self, serializer):
@@ -79,3 +95,33 @@ class ProcesoCRUDViewSet(viewsets.ModelViewSet):
             raise ValidationError({"detail": "No se pudo activar: ya hay otro ACTIVO."})
 
         return Response(ProcesoSerializer(obj).data)
+    
+     # eliminar perfiles, asignaciones y proceso
+    @action(detail=True, methods=["post"], url_path="eliminar-todo")
+    def eliminar_todo(self, request, pk=None):
+        """
+        Elimina TODO lo generado para este proceso:
+        - Perfiles académicos del año/semestre del proceso
+        - Asignaciones del año/semestre del proceso
+        - El propio ProcesoAsignacion
+
+        Solo si el proceso está ACTIVO y NO está FINALIZADO.
+        """
+        obj = self.get_object()  # por si luego quieres validar algo más
+
+        try:
+            eliminar_todo_del_proceso(obj.pa_codigo)
+        except DjangoValidationError as e:
+            # Convertimos la ValidationError de Django en ValidationError de DRF
+            raise ValidationError({"detail": e.message})
+
+        return Response(
+            {
+                "detail": (
+                    "Perfiles académicos, asignaciones y proceso de asignación "
+                    "eliminados correctamente. Ya puedes iniciar de nuevo la "
+                    "asignación para ese periodo."
+                )
+            },
+            status=status.HTTP_200_OK,
+        )

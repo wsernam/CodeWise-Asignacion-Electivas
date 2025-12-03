@@ -15,7 +15,8 @@ const EditProgram: React.FC = () => {
   const navigate = useNavigate();
   const { codigo } = useParams<{ codigo: string }>();
   const formValues = Form.useWatch([], form);
-
+  const faculties = useProgramStore((state) => state.faculties);
+  const fetchFaculties = useProgramStore((state) => state.fetchFaculties);
   const [touchedFields, setTouchedFields] = useState({
     nombre: false,
     facultad: false,
@@ -36,15 +37,19 @@ const EditProgram: React.FC = () => {
   const fetchPrograms = useProgramStore((state) => state.fetchPrograms);
 
   // Obtener facultades únicas de los programas existentes
-  const facultades = Array.from(
-    new Set(programs.map((p) => p.fac_nombre))
-  ).filter(Boolean);
+  const facultades = faculties.map((f) => f.fac_nombre);
 
   useEffect(() => {
     if (programs.length === 0) {
       fetchPrograms();
     }
   }, [fetchPrograms, programs.length]);
+
+  useEffect(() => {
+    if (faculties.length === 0) {
+      fetchFaculties();
+    }
+  }, [fetchFaculties, faculties.length]);
 
   useEffect(() => {
     if (codigo && programs.length > 0) {
@@ -120,15 +125,18 @@ const EditProgram: React.FC = () => {
     if (!codigo) return;
 
     try {
+      const facultadSeleccionada = faculties.find(
+        (f) => f.fac_nombre === values.facultad
+      );
       const cleanedValues: Program = {
-        pro_codigo: parseInt(codigo),
+        pro_codigo: codigo,
         pro_nombre: values.nombre.trim().replace(/\s+/g, " "),
-        fac_codigo: 2,
+        fac_codigo: 1,
         fac_nombre: values.facultad,
         pro_activo: true,
       };
 
-      await updateProgram(parseInt(codigo), cleanedValues);
+      await updateProgram(codigo, cleanedValues);
       setSuccess({
         open: true,
         message: "Programa actualizado correctamente",
@@ -237,25 +245,32 @@ const EditProgram: React.FC = () => {
               </Select>
             </Form.Item>
 
+            {/* Botones */}
             <Form.Item>
-              <Button
-                type="submit"
-                variant="primary"
-                size="medium"
-                disabled={!isFormValid}
+              <div
+                style={{
+                  display: "flex",
+                  gap: "1rem",
+                  width: "100%",
+                }}
               >
-                Guardar
-              </Button>
-            </Form.Item>
-
-            <Form.Item>
-              <Button
-                variant="ghost"
-                onClick={() => navigate("/programs")}
-                size="medium"
-              >
-                Volver
-              </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => navigate("/programs")}
+                  size="medium"
+                >
+                  Volver
+                </Button>
+                <Button
+                  type="submit"
+                  variant="primary"
+                  size="medium"
+                  disabled={!isFormValid}
+                >
+                  Guardar
+                </Button>
+              </div>
             </Form.Item>
           </Form>
         </Card>

@@ -1,0 +1,293 @@
+.tooltip-info-container {
+  /* Posicionamiento */
+  position: relative;
+  z-index: 9999;
+
+  /* Modelo de caja */
+  display: inline-block;
+
+  /* Interactividad */
+  cursor: pointer;
+}
+
+.tooltip-info-icon {
+  /* Modelo de caja */
+  display: flex;
+
+  /* Flexbox y Grid */
+  align-items: center;
+  justify-content: center;
+
+  /* Bordes */
+  border-radius: 50%;
+
+  /* Fondos */
+  background-color: #e0e0e0;
+
+  /* Tipografía */
+  font-weight: bold;
+  font-family: Arial, sans-serif;
+
+  /* Colores y efectos */
+  color: #666;
+}
+
+.tooltip-info-icon-small {
+  /* Dimensiones */
+  width: 24px;
+  height: 24px;
+
+  /* Tipografía */
+  font-size: 14px;
+}
+
+.tooltip-info-icon-medium {
+  /* Dimensiones */
+  width: 28px;
+  height: 28px;
+
+  /* Tipografía */
+  font-size: 16px;
+}
+
+.tooltip-info-icon:hover {
+  /* Fondos */
+  background-color: #d0d0d0;
+
+  /* Otras propiedades */
+  transform: scale(1.05);
+}
+
+.tooltip-info-content {
+  /* Posicionamiento */
+  position: absolute;
+  z-index: 10000;
+
+  /* Dimensiones */
+  width: 420px;
+
+  /* Relleno */
+  padding: 16px;
+
+  /* Bordes */
+  border: 1px solid #ddd;
+  border-radius: 8px;
+
+  /* Fondos */
+  background-color: white;
+
+  /* Tipografía */
+  text-align: left;
+
+  /* Colores y efectos */
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+  opacity: 0;
+
+  /* Transiciones y animaciones */
+  transition: all 0.3s ease-in-out;
+
+  /* Interactividad */
+  pointer-events: none;
+
+  /* Otras propiedades */
+  visibility: hidden;
+}
+
+.tooltip-info-container:hover .tooltip-info-content {
+  /* Colores y efectos */
+  opacity: 1;
+
+  /* Otras propiedades */
+  visibility: visible;
+}
+
+.tooltip-info-content-top {
+  /* Posicionamiento */
+  bottom: 100%;
+  left: 50%;
+
+  /* Márgenes */
+  margin-bottom: 8px;
+
+  /* Otras propiedades */
+  transform: translateX(-50%) translateY(-8px);
+}
+
+.tooltip-info-content-bottom {
+  /* Posicionamiento */
+  top: 100%;
+  left: 50%;
+
+  /* Márgenes */
+  margin-top: 8px;
+
+  /* Otras propiedades */
+  transform: translateX(-50%) translateY(8px);
+}
+
+.tooltip-info-content-left {
+  /* Posicionamiento */
+  right: 100%;
+  top: 50%;
+
+  /* Márgenes */
+  margin-right: 8px;
+
+  /* Otras propiedades */
+  transform: translateY(-50%) translateX(-8px);
+}
+
+.tooltip-info-content-right {
+  /* Posicionamiento */
+  left: 100%;
+  top: 50%;
+
+  /* Márgenes */
+  margin-left: 8px;
+
+  /* Otras propiedades */
+  transform: translateY(-50%) translateX(8px);
+}
+
+.tooltip-info-title {
+  /* Márgenes */
+  margin-bottom: 8px;
+
+  /* Tipografía */
+  font-size: 14px;
+  font-weight: 700;
+  text-align: left;
+  line-height: 1.3;
+
+  /* Colores y efectos */
+  color: #333;
+}
+
+.tooltip-info-subtitle {
+  /* Márgenes */
+  margin-bottom: 8px;
+
+  /* Tipografía */
+  font-size: 12px;
+  font-weight: 600;
+  text-align: left;
+  line-height: 1.3;
+
+  /* Colores y efectos */
+  color: #555;
+}
+
+.tooltip-info-description {
+  /* Tipografía */
+  font-size: 12px;
+  line-height: 1.5;
+  text-align: left;
+
+  /* Colores y efectos */
+  color: #666;
+}
+
+.tooltip-info-description strong {
+  /* Tipografía */
+  font-weight: 700;
+
+  /* Colores y efectos */
+  color: #444;
+}
+
+.tooltip-info-content::before {
+  /* Posicionamiento */
+  position: absolute;
+
+  /* Bordes */
+  border: 6px solid transparent;
+
+  /* Otras propiedades */
+  content: "";
+}
+
+.tooltip-info-content-top::before {
+  /* Posicionamiento */
+  top: 100%;
+  left: 50%;
+
+  /* Otras propiedades */
+  transform: translateX(-50%);
+  border-top-color: white;
+}
+
+.tooltip-info-content-bottom::before {
+  /* Posicionamiento */
+  bottom: 100%;
+  left: 50%;
+
+  /* Otras propiedades */
+  transform: translateX(-50%);
+  border-bottom-color: white;
+}
+
+.tooltip-info-content-left::before {
+  /* Posicionamiento */
+  left: 100%;
+  top: 50%;
+
+  /* Otras propiedades */
+  transform: translateY(-50%);
+  border-left-color: white;
+}
+
+.tooltip-info-content-right::before {
+  /* Posicionamiento */
+  right: 100%;
+  top: 50%;
+
+  /* Otras propiedades */
+  transform: translateY(-50%);
+  border-right-color: white;
+}
+
+.assignment-tooltip-wrapper {
+  /* Posicionamiento */
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  z-index: 10000;
+}
+
+.assignment-page-container,
+.form-page-content,
+.main-card.assignment-card,
+.simple-process-header,
+.no-process-container {
+  /* Posicionamiento */
+  position: relative;
+  z-index: auto;
+}
+
+.title-with-tooltip {
+  /* Modelo de caja */
+  display: flex;
+
+  /* Flexbox y Grid */
+  align-items: center;
+  gap: 8px;
+}
+
+.sm-card {
+  /* Modelo de caja */
+  overflow: visible !important;
+}
+
+.sm-body {
+  /* Modelo de caja */
+  overflow: visible !important;
+}
+
+.sm-card .tooltip-info-content {
+  /* Posicionamiento */
+  position: absolute;
+  z-index: 10051;
+
+  /* Dimensiones */
+  max-width: 350px;
+}

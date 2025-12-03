@@ -1,5 +1,7 @@
-import { ASSIGNMENT_BASE_URL } from "../config/config";
+import apiClient from "../Auth/apiClient";
+import { ASSIGNMENT_API_BASE_URL_PRIVATE } from "../config/config";
 import type { AssignmentProcess } from "../../models/Assignment/assignmentProcess";
+import type { CodeBatchesResponse } from "../../models/Assignment/assignmentProcess";
 
 export const assignmentProcessService = {
   /**
@@ -14,55 +16,43 @@ export const assignmentProcessService = {
     semestre: number
   ): Promise<AssignmentProcess> {
     try {
-      const response = await fetch(`${ASSIGNMENT_BASE_URL}/procesos/`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+      const response = await apiClient.post(
+        `${ASSIGNMENT_API_BASE_URL_PRIVATE}api/asignacion/procesos/`,
+        {
           pa_anio: anio,
           pa_num_semestre: semestre,
-//          pa_activo: true,
-        }),
-      });
-
-      if (!response.ok) {
-        // Obtener el error detallado del backend
-        let errorMessage = `Error ${response.status}: ${response.statusText}`;
-
-        try {
-          const errorData = await response.json();
-          if (errorData.non_field_errors) {
-            errorMessage = errorData.non_field_errors[0];
-          } else if (errorData.detail) {
-            errorMessage = errorData.detail;
-          } else if (errorData.error) {
-            errorMessage = errorData.error;
-          }
-        } catch {
-          // Si no se puede parsear JSON, usar el texto plano
-          errorMessage = await response.text();
         }
+      );
 
-        throw new Error(errorMessage);
-      }
-
-      return (await response.json()) as AssignmentProcess;
+      return response.data as AssignmentProcess;
     } catch (error: any) {
       console.error("[assignmentProcessService] Error creando proceso:", error);
 
-      // Mejorar mensajes de error genéricos
-      if (error.message.includes("Failed to fetch")) {
+      // Manejo de errores de Axios
+      if (error.response) {
+        // El servidor respondió con un código de error
+        const errorData = error.response.data;
+
+        if (errorData.non_field_errors) {
+          throw new Error(errorData.non_field_errors[0]);
+        } else if (errorData.detail) {
+          throw new Error(errorData.detail);
+        } else if (errorData.error) {
+          throw new Error(errorData.error);
+        }
+
+        throw new Error(
+          `Error ${error.response.status}: ${error.response.statusText}`
+        );
+      } else if (error.request) {
+        // La petición se hizo pero no hubo respuesta
         throw new Error(
           "No se pudo conectar con el servidor. Verifica que el backend esté ejecutándose."
         );
+      } else {
+        // Error al configurar la petición
+        throw new Error(error.message);
       }
-
-      if (error.message.includes("ERR_CONNECTION_REFUSED")) {
-        throw new Error(
-          "El servidor no está respondiendo. Verifica que el servicio de asignación esté activo en el puerto 8002."
-        );
-      }
-
-      throw error;
     }
   },
 
@@ -73,14 +63,16 @@ export const assignmentProcessService = {
    */
   async obtenerProcesoActivo(): Promise<AssignmentProcess | null> {
     try {
-      const response = await fetch(
-        `${ASSIGNMENT_BASE_URL}/procesos/periodo-activo/`
+      const response = await apiClient.get(
+        `${ASSIGNMENT_API_BASE_URL_PRIVATE}api/asignacion/procesos/periodo-activo/`
       );
-      if (response.status === 204) return null; // No hay proceso activo
-      if (!response.ok)
-        throw new Error(`Error obteniendo proceso: ${response.statusText}`);
-      return (await response.json()) as AssignmentProcess;
-    } catch (error) {
+      return response.data as AssignmentProcess;
+    } catch (error: any) {
+      // Si es un 204 (No Content), retornar null
+      if (error.response?.status === 204) {
+        return null;
+      }
+
       console.error(
         "[assignmentProcessService] Error obteniendo proceso activo:",
         error
@@ -96,11 +88,10 @@ export const assignmentProcessService = {
    */
   async obtenerTodosLosProcesos(): Promise<AssignmentProcess[]> {
     try {
-      const response = await fetch(`${ASSIGNMENT_BASE_URL}/procesos/`);
-      if (!response.ok) {
-        throw new Error(`Error obteniendo procesos: ${response.statusText}`);
-      }
-      return (await response.json()) as AssignmentProcess[];
+      const response = await apiClient.get(
+        `${ASSIGNMENT_API_BASE_URL_PRIVATE}api/asignacion/procesos/`
+      );
+      return response.data as AssignmentProcess[];
     } catch (error) {
       console.error(
         "[assignmentProcessService] Error obteniendo procesos:",
@@ -109,6 +100,7 @@ export const assignmentProcessService = {
       throw error;
     }
   },
+
   /**
    * FINALIZAR UN PROCESO DE ASIGNACIÓN
    * Endpoint: PATCH /api/asignacion/procesos/{codigo}/
@@ -118,21 +110,14 @@ export const assignmentProcessService = {
   async finalizarProceso(codigo: number): Promise<AssignmentProcess> {
     try {
       const fechaFin = new Date().toISOString();
-      const response = await fetch(
-        `${ASSIGNMENT_BASE_URL}/procesos/${codigo}/estado/`,
+      const response = await apiClient.patch(
+        `${ASSIGNMENT_API_BASE_URL_PRIVATE}api/asignacion/procesos/${codigo}/estado/`,
         {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            pa_estado: 2,
-          }),
+          pa_estado: 2,
         }
       );
 
-      if (!response.ok) {
-        throw new Error(`Error finalizando proceso: ${response.statusText}`);
-      }
-      const proceso = await response.json();
+      const proceso = response.data;
       return {
         ...proceso,
         fechaFinalizacion: fechaFin,
@@ -140,6 +125,137 @@ export const assignmentProcessService = {
     } catch (error: any) {
       console.error(
         "[assignmentProcessService] Error finalizando proceso:",
+        error
+      );
+      throw error;
+    }
+  },
+
+  /**
+   * ELIMINAR UN PROCESO DE ASIGNACIÓN
+   * Endpoint: DELETE /api/asignacion/procesos/{codigo}/
+   * @param codigo - Código del proceso a finalizar
+   * @returns Proceso eliminado
+   */
+  async eliminarProceso(codigo: number): Promise<AssignmentProcess> {
+    try {
+      const response = await apiClient.delete(
+        `${ASSIGNMENT_API_BASE_URL_PRIVATE}api/asignacion/procesos/${codigo}/`
+      );
+      console.log(
+        "[assignmentProcessService] Proceso eliminado:",
+        response.data
+      );
+      return response.data as AssignmentProcess;
+    } catch (error: any) {
+      console.error(
+        "[assignmentProcessService] Error eliminando proceso:",
+        error
+      );
+      throw error;
+    }
+  },
+
+  /**
+   * EJECUTAR ASIGNACIÓN
+   * Endpoint: POST /api/asignacion/ejecutar/
+   *
+   * @param anio
+   * @param semestre
+   */
+
+  async ejecutarAsignacion(anio: number, semestre: number): Promise<any> {
+    try {
+      const response = await apiClient.post(
+        `${ASSIGNMENT_API_BASE_URL_PRIVATE}api/asignacion/ejecutar/`,
+        {
+          anio,
+          semestre,
+        }
+      );
+      console.log(
+        "[assignmentProcessService] Asignación ejecutada:",
+        response.data
+      );
+    } catch (error: any) {
+      console.error(
+        "[assignmentProcessService] Error ejecutando asignación:",
+        error
+      );
+      throw error;
+    }
+  },
+
+  // Lotes de códigos de estudiantes para asignación
+
+  /**
+   * OBTENER LOTES DE CÓDIGOS DE ESTUDIANTES PARA ASIGNACIÓN
+   * Endpoint: GET api/reporte-asignacion/lotes-selecciones/?anio={anio}&semestre={semestre}
+   * @param anio - Año académico
+   * @param semestre - Semestre (1 o 2)
+   * @returns Información de lotes de códigos de estudiantes
+   */
+  async getCodeBatches(
+    anio: number,
+    semestre: number
+  ): Promise<CodeBatchesResponse> {
+    const url = `${ASSIGNMENT_API_BASE_URL_PRIVATE}api/reporte-asignacion/lotes-selecciones/?anio={anio}&semestre={semestre}`;
+    try {
+      const resp = await apiClient.get<CodeBatchesResponse>(url, {
+        params: { anio, semestre },
+      });
+      console.log("[codeBatchService] getCodeBatches response:", resp.data);
+      return resp.data;
+    } catch (err: any) {
+      console.error("[codeBatchService] getCodeBatches error:", err);
+      throw err;
+    }
+  },
+
+  /**
+   * OBTENER LOTES DE CÓDIGOS DE ESTUDIANTES PARA ASIGNACIÓN
+   * Endpoint: GET api/reporte-asignacion/lotes-selecciones/?anio={anio}&semestre={semestre}
+   * @param anio - Año académico
+   * @param semestre - Semestre (1 o 2)
+   * @returns Información de lotes de códigos de estudiantes
+   */
+  async downloadCodeBatches(anio: number, semestre: number): Promise<Blob> {
+    const url = `${ASSIGNMENT_API_BASE_URL_PRIVATE}api/reporte-asignacion/pdf/lotes-selecciones/?anio={anio}&semestre={semestre}`;
+    try {
+      const resp = await apiClient.get(url, {
+        params: { anio, semestre },
+        responseType: "blob",
+      });
+      console.log("[codeBatchService] getCodeBatches response:", resp.data);
+      return resp.data as Blob;
+    } catch (err: any) {
+      console.error("[codeBatchService] getCodeBatches error:", err);
+      throw err;
+    }
+  },
+  /**
+   * Elimina las asignaciones de un período específico.
+   */
+  async purgarAsignaciones(anio: number, semestre: number): Promise<void> {
+    try {
+      await apiClient.delete(
+        `${ASSIGNMENT_API_BASE_URL_PRIVATE}api/asignacion/purgar/`,
+        {
+          params: {
+            anio,
+            semestre,
+            dry_run: 0, // 0 para borrar realmente (no dry run)
+          },
+        }
+      );
+      console.log(
+        "[assignmentProcessService] Asignaciones purgadas para:",
+        anio,
+        semestre
+      );
+    } catch (error: any) {
+      console.error(
+        "[assignmentProcessService] Error purgando asignaciones:",
         error
       );
       throw error;

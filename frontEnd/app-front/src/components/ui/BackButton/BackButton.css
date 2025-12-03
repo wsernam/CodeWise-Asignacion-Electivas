@@ -1,19 +1,25 @@
-/* src/components/ui/BackButton/BackButton.css */
 .back-button {
-  background: transparent;
-  color: #1f297f;
-  border: 1px solid #1f297f;
-  border-radius: 6px;
-  padding: 0.6rem 1.2rem;
+  background-color: #1f297f;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 0.75rem 1.5rem;
   cursor: pointer;
-  font-size: 0.95rem;
-  font-weight: 500;
+  font-size: 1rem;
+  font-weight: 600;
   width: 100%;
   transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.back-button:hover {
-  background: #1f297f;
-  color: white;
+.back-button:hover:not(:disabled) {
+  background-color: #14206d;
   transform: translateY(-1px);
+}
+
+.back-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }

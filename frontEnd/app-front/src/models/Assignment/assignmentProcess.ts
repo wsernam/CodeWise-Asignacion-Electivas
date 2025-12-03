@@ -53,3 +53,11 @@ export interface ConfirmLeveledRequest {
   est_codigo: number;
   nivelado: number; // 1 o 0
 }
+
+export interface CodeBatchesResponse {
+  anio: number,
+  semestre: number;
+  total_estudiantes: number;
+  lote_size: number;
+  lotes: number [][];
+}

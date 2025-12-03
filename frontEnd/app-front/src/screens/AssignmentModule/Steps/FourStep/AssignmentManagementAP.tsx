@@ -9,6 +9,7 @@ import {
 import Button from "../../../../components/ui/Button/Button";
 import SimpleModal from "../../../../components/shared/SimpleModal/SimpleModal";
 import ConfirmModal from "../../../../components/shared/ConfirmModal/ConfirmModal";
+import { useAssignmentProcessStore } from "../../../../store/Assignment";
 
 type AssignmentProcessProps = {
   onNext: () => void;
@@ -17,6 +18,7 @@ type AssignmentProcessProps = {
   currentStep: number;
   completedSteps: number[];
   getStepBorderClass: (stepNumber: number) => string;
+  // No necesitamos processData aquí, solo en AssignmentModule
 };
 
 const cards = [
@@ -48,14 +50,18 @@ const cards = [
 
 const AssignmentManagementAP: React.FC<AssignmentProcessProps> = ({
   onNext,
-  onCancel,
   onStepClick,
   currentStep,
-  completedSteps,
   getStepBorderClass,
 }) => {
   const [showModal, setShowModal] = React.useState(false);
   const [showConfirm, setShowConfirm] = React.useState(false);
+
+  // Acciones del store
+  const ejecutarAsignacion = useAssignmentProcessStore(
+    (s: any) => s.ejecutarAsignacion
+  );
+  const loading = useAssignmentProcessStore((s) => s.loading);
 
   const handleCardClick = (stepNumber: number) => {
     if (stepNumber === currentStep) {
@@ -65,11 +71,15 @@ const AssignmentManagementAP: React.FC<AssignmentProcessProps> = ({
     }
   };
 
-  const handleSave = () => setShowConfirm(true);
-  const handleConfirmSave = () => {
-    setShowConfirm(false);
-    setShowModal(false);
-    onNext(); 
+  // FUNCIÓN: Solo ejecutar asignación y avanzar al paso 5
+  const handleExecuteAssignment = async () => {
+    try {
+      await ejecutarAsignacion(); // Solo ejecuta la asignación
+      setShowModal(false);
+      onNext(); // ✅ Avanza al paso 5 (para ver asignación y finalizar proceso)
+    } catch (e: any) {
+      console.error("Error ejecutando la asignación:", e?.message || e);
+    }
   };
 
   return (
@@ -93,29 +103,33 @@ const AssignmentManagementAP: React.FC<AssignmentProcessProps> = ({
       </div>
 
       {currentStep === 4 && (
-        <SimpleModal
-          open={showModal}
-          title="Asignación de electivas"
-          onClose={() => setShowModal(false)}
-        >
-          <div className="assignment-content">
-            <p>Proceso de asignación automática de electivas...</p>
-            <p>Se asignarán las electivas según los criterios establecidos.</p>
-          </div>
-          <div className="aps-step-buttons">
-            <Button variant="primary" onClick={handleSave}>
-              Finalizar asignación
-            </Button>
-          </div>
-        </SimpleModal>
-      )}
+        <>
+          <SimpleModal
+            open={showModal}
+            title="Asignación de electivas"
+            onClose={() => setShowModal(false)}
+          >
+            <div className="assignment-content">
+              <p>Proceso de asignación automática de electivas...</p>
+              <p>
+                Se asignarán las electivas según los criterios establecidos.
+              </p>
 
-      <ConfirmModal
-        open={showConfirm}
-        message="¿Está seguro de finalizar el proceso de asignación?"
-        onConfirm={handleConfirmSave}
-        onCancel={() => setShowConfirm(false)}
-      />
+              <div className="aps-step-buttons">
+                <Button
+                  variant="primary"
+                  onClick={handleExecuteAssignment}
+                  disabled={loading}
+                >
+                  {loading
+                    ? "Ejecutando asignación..."
+                    : "Finalizar asignación"}
+                </Button>
+              </div>
+            </div>
+          </SimpleModal>
+        </>
+      )}
     </div>
   );
 };

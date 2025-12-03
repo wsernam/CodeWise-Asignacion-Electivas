@@ -1,0 +1,759 @@
+_format_version: "3.0"
+_transform: true
+
+
+# ==================================================
+# SERVICIO: Gestión de Asignación
+# ==================================================
+services:
+  - name: gestion-asignacion-service
+    url: http://gestion-asignacion:8000
+    protocol: http
+    host: gestion-asignacion
+    port: 8000
+    path: /
+    retries: 5
+    connect_timeout: 60000
+    write_timeout: 60000
+    read_timeout: 60000
+    
+    routes:
+      - name: gestion-asignacion-route
+        protocols:
+          - http
+          - https
+        methods:
+          - GET
+          - POST
+          - PUT
+          - PATCH
+          - DELETE
+          - OPTIONS
+        paths:
+          - /gestion-asignacion
+        strip_path: true
+        preserve_host: false
+    
+    plugins:
+      - name: jwt
+        enabled: true
+        config:
+          uri_param_names:
+            - jwt
+          cookie_names: []
+          header_names:
+            - authorization
+          claims_to_verify:
+            - exp
+          maximum_expiration: 31536000
+          key_claim_name: iss
+          secret_is_base64: false
+          anonymous: null
+          run_on_preflight: true
+      
+      - name: pre-function
+        enabled: true
+        config:
+          access:
+            - |
+              local jwt = kong.ctx.shared.jwt_keyset_credential
+              
+              if jwt and jwt.claims then
+                if jwt.claims.role then
+                  kong.service.request.set_header("X-User-Role", jwt.claims.role)
+                end
+                
+                if jwt.claims.user_id then
+                  kong.service.request.set_header("X-User-Id", jwt.claims.user_id)
+                end
+                
+                kong.log.info("JWT Claims extraídos - Role: ", jwt.claims.role, ", User ID: ", jwt.claims.user_id)
+              end
+      
+      - name: cors
+        enabled: true
+        config:
+          origins:
+            - "*"
+          methods:
+            - GET
+            - POST
+            - PUT
+            - PATCH
+            - DELETE
+            - OPTIONS
+          headers:
+            - Accept
+            - Accept-Version
+            - Content-Length
+            - Content-MD5
+            - Content-Type
+            - Date
+            - Authorization
+            - X-Auth-Token
+          exposed_headers:
+            - X-Auth-Token
+          credentials: true
+          max_age: 3600
+          preflight_continue: false
+      
+      - name: rate-limiting
+        enabled: true
+        config:
+          second: 100
+          minute: null
+          hour: 10000
+          day: null
+          month: null
+          year: null
+          limit_by: consumer
+          policy: local
+          fault_tolerant: true
+          hide_client_headers: false
+          redis_ssl: false
+          redis_ssl_verify: false
+          redis_timeout: 2000
+          redis_database: 0
+
+# ==================================================
+# SERVICIO: Autenticación (JWT)
+# ==================================================
+  - name: auth-service
+    url: http://seguridad:8000
+    protocol: http
+    host: seguridad
+    port: 8000
+    path: /
+    retries: 5
+    connect_timeout: 60000
+    write_timeout: 60000
+    read_timeout: 60000
+
+    routes:
+      - name: auth-login-route
+        protocols:
+          - http
+          - https
+        methods:
+          - POST
+          - OPTIONS
+        paths:
+          - /auth/login
+        strip_path: true      # Cambiado a 'false'
+        preserve_host: false    # Cambiado a 'true' para mejor consistencia
+
+    plugins:
+      - name: cors
+        config:
+          origins:
+            - "*"
+      - name: request-transformer
+        enabled: true
+        config:
+          replace:
+            uri: /api/login/ # Reemplaza la ruta de la petición por la que espera Django
+
+  # ==================================================
+  # SERVICIO: Gestión de Formulario - PÚBLICO
+  # ==================================================
+  - name: gestion-formulario-public-service
+    url: http://gestion_formulario:8000
+    protocol: http
+    host: gestion_formulario
+    port: 8000
+    path: /
+    retries: 5
+    connect_timeout: 60000
+    write_timeout: 60000
+    read_timeout: 60000
+    
+    routes:
+      # ------------------------------------------------
+      # Electivas - GET (Público)
+      # ------------------------------------------------
+      - name: gestion-formulario-electivas-public-list
+        protocols:
+          - http
+          - https
+        methods:
+          - GET
+          - OPTIONS
+        paths:
+          - /gestion-formulario/electivas
+        strip_path: false
+        preserve_host: true
+        plugins:
+          - name: request-transformer
+            enabled: true
+            config:
+              replace:
+                uri: /electivas/
+      
+      - name: gestion-formulario-electivas-public-detail
+        protocols:
+          - http
+          - https
+        methods:
+          - GET
+          - OPTIONS
+        paths:
+          - ~/gestion-formulario/electivas/(?<pk>\d+)/?
+        strip_path: false
+        preserve_host: true
+        plugins:
+          - name: request-transformer
+            enabled: true
+            config:
+              replace:
+                uri: /electivas/$(uri_captures['pk'])/
+      
+      # ------------------------------------------------
+      # Programas - GET (Público)
+      # ------------------------------------------------
+      - name: gestion-formulario-programas-public
+        protocols:
+          - http
+          - https
+        methods:
+          - GET
+          - OPTIONS
+        paths:
+          - /gestion-formulario/programas
+        strip_path: false
+        preserve_host: true
+        plugins:
+          - name: request-transformer
+            enabled: true
+            config:
+              replace:
+                uri: /programas/
+      
+      # ------------------------------------------------
+      # Estado Formulario - GET (Público)
+      # ------------------------------------------------
+      - name: gestion-formulario-estado-public
+        protocols:
+          - http
+          - https
+        methods:
+          - GET
+          - OPTIONS
+        paths:
+          - /gestion-formulario/estado-formulario
+        strip_path: false
+        preserve_host: true
+        plugins:
+          - name: request-transformer
+            enabled: true
+            config:
+              replace:
+                uri: /estado-formulario/
+      
+      # ------------------------------------------------
+      # Ofertas - GET (Público)
+      # ------------------------------------------------
+      - name: gestion-formulario-ofertas-public-list
+        protocols:
+          - http
+          - https
+        methods:
+          - GET
+          - OPTIONS
+        paths:
+          - ~/gestion-formulario/ofertas/(?<anio>\d+)/(?<semestre>\d+)/?
+        strip_path: false
+        preserve_host: true
+        regex_priority: 5
+        plugins:
+          - name: request-transformer
+            enabled: true
+            config:
+              replace:
+                uri: /ofertas/$(uri_captures['anio'])/$(uri_captures['semestre'])/
+      
+      - name: gestion-formulario-ofertas-public-by-programa
+        protocols:
+          - http
+          - https
+        methods:
+          - GET
+          - OPTIONS
+        paths:
+          - ~/gestion-formulario/ofertas/(?<anio>\d+)/(?<semestre>\d+)/(?<programa>[^/]+)/?
+        strip_path: false
+        preserve_host: true
+        regex_priority: 10 
+        plugins:
+          - name: request-transformer
+            enabled: true
+            config:
+              replace:
+                uri: /ofertas/$(uri_captures['anio'])/$(uri_captures['semestre'])/$(uri_captures['programa'])/
+      
+      # ------------------------------------------------
+      # Selecciones - POST (Público para estudiantes)
+      # ------------------------------------------------
+      - name: gestion-formulario-selecciones-public-post
+        protocols:
+          - http
+          - https
+        methods:
+          - POST
+          - OPTIONS
+        paths:
+          - /gestion-formulario/selecciones
+        strip_path: false
+        preserve_host: true
+        plugins:
+          - name: request-transformer
+            enabled: true
+            config:
+              replace:
+                uri: /seleccion-electivas/
+
+      # ------------------------------------------------
+      # Estudiantes - TODAS LAS OPERACIONES (Público) 
+      # ------------------------------------------------
+      - name: gestion-formulario-estudiantes-public-list
+        protocols:
+          - http
+          - https
+        methods:
+          - GET
+          - POST
+          - OPTIONS
+        paths:
+          - /gestion-formulario/estudiantes
+        strip_path: false
+        preserve_host: true
+        plugins:
+          - name: request-transformer
+            enabled: true
+            config:
+              replace:
+                uri: /estudiantes/
+      
+      - name: gestion-formulario-estudiantes-public-detail
+        protocols:
+          - http
+          - https
+        methods:
+          - GET
+          - PUT
+          - PATCH
+          - DELETE
+          - OPTIONS
+        paths:
+          - ~/gestion-formulario/estudiantes/(?<id>[^/]+)/?
+        strip_path: false
+        preserve_host: true
+        plugins:
+          - name: request-transformer
+            enabled: true
+            config:
+              replace:
+                uri: /estudiantes/$(uri_captures['id'])/
+
+      - name: gestion-formulario-estudiantes-public-all
+        protocols:
+          - http
+          - https
+        methods:
+          - GET
+          - OPTIONS
+        paths:
+          - /gestion-formulario/estudiantes/all
+        strip_path: false
+        preserve_host: true
+        plugins:
+          - name: request-transformer
+            enabled: true
+            config:
+              replace:
+                uri: /estudiantes/all/
+
+      - name: gestion-formulario-estudiantes-public-info
+        protocols:
+          - http
+          - https
+        methods:
+          - GET
+          - OPTIONS
+        paths:
+          - /gestion-formulario/estudiantes/info
+        strip_path: false
+        preserve_host: true
+        plugins:
+          - name: request-transformer
+            enabled: true
+            config:
+              replace:
+                uri: /estudiantes/info/
+    
+    plugins:
+      - name: cors
+        enabled: true
+        config:
+          origins:
+            - "*"
+          methods:
+            - GET
+            - POST
+            - PUT
+            - PATCH
+            - DELETE
+            - OPTIONS
+          headers:
+            - Accept
+            - Accept-Version
+            - Content-Length
+            - Content-MD5
+            - Content-Type
+            - Date
+            - Authorization
+          exposed_headers: []
+          credentials: true
+          max_age: 3600
+          preflight_continue: false
+      
+      - name: rate-limiting
+        enabled: true
+        config:
+          second: 50
+          minute: null
+          hour: 5000
+          limit_by: ip
+          policy: local
+          fault_tolerant: true
+          hide_client_headers: false
+
+  # ==================================================
+  # SERVICIO: Gestión de Formulario - ADMIN (Protegido)
+  # ==================================================
+  - name: gestion-formulario-admin-service
+    url: http://gestion_formulario:8000
+    protocol: http
+    host: gestion_formulario
+    port: 8000
+    path: /
+    retries: 5
+    connect_timeout: 60000
+    write_timeout: 60000
+    read_timeout: 60000
+    
+    routes:
+      # ------------------------------------------------
+      # Electivas - Admin (POST, PUT, PATCH, DELETE)
+      # ------------------------------------------------
+      - name: gestion-formulario-electivas-admin-create
+        protocols:
+          - http
+          - https
+        methods:
+          - POST
+          - OPTIONS
+        paths:
+          - /gestion-formulario/admin/electivas
+        strip_path: false
+        preserve_host: true
+        plugins:
+          - name: request-transformer
+            enabled: true
+            config:
+              replace:
+                uri: /electivas/
+      
+      - name: gestion-formulario-electivas-admin-modify
+        protocols:
+          - http
+          - https
+        methods:
+          - PUT
+          - PATCH
+          - DELETE
+          - OPTIONS
+        paths:
+          - ~/gestion-formulario/admin/electivas/(?<pk>[^/]+)/?
+        strip_path: false
+        preserve_host: true
+        plugins:
+          - name: request-transformer
+            enabled: true
+            config:
+              replace:
+                uri: /electivas/$(uri_captures['pk'])/
+      
+      - name: gestion-formulario-electivas-admin-toggle
+        protocols:
+          - http
+          - https
+        methods:
+          - PATCH
+          - OPTIONS
+        paths:
+          - ~/gestion-formulario/admin/electivas/(?<pk>[^/]+)/toggle_estado/?
+        strip_path: false
+        preserve_host: true
+        plugins:
+          - name: request-transformer
+            enabled: true
+            config:
+              replace:
+                uri: /electivas/$(uri_captures['pk'])/toggle_estado/
+      
+      # ------------------------------------------------
+      # Programas - Admin (POST, PUT, PATCH, DELETE)
+      # ------------------------------------------------
+      - name: gestion-formulario-programas-admin-create
+        protocols:
+          - http
+          - https
+        methods:
+          - POST
+          - OPTIONS
+        paths:
+          - /gestion-formulario/admin/programas
+        strip_path: false
+        preserve_host: true
+        plugins:
+          - name: request-transformer
+            enabled: true
+            config:
+              replace:
+                uri: /programas/
+      
+      - name: gestion-formulario-programas-admin-modify
+        protocols:
+          - http
+          - https
+        methods:
+          - PUT
+          - PATCH
+          - DELETE
+          - OPTIONS
+        paths:
+          - ~/gestion-formulario/admin/programas/(?<pk>[^/]+)/?
+        strip_path: false
+        preserve_host: true
+        plugins:
+          - name: request-transformer
+            enabled: true
+            config:
+              replace:
+                uri: /programas/$(uri_captures['pk'])/
+      
+      # ------------------------------------------------
+      # Ofertas - Admin (POST, PUT, DELETE)
+      # ------------------------------------------------
+      - name: gestion-formulario-ofertas-admin-create
+        protocols:
+          - http
+          - https
+        methods:
+          - POST
+          - OPTIONS
+        paths:
+          - /gestion-formulario/admin/ofertas
+        strip_path: false
+        preserve_host: true
+        plugins:
+          - name: request-transformer
+            enabled: true
+            config:
+              replace:
+                uri: /ofertas/
+      
+      - name: gestion-formulario-ofertas-admin-bulk
+        protocols:
+          - http
+          - https
+        methods:
+          - POST
+          - OPTIONS
+        paths:
+          - /gestion-formulario/admin/ofertas/bulk-create
+        strip_path: false
+        preserve_host: true
+        plugins:
+          - name: request-transformer
+            enabled: true
+            config:
+              replace:
+                uri: /ofertas/bulk-create/
+      
+      - name: gestion-formulario-ofertas-admin-modify
+        protocols:
+          - http
+          - https
+        methods:
+          - PUT
+          - DELETE
+          - OPTIONS
+        paths:
+          - ~/gestion-formulario/admin/ofertas/(?<codigo>\d+)/?
+        strip_path: false
+        preserve_host: true
+        plugins:
+          - name: request-transformer
+            enabled: true
+            config:
+              replace:
+                uri: /ofertas/$(uri_captures['codigo'])/
+      
+      # ------------------------------------------------
+      # Estado Formulario - Admin (POST/PUT)
+      # ------------------------------------------------
+      - name: gestion-formulario-toggle-formulario-admin
+        protocols:
+          - http
+          - https
+        methods:
+          - POST
+          - PUT
+          - OPTIONS
+        paths:
+          - /gestion-formulario/admin/toggle-formulario
+        strip_path: false
+        preserve_host: true
+        plugins:
+          - name: request-transformer
+            enabled: true
+            config:
+              replace:
+                uri: /toggle-formulario/
+      
+      # ------------------------------------------------
+      # Selecciones - Admin (GET)
+      # ------------------------------------------------
+      - name: gestion-formulario-selecciones-admin-list
+        protocols:
+          - http
+          - https
+        methods:
+          - GET
+          - OPTIONS
+        paths:
+          - /gestion-formulario/admin/selecciones
+        strip_path: false
+        preserve_host: true
+        plugins:
+          - name: request-transformer
+            enabled: true
+            config:
+              replace:
+                uri: /seleccion-electivas/
+      
+      - name: gestion-formulario-selecciones-admin-consulta
+        protocols:
+          - http
+          - https
+        methods:
+          - GET
+          - OPTIONS
+        paths:
+          - ~/gestion-formulario/admin/selecciones/(?<est_codigo>\d+)/(?<sel_anio>\d+)/(?<sel_semestre>\d+)/?
+        strip_path: false
+        preserve_host: true
+        plugins:
+          - name: request-transformer
+            enabled: true
+            config:
+              replace:
+                uri: /seleccion-electivas/consulta/$(uri_captures['est_codigo'])/$(uri_captures['sel_anio'])/$(uri_captures['sel_semestre'])/
+      
+      # ------------------------------------------------
+      # Reportes - Admin
+      # ------------------------------------------------
+      - name: gestion-formulario-reporte-oferta
+        protocols:
+          - http
+          - https
+        methods:
+          - GET
+          - OPTIONS
+        paths:
+          - ~/gestion-formulario/admin/reporte-oferta/(?<anio>\d+)/(?<semestre>\d+)/?
+        strip_path: false
+        preserve_host: true
+        plugins:
+          - name: request-transformer
+            enabled: true
+            config:
+              replace:
+                uri: /reporte-oferta/$(uri_captures['anio'])/$(uri_captures['semestre'])/
+      
+      - name: gestion-formulario-reporte-seleccion-general
+        protocols:
+          - http
+          - https
+        methods:
+          - GET
+          - OPTIONS
+        paths:
+          - ~/gestion-formulario/admin/reporte-seleccion-general/(?<anio>\d+)/(?<semestre>\d+)/?
+        strip_path: false
+        preserve_host: true
+        plugins:
+          - name: request-transformer
+            enabled: true
+            config:
+              replace:
+                uri: /reporte-seleccion-general/$(uri_captures['anio'])/$(uri_captures['semestre'])/
+      
+      - name: gestion-formulario-reporte-seleccion-estudiante
+        protocols:
+          - http
+          - https
+        methods:
+          - GET
+          - OPTIONS
+        paths:
+          - ~/gestion-formulario/admin/reporte-seleccion/(?<est_codigo>\d+)/(?<anio>\d+)/(?<semestre>\d+)/?
+        strip_path: false
+        preserve_host: true
+        plugins:
+          - name: request-transformer
+            enabled: true
+            config:
+              replace:
+                uri: /reporte-seleccion/$(uri_captures['est_codigo'])/$(uri_captures['anio'])/$(uri_captures['semestre'])/
+
+      
+# ==================================================
+# CONSUMIDORES (ISSUERS) DE JWT
+# ==================================================
+consumers:
+  - username: auth-hs256
+    custom_id: django-auth-service
+    
+    jwt_secrets:
+      - key: auth-hs256
+        algorithm: HS256
+        secret: ab3750eadf31526430c6b7242b8ebf1cda010443c77130350d0a11c8e7ea360d
+
+# ==================================================
+# PLUGINS GLOBALES
+# ==================================================
+plugins:
+  - name: correlation-id
+    enabled: true
+    config:
+      header_name: X-Request-ID
+      generator: uuid
+      echo_downstream: true
+
+  - name: request-size-limiting
+    enabled: true
+    config:
+      allowed_payload_size: 10
+      size_unit: megabytes
+      require_content_length: false
+
+  - name: response-transformer
+    enabled: true
+    config:
+      add:
+        headers:
+          - X-Content-Type-Options:nosniff
+          - X-Frame-Options:DENY
+          - X-XSS-Protection:1; mode=block

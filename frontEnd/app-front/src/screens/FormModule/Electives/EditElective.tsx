@@ -54,6 +54,17 @@ const EditElective: React.FC = () => {
           ele_nombre: elective.ele_nombre,
           pro_codigo: elective.pro_codigo,
         });
+
+        // 🔹 Marcar los campos como tocados automáticamente
+        setTouchedFields({
+          ele_nombre: true,
+          pro_codigo: true,
+        });
+
+        // 🔹 Forzar validación de los valores cargados
+        form.validateFields().then(() => {
+          setIsFormValid(true);
+        });
         setElectiveFound(true);
       } else {
         setWarning({
@@ -249,15 +260,32 @@ const EditElective: React.FC = () => {
               />
             </Form.Item>
 
+            {/* Botones */}
             <Form.Item>
-              <Button
-                type="submit"
-                variant="primary"
-                size="medium"
-                disabled={!isFormValid}
+              <div
+                style={{
+                  display: "flex",
+                  gap: "1rem",
+                  width: "100%",
+                }}
               >
-                Guardar
-              </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => navigate("/electives")}
+                  size="medium"
+                >
+                  Volver
+                </Button>
+                <Button
+                  type="submit"
+                  variant="primary"
+                  size="medium"
+                  disabled={!isFormValid}
+                >
+                  Guardar
+                </Button>
+              </div>
             </Form.Item>
 
             <Form.Item>

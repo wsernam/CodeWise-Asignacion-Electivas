@@ -14,7 +14,7 @@ const BackButton: React.FC<BackButtonProps> = ({
 }) => {
   return (
     <button className={`back-button ${className}`} onClick={onClick}>
-      ← {text}
+      {text}
     </button>
   );
 };

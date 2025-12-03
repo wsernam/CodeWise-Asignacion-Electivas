@@ -16,13 +16,14 @@ const ListProgram: React.FC = () => {
   useEffect(() => {
     fetchPrograms();
   }, [fetchPrograms]);
-
   const filteredPrograms: Program[] = programs
     .filter((p) => p.pro_activo !== false)
     .filter(
       (p) =>
         p.pro_nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        p.pro_codigo.toString().includes(searchTerm.toLowerCase()) ||
+        String(p.pro_codigo)
+          .toLocaleLowerCase()
+          .includes(searchTerm.toLowerCase()) ||
         p.fac_nombre.toLowerCase().includes(searchTerm.toLowerCase())
     );
 

@@ -1,73 +1,107 @@
 import { create } from "zustand";
-import {
-  loginAdminService,
-  loginStudentService,
-} from "../../services/Auth/authService";
+import { login, logout, getAccessToken } from "../../services/Auth/authService";
+import { jwtDecode } from "jwt-decode";
 
-type Role = "estudiante" | "administrador" | "asignador" | null;
+type Role = "administrador" | "asignador" | "ambos" | null;
 
 interface AuthState {
   token: string | null;
   role: Role;
-  userId: number | null; // Codigo del estudiante o ID del usuario
+  username: string | null;
+  userId: string | null;
   loading: boolean;
   error: string | null;
 
-  // Métodos de autenticación
-  loginStudent: (code: string) => Promise<void>;
   loginAdmin: (username: string, password: string) => Promise<void>;
   logout: () => void;
+  initializeAuth: () => void;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
+  // ESTADO INICIAL
   token: null,
   role: null,
+  username: null,
   userId: null,
   loading: false,
   error: null,
 
-  loginStudent: async (code: string) => {
-    set({ loading: true, error: null });
-    try {
-      const data = await loginStudentService(code.toString());
-      if (!data) throw new Error("[authStore] Estudiante no encontrado");
+  /**
+   * Inicializa la autenticación desde localStorage
+   */
+  initializeAuth: () => {
+    const token = getAccessToken();
+    if (token) {
+      try {
+        const decodedToken: any = jwtDecode(token);
+        const backendRole = decodedToken.role;
 
-      set({
-        token: data.token ?? null,
-        role: "estudiante",
-        userId: data.codigo ?? null,
-        loading: false,
-      });
+        // Normalizar a minúscula
+        let mappedRole: Role = null;
+        if (backendRole) {
+          const normalizedRole = backendRole.toLowerCase();
 
-      // Almacena el token en localStorage
-      if (data.token) localStorage.setItem("authToken", data.token);
-    } catch (err: any) {
-      set({
-        error: "[authStore] Error en el inicio de sesión del estudiante",
-        loading: false,
-      });
-      throw err;
+          if (normalizedRole === "administrador") {
+            mappedRole = "administrador";
+          } else if (normalizedRole === "asignador") {
+            mappedRole = "asignador";
+          } else if (normalizedRole === "ambos") {
+            mappedRole = "ambos";
+          }
+        }
+
+        set({
+          token,
+          role: mappedRole,
+          username: decodedToken.username || null, // ← Usa username del token
+        });
+      } catch (error) {
+        console.error("[AuthStore] Error decodificando token:", error);
+        logout();
+        set({ token: null, role: null, username: null });
+      }
     }
   },
 
   loginAdmin: async (username: string, password: string) => {
     set({ loading: true, error: null });
+
     try {
-      const data = await loginAdminService(username, password);
-      if (!data || !data.token)
-        throw new Error("[authStore] Credenciales inválidas");
+      const data = await login(username, password);
+      const decodedToken: any = jwtDecode(data.access);
+      const backendRole = decodedToken.role;
 
+      // Normalizar a minúscula
+      let mappedRole: Role = null;
+      if (backendRole) {
+        const normalizedRole = backendRole.toLowerCase();
+
+        if (normalizedRole === "administrador") {
+          mappedRole = "administrador";
+        } else if (normalizedRole === "asignador") {
+          mappedRole = "asignador";
+        } else if (normalizedRole === "ambos") {
+          mappedRole = "ambos";
+        }
+      }
+
+      // Actualizar estado
       set({
-        token: data.token,
-        role: data.role,
-        userId: data.userId ?? null,
+        token: data.access,
+        role: mappedRole,
+        username: username, // ← Guarda el username que usó para login
+        userId: decodedToken.user_id || null,
         loading: false,
+        error: null,
       });
-
-      localStorage.setItem("authToken", data.token);
     } catch (err: any) {
+      console.error("[AuthStore] Error en login:", err);
+      const errorMessage =
+        err.response?.data?.detail ||
+        err.response?.data?.message ||
+        "Credenciales inválidas";
       set({
-        error: "[authStore] Error en el inicio de sesión del administrador",
+        error: errorMessage,
         loading: false,
       });
       throw err;
@@ -75,7 +109,14 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   logout: () => {
-    localStorage.removeItem("authToken");
-    set({ token: null, role: null, userId: null, loading: false, error: null });
+    logout();
+    set({
+      token: null,
+      role: null,
+      username: null,
+      userId: null,
+      loading: false,
+      error: null,
+    });
   },
 }));

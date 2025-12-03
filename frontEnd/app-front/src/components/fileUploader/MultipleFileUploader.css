@@ -1,113 +1,205 @@
 .file-list {
+  /* Modelo de caja */
   display: flex;
+
+  /* Flexbox y Grid */
   flex-direction: column;
   gap: 8px;
+
+  /* Márgenes */
   margin-top: 16px;
 }
 
-/* Ajustes para uso dentro del modal */
 .file-list {
-  max-height: 46vh;
+  /* Modelo de caja */
   overflow-y: auto;
+
+  /* Dimensiones */
+  max-height: 46vh;
+
+  /* Relleno */
   padding-right: 8px;
 }
 
 .file-list-header {
+  /* Márgenes */
   margin-bottom: 6px;
 }
 
-/* Alinea el botón de subir a la derecha dentro del modal */
 .upload-button {
-  margin-top: 16px;
+  /* Flexbox y Grid */
   align-self: flex-end;
+
+  /* Márgenes */
+  margin-top: 16px;
 }
 
-/* columnas en header/filas */
 .file-list-header .col,
 .file-row .col {
+  /* Modelo de caja */
   display: flex;
+
+  /* Flexbox y Grid */
   align-items: center;
 }
 
-.file-list-header .name { flex: 1; }
-.file-list-header .size { width: 140px; text-align: right; }
-.file-list-header .action { width: 48px; }
+.file-list-header .name {
+  /* Flexbox y Grid */
+  flex: 1;
+}
 
-/* Card por archivo */
+.file-list-header .size {
+  /* Dimensiones */
+  width: 140px;
+
+  /* Tipografía */
+  text-align: right;
+}
+
+.file-list-header .action {
+  /* Dimensiones */
+  width: 48px;
+}
+
 .file-item-card {
+  /* Relleno */
   padding: 10px 12px;
-  background-color: #f2f2f2;
+
+  /* Bordes */
   border-radius: 8px;
+
+  /* Fondos */
+  background-color: #f2f2f2;
+
+  /* Colores y efectos */
   box-shadow: none;
+
+  /* Transiciones y animaciones */
   transition: transform 0.12s;
 }
 
-/* fila interna con layout de columnas */
 .file-row {
+  /* Modelo de caja */
   display: flex;
+
+  /* Flexbox y Grid */
   align-items: center;
   gap: 12px;
 }
 
 .file-name {
-  flex: 1;
-  font-size: 14px;
-  color: #1f1f1f;
-  white-space: nowrap;
+  /* Modelo de caja */
   overflow: hidden;
+
+  /* Flexbox y Grid */
+  flex: 1;
+
+  /* Tipografía */
+  font-size: 14px;
+
+  /* Colores y efectos */
+  color: #1f1f1f;
+
+  /* Otras propiedades */
+  white-space: nowrap;
   text-overflow: ellipsis;
 }
 
 .file-size {
+  /* Dimensiones */
   width: 140px;
+
+  /* Tipografía */
   text-align: right;
   font-size: 13px;
+
+  /* Colores y efectos */
   color: #444;
 }
 
-/* Botón de eliminar - papelera pequeño */
 .remove-btn {
-  width: 36px;
-  height: 36px;
-  border-radius: 6px;
-  border: none;
-  background: transparent;
-  color: #6b6b6b;
-  cursor: pointer;
+  /* Modelo de caja */
   display: inline-flex;
+
+  /* Flexbox y Grid */
   align-items: center;
   justify-content: center;
+
+  /* Dimensiones */
+  width: 36px;
+  height: 36px;
+
+  /* Bordes */
+  border-radius: 6px;
+  border: none;
+
+  /* Fondos */
+  background: transparent;
+
+  /* Colores y efectos */
+  color: #6b6b6b;
+
+  /* Transiciones y animaciones */
   transition: background 0.12s, color 0.12s;
+
+  /* Interactividad */
+  cursor: pointer;
 }
 
 .remove-btn:hover {
-  background: rgba(0,0,0,0.04);
+  /* Fondos */
+  background: rgba(0, 0, 0, 0.04);
+
+  /* Colores y efectos */
   color: #d9363e;
 }
 
-/* Input de subir archivo */
 .custom-file-upload {
+  /* Modelo de caja */
   display: inline-block;
+
+  /* Relleno */
   padding: 0.6rem 1.2rem;
-  border: 1px solid #007bff;
-  border-radius: 6px;
-  background-color: #007bff;
-  color: #fff;
-  font-weight: 500;
+
+  /* Bordes */
+  border: none;
+  border-radius: 8px;
+
+  /* Fondos */
+  background-color: #08326b;
+
+  /* Tipografía */
+  font-weight: 600;
+  font-size: 0.95rem;
+  text-align: center;
+
+  /* Colores y efectos */
+  color: white;
+
+  /* Transiciones y animaciones */
+  transition: background-color 0.2s;
+
+  /* Interactividad */
   cursor: pointer;
 }
 
 .custom-file-upload input {
+  /* Modelo de caja */
   display: none;
 }
 
 .custom-file-upload:hover {
+  /* Fondos */
   background-color: #0056b3;
-  border-color: #0056b3;
 }
 
 .upload-button {
-  margin-top: 16px;
-  align-self: flex-end;
+  /* Modelo de caja */
   display: inline-block;
+
+  /* Flexbox y Grid */
+  align-self: flex-end;
+
+  /* Márgenes */
+  margin-top: 16px;
 }

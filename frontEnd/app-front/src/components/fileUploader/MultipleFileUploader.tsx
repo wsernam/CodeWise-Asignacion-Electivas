@@ -116,19 +116,38 @@ const MultipleFileUploader: React.FC<MultipleFileUploaderProps> = ({
 
   return (
     <>
-      <div className="uploader-header">
-        <label className="custom-file-upload">
-          Seleccionar archivos
+      <div
+        className="uploader-header"
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: "16px",
+        }}
+      >
+        {/* Botón de Seleccionar archivos - CON ESTILO DE BUTTON */}
+        <div>
           <input
+            id="file-upload-input"
             type="file"
             multiple
             accept=".xlsx,.xls,.xlsm,.xltm,.xltx,.csv"
             onChange={handleFileChange}
+            style={{ display: "none" }}
           />
-        </label>
+          <Button
+            variant="primary"
+            size="medium"
+            onClick={() =>
+              document.getElementById("file-upload-input")?.click()
+            }
+          >
+            Seleccionar archivos
+          </Button>
+        </div>
 
         {files.length > 0 && (
-          <Button variant="secondary" size="small" onClick={handleClearAll}>
+          <Button variant="secondary" size="medium" onClick={handleClearAll}>
             Limpiar todo
           </Button>
         )}
@@ -146,8 +165,15 @@ const MultipleFileUploader: React.FC<MultipleFileUploaderProps> = ({
               padding="sm"
               className="file-item-card"
             >
-              <div className="file-row">
-                <div className="file-info">
+              <div
+                className="file-row"
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+              >
+                <div className="file-info" style={{ flex: 1 }}>
                   <div className="file-name">{file.name}</div>
                   <div className="file-size">{formatSize(file.size)}</div>
                 </div>

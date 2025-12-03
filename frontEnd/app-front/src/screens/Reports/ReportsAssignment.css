@@ -1,0 +1,315 @@
+.reports-page-container {
+  /* Dimensiones */
+  min-height: 100vh;
+
+  /* Fondos */
+  background: transparent;
+}
+
+.reports-content {
+  /* Dimensiones */
+  width: 100%;
+
+  /* Relleno */
+  padding: 2rem;
+}
+
+.reports-card {
+  /* Relleno */
+  padding: 2rem;
+}
+
+.reports-header {
+  /* Márgenes */
+  margin-bottom: 2rem;
+
+  /* Tipografía */
+  text-align: center;
+}
+
+.reports-header h2 {
+  /* Márgenes */
+  margin-bottom: 0.5rem;
+
+  /* Tipografía */
+  font-size: 1.8rem;
+
+  /* Colores y efectos */
+  color: #222;
+}
+
+.reports-header p {
+  /* Tipografía */
+  font-size: 1.1rem;
+
+  /* Colores y efectos */
+  color: #666;
+}
+
+.filters-section {
+  /* Márgenes */
+  margin-bottom: 2rem;
+
+  /* Relleno */
+  padding: 1.5rem;
+
+  /* Bordes */
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+
+  /* Fondos */
+  background: #f8f9fa;
+}
+
+.filters-section h3 {
+  /* Márgenes */
+  margin-bottom: 1rem;
+
+  /* Tipografía */
+  font-size: 1.3rem;
+
+  /* Colores y efectos */
+  color: #333;
+}
+
+.filters-grid {
+  /* Modelo de caja */
+  display: grid;
+
+  /* Flexbox y Grid */
+  gap: 1.5rem;
+  align-items: end;
+
+  /* Otras propiedades */
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+
+.filter-group {
+  /* Modelo de caja */
+  display: flex;
+
+  /* Flexbox y Grid */
+  flex-direction: column;
+}
+
+.filter-label {
+  /* Márgenes */
+  margin-bottom: 0.5rem;
+
+  /* Tipografía */
+  font-weight: 600;
+  font-size: 0.9rem;
+
+  /* Colores y efectos */
+  color: #333;
+}
+
+.filter-select {
+  /* Relleno */
+  padding: 0.75rem;
+
+  /* Bordes */
+  border: 1px solid #ddd;
+  border-radius: 6px;
+
+  /* Fondos */
+  background: white;
+
+  /* Tipografía */
+  font-size: 1rem;
+
+  /* Transiciones y animaciones */
+  transition: border-color 0.2s;
+}
+
+.filter-select:focus {
+  /* Bordes */
+  border-color: #1e40af;
+
+  /* Colores y efectos */
+  box-shadow: 0 0 0 2px rgba(30, 64, 175, 0.1);
+
+  /* Otras propiedades */
+  outline: none;
+}
+
+.generate-btn {
+  /* Dimensiones */
+  width: 100%;
+
+  /* Relleno */
+  padding: 0.75rem;
+
+  /* Tipografía */
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.pdf-viewer-section {
+  /* Márgenes */
+  margin-top: 2rem;
+}
+
+.pdf-viewer-section h3 {
+  /* Márgenes */
+  margin-bottom: 1rem;
+
+  /* Tipografía */
+  font-size: 1.3rem;
+
+  /* Colores y efectos */
+  color: #333;
+}
+
+.pdf-viewer {
+  /* Modelo de caja */
+  display: flex;
+
+  /* Flexbox y Grid */
+  align-items: center;
+  justify-content: center;
+
+  /* Dimensiones */
+  min-height: 500px;
+
+  /* Bordes */
+  border: 2px dashed #ddd;
+  border-radius: 8px;
+
+  /* Fondos */
+  background: #fafafa;
+
+  /* Transiciones y animaciones */
+  transition: border-color 0.2s;
+}
+
+.pdf-viewer.has-pdf {
+  /* Bordes */
+  border: 2px solid #e9ecef;
+
+  /* Fondos */
+  background: white;
+}
+
+.pdf-iframe {
+  /* Dimensiones */
+  width: 100%;
+  height: 500px;
+
+  /* Bordes */
+  border: none;
+  border-radius: 4px;
+}
+
+.pdf-placeholder {
+  /* Relleno */
+  padding: 2rem;
+
+  /* Tipografía */
+  text-align: center;
+
+  /* Colores y efectos */
+  color: #666;
+}
+
+.pdf-placeholder p {
+  /* Márgenes */
+  margin: 0;
+
+  /* Tipografía */
+  font-size: 1.1rem;
+}
+
+.filters-grid {
+  /* Modelo de caja */
+  display: grid;
+
+  /* Flexbox y Grid */
+  gap: 1rem;
+  align-items: end;
+
+  /* Otras propiedades */
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+
+.generate-button-container {
+  /* Modelo de caja */
+  display: flex;
+
+  /* Flexbox y Grid */
+  justify-content: center;
+
+  /* Otras propiedades */
+  grid-column: span 1;
+}
+
+.generate-btn {
+  /* Dimensiones */
+  min-width: 150px;
+  max-width: 200px;
+}
+
+.filters-section {
+  /* Márgenes */
+  margin-bottom: 2rem;
+}
+
+.filters-grid {
+  /* Modelo de caja */
+  display: grid;
+
+  /* Flexbox y Grid */
+  gap: 1rem;
+  align-items: end;
+
+  /* Otras propiedades */
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+
+.filter-group {
+  /* Modelo de caja */
+  display: flex;
+
+  /* Flexbox y Grid */
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.generate-button-container {
+  /* Modelo de caja */
+  display: flex;
+
+  /* Flexbox y Grid */
+  justify-content: center;
+  align-items: flex-end;
+
+  /* Márgenes */
+  margin-top: 2rem;
+
+  /* Otras propiedades */
+  grid-column: span 1;
+}
+
+.generate-btn {
+  /* Dimensiones */
+  min-width: 150px;
+  max-width: 200px;
+  height: 40px;
+}
+
+.filter-select,
+input.filter-select {
+  /* Dimensiones */
+  width: 100%;
+  height: 40px;
+
+  /* Relleno */
+  padding: 0.5rem;
+
+  /* Bordes */
+  border: 1px solid #d9d9d9;
+  border-radius: 4px;
+
+  /* Tipografía */
+  font-size: 14px;
+}

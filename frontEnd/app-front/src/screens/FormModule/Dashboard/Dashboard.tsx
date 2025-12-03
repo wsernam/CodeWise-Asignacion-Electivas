@@ -102,9 +102,7 @@ const Dashboard: React.FC = () => {
     const programasActivos = activePrograms.map((p) => p.pro_nombre);
 
     // Solo mostrar programas que tienen electivas activas
-    const programasFiltrados = programasActivos.filter((programa) =>
-      programasConElectivas.has(programa)
-    );
+    const programasFiltrados = programasActivos;
 
     return ["Todos", ...programasFiltrados];
   }, [activeElectives, activePrograms]);

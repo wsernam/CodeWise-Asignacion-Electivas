@@ -120,8 +120,6 @@ const CreateProgram: React.FC = () => {
    */
   const validateCodigo = (_: any, value: string) => {
     if (!value) return Promise.reject("Por favor ingresa el código");
-    if (!/^\d+$/.test(value))
-      return Promise.reject("El código debe contener solo números");
     if (value.length < 2 || value.length > 10)
       return Promise.reject("El código debe tener entre 2 y 10 dígitos");
     return Promise.resolve();
@@ -203,7 +201,7 @@ const CreateProgram: React.FC = () => {
 
       // Preparar datos para enviar al backend
       const cleanedValues: Program = {
-        pro_codigo: parseInt(values.pro_codigo),
+        pro_codigo: values.pro_codigo,
         pro_nombre: values.pro_nombre.trim().replace(/\s+/g, " "),
         fac_codigo: facultadSeleccionada.fac_codigo,
         fac_nombre: values.fac_nombre,
@@ -355,27 +353,32 @@ const CreateProgram: React.FC = () => {
               </Select>
             </Form.Item>
 
-            {/* Botón de Guardar */}
+            {/* Botones */}
             <Form.Item>
-              <Button
-                type="submit"
-                variant="primary"
-                size="medium"
-                disabled={!isFormValid}
+              <div
+                style={{
+                  display: "flex",
+                  gap: "1rem",
+                  width: "100%",
+                }}
               >
-                Guardar
-              </Button>
-            </Form.Item>
-
-            {/* Botón de Volver */}
-            <Form.Item>
-              <Button
-                variant="ghost"
-                onClick={() => navigate("/programs")}
-                size="medium"
-              >
-                Volver
-              </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => navigate("/programs")}
+                  size="medium"
+                >
+                  Volver
+                </Button>
+                <Button
+                  type="submit"
+                  variant="primary"
+                  size="medium"
+                  disabled={!isFormValid}
+                >
+                  Guardar
+                </Button>
+              </div>
             </Form.Item>
           </Form>
         </Card>

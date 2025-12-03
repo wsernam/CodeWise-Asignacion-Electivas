@@ -1,0 +1,27 @@
+.next-button {
+  background-color: #1f297f;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 0.75rem 1.5rem;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 600;
+  width: 100%;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.next-button:hover:not(.disabled) {
+  background-color: #14206d;
+  transform: translateY(-1px);
+}
+
+.next-button.disabled {
+  background-color: #cccccc;
+  color: #666666;
+  cursor: not-allowed;
+  transform: none;
+}

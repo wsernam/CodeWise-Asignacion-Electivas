@@ -18,8 +18,8 @@ interface ProgramState {
   fetchPrograms: () => Promise<void>;
   fetchFaculties: () => Promise<void>;
   addProgram: (program: Program) => Promise<void>;
-  updateProgram: (pro_codigo: number, updated: Program) => Promise<void>;
-  getProgramByCode: (pro_codigo: number) => Promise<Program | null>;
+  updateProgram: (pro_codigo: string, updated: Program) => Promise<void>;
+  getProgramByCode: (pro_codigo: string) => Promise<Program | null>;
   searchPrograms: (searchTerm: string) => Promise<Program[]>;
   getProgramStats: () => Promise<{
     total: number;
@@ -43,6 +43,7 @@ export const useProgramStore = create<ProgramState>((set) => ({
   /**
    * Obtiene todos los programas desde el backend
    */
+  
   fetchPrograms: async () => {
     console.log("[ProgramStore] Cargando programas...");
     set({ loading: true, error: null });
@@ -101,7 +102,7 @@ export const useProgramStore = create<ProgramState>((set) => ({
    * @param pro_codigo - Código del programa a actualizar
    * @param updated - Datos actualizados del programa
    */
-  updateProgram: async (pro_codigo: number, updated: Program) => {
+  updateProgram: async (pro_codigo: string, updated: Program) => {
     console.log(`[ProgramStore] Actualizando programa ${pro_codigo}`);
     try {
       const updatedProgram = await updateProgram(updated);
@@ -123,7 +124,7 @@ export const useProgramStore = create<ProgramState>((set) => ({
    * @param pro_codigo - Código del programa a buscar
    * @returns Programa encontrado o null si no existe
    */
-  getProgramByCode: async (pro_codigo: number) => {
+  getProgramByCode: async (pro_codigo: string) => {
     console.log(`[ProgramStore] Buscando programa: ${pro_codigo}`);
     return await getProgramByCode(pro_codigo);
   },
