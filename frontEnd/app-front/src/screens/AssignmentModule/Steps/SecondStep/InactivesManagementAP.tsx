@@ -98,6 +98,7 @@ const InactivesManagementAP: React.FC<AssignmentProcessProps> = ({
         id: index + 1,
         codigo: row.codigo?.toString() || "",
         nombre: "",
+        // Datos que vienen del backend para identificar la fila
         apellido: "",
         programa: "",
         creditosObligatorios: "",
@@ -160,55 +161,59 @@ const InactivesManagementAP: React.FC<AssignmentProcessProps> = ({
 
   // Envía los datos al backend
   const handleSave = async () => {
-    try {
-      if (inactiveRows.length === 0) {
-        setConfirmMessage(
-          "No hay estudiantes inactivos para procesar. ¿Desea continuar?"
-        );
-        setShowConfirm(true);
-        return;
-      }
-
-      if (hayEstudiantesInactivos()) {
-        setConfirmMessage(
-          "Hay estudiantes inactivos con datos incompletos o inválidos. ¿Desea continuar?"
-        );
-        setShowConfirm(true);
-        return;
-      }
-
-      // Preparar datos para enviar al backend si hay por completar
-      const filasACompletar = inactiveRows
-        .filter((row) => row.codigo)
-        .map((row) => ({
-          archivo: "archivo_procesado",
-          fila: row.id,
-          datos: {
-            codigo_estudiante: row.codigo,
-            nombre: row.nombre,
-            apellido: row.apellido,
-            programa: row.programa,
-            creditos_obligatorios: parseInt(row.creditosObligatorios) || 0,
-            periodos_matriculados: parseInt(row.periodosMatriculados) || 0,
-            porcentaje_avance: parseFloat(row.porcentajeAvance) || 0,
-          },
-        }));
-
-      console.log("Enviando datos al backend:", filasACompletar);
-
-      // Enviar al backend para procesamiento final
-      await completarYProcesar(filasACompletar);
-      setConfirmMessage("Cambios guardados exitosamente. ¿Desea continuar?");
+    // 1. Determinar si hay estudiantes con datos inválidos o incompletos.
+    // Si el usuario decide continuar, estos estudiantes no se incluirán en la importación final.
+    if (hayEstudiantesInactivos()) {
+      setConfirmMessage(
+        "Hay estudiantes con datos incompletos o inválidos. Si continúa, solo se procesarán los estudiantes con datos completos. ¿Desea continuar?"
+      );
       setShowConfirm(true);
+      return; // Muestra el modal y espera la confirmación del usuario.
+    }
+
+    // Si todos los datos son válidos o no hay filas, procede directamente.
+    await procesarYContinuar();
+  };
+
+  // Función que realmente llama al backend y avanza.
+  const procesarYContinuar = async () => {
+    try {
+      // 2. Preparar los datos para enviar al backend.
+      // Filtramos solo las filas que el usuario completó y que son válidas.
+      const filasACompletar = inactiveRows
+        .filter((row) => !hayEstudiantesInactivos()) // Solo las filas completas y válidas
+        .map((row) => {
+          const originalRow = incompleteRows.find(
+            (ir) => ir.codigo.toString() === row.codigo
+          );
+          return {
+            archivo: originalRow?.archivo || "", // Nombre de archivo original
+            fila: originalRow?.fila || 0, // Número de fila original
+            datos: {
+              // Nombres de campo que el backend espera
+              CREDITOS_APROBADOS: parseInt(row.creditosObligatorios) || 0,
+              PROMEDIO_CARRERA: parseFloat(row.porcentajeAvance) || 0, // Asumiendo que porcentajeAvance es el promedio
+              APROBADAS: 0, // Este campo no está en el formulario, se envía 0
+              PERIODOS_MATRICULADOS: parseInt(row.periodosMatriculados) || 0,
+            },
+          };
+        });
+
+      // 3. Llamar al endpoint. Si `filasACompletar` está vacío, el backend solo procesará.
+      await completarYProcesar(filasACompletar);
+
+      // 4. Si la llamada es exitosa, avanzar al siguiente paso.
+      setShowConfirm(false); // Cierra el modal de confirmación si estaba abierto
+      setShowModal(false);
+      onNext();
     } catch (error) {
       console.error("Error guardando cambios:", error);
     }
   };
 
   const handleConfirmSave = () => {
-    setShowConfirm(false);
-    setShowModal(false);
-    onNext();
+    // Esta función ahora solo llama a la lógica de procesamiento.
+    procesarYContinuar();
   };
 
   return (

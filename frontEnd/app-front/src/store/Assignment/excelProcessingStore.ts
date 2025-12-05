@@ -140,15 +140,13 @@ export const useExcelProcessingStore = create<ExcelProcessingState>(
      * Paso final después de completar todas las validaciones
      */
     importarPerfiles: async (files: File[]) => {
-      set({ loading: true, error: null });
-      try {
-        const result = await excelProcessingService.importarPerfiles(files);
-        set({ loading: false });
-        return result;
-      } catch (error: any) {
-        set({ loading: false, error: error.message });
-        throw error;
-      }
+      // REUTILIZACIÓN DE LÓGICA:
+      // En lugar de tener una llamada de API separada, reutilizamos
+      // `completarYProcesar`. Si no se pasan filas, simplemente le pide
+      // al backend que procese los archivos en caché y los importe.
+      // Esto soluciona el bug donde la importación final no se llamaba.
+      // El parámetro `files` se ignora, ya que los archivos ya están en caché.
+      return get().completarYProcesar();
     },
 
     clearError: () => set({ error: null }),
