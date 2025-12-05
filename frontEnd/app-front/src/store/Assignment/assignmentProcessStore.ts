@@ -18,6 +18,13 @@ interface AssignmentProcessState {
   eliminarProceso: (procesoId: number) => Promise<void>;
   eliminarProcesoCompleto: (procesoId: number) => Promise<void>;
   ejecutarAsignacion: () => Promise<any>;
+  verificarCondicionesCreacion: (
+    anio: number,
+    semestre: number
+  ) => Promise<{
+    puedeCrear: boolean;
+    razones: string[];
+  }>;
   clearError: () => void;
   reset: () => void;
 }
@@ -48,6 +55,41 @@ export const useAssignmentProcessStore = create<AssignmentProcessState>(
     error: null,
 
     // ========== ACCIONES ==========
+
+    /**
+     * VERIFICAR CONDICIONES PARA CREAR PROCESO
+     * @param anio - Año del proceso
+     * @param semestre - Semestre del proceso
+     * @returns Objeto con si se puede crear y las razones en caso negativo
+     */
+    verificarCondicionesCreacion: async (anio: number, semestre: number) => {
+      set({ loading: true, error: null });
+
+      const razones: string[] = [];
+
+      try {
+        // 1. Verificar si ya existe un proceso para ese periodo
+        const todosProcesos =
+          await assignmentProcessService.obtenerTodosLosProcesos();
+
+        const procesoExistente = todosProcesos.find(
+          (p) => p.pa_anio === anio && p.pa_num_semestre === semestre
+        );
+
+        if (procesoExistente) {
+          razones.push(
+            `Ya existe un proceso de asignación para el periodo ${anio}-${semestre}`
+          );
+        }
+        const puedeCrear = razones.length === 0;
+
+        set({ loading: false });
+        return { puedeCrear, razones };
+      } catch (error: any) {
+        set({ loading: false, error: error.message });
+        throw error;
+      }
+    },
 
     /**
      * CREAR NUEVO PROCESO DE ASIGNACIÓN

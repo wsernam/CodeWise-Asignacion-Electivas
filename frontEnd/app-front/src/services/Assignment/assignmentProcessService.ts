@@ -261,4 +261,42 @@ export const assignmentProcessService = {
       throw error;
     }
   },
+  // Valida si hay ofertas activas
+  async verificarEstadoFormulario(): Promise<{ formStatus: boolean }> {
+    try {
+      // Asumiendo que tienes un endpoint para el estado del formulario
+      const response = await apiClient.get(
+        `${ASSIGNMENT_API_BASE_URL_PRIVATE}api/form/status/`
+      );
+      return response.data;
+    } catch (error) {
+      console.error(
+        "[assignmentProcessService] Error verificando estado formulario:",
+        error
+      );
+      throw error;
+    }
+  },
+
+  async verificarOfertasActivas(
+    anio: number,
+    semestre: number
+  ): Promise<boolean> {
+    try {
+      // Verificar si hay ofertas activas para el periodo
+      const response = await apiClient.get(
+        `${ASSIGNMENT_API_BASE_URL_PRIVATE}api/ofertas/verificar-activas/`,
+        {
+          params: { anio, semestre },
+        }
+      );
+      return response.data.hay_ofertas_activas;
+    } catch (error) {
+      console.error(
+        "[assignmentProcessService] Error verificando ofertas activas:",
+        error
+      );
+      throw error;
+    }
+  },
 };

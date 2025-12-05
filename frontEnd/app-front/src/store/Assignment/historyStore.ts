@@ -1,5 +1,4 @@
 import { create } from "zustand";
-import { assignmentProcessService } from "../../services/Assignment";
 import type { AssignmentProcess } from "../../models/Assignment/assignmentProcess";
 
 interface ProcessWithStatus extends AssignmentProcess {
