@@ -93,7 +93,12 @@ const LoginStudent: React.FC = () => {
                 marginTop: "2rem",
               }}
             >
-              <Button type="button" onClick={handleBack} size="large">
+              <Button
+                type="button"
+                onClick={handleBack}
+                size="large"
+                variant="ghost"
+              >
                 Volver
               </Button>
 
