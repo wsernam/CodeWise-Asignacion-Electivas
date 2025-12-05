@@ -28,7 +28,7 @@ const CreateAssignmentProcess: React.FC<AssignmentProcessProps> = ({
     message: "",
   });
 
-  const { crearProceso, loading, error, clearError } =
+  const { crearProceso, verificarCondicionesCreacion, loading, clearError } =
     useAssignmentProcessStore();
   const { setCurrentStep, addCompletedStep } = useAssignmentFlowStore();
 
@@ -46,7 +46,7 @@ const CreateAssignmentProcess: React.FC<AssignmentProcessProps> = ({
     return [currentYear, currentYear + 1, currentYear + 2];
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!isFormValid) {
       setWarning({
         open: true,
@@ -55,7 +55,28 @@ const CreateAssignmentProcess: React.FC<AssignmentProcessProps> = ({
       });
       return;
     }
-    setShowConfirm(true);
+
+    try {
+      // Validar condiciones antes de mostrar confirmación
+      const validacion = await verificarCondicionesCreacion(year!, semester!);
+
+      if (!validacion.puedeCrear) {
+        // Mostrar todas las razones en un solo mensaje
+        const mensajeError = validacion.razones.join("\n• ");
+        setWarning({
+          open: true,
+          message: `No se puede crear el proceso porque:\n ${mensajeError}`,
+        });
+        return;
+      }
+      setShowConfirm(true);
+    } catch (error: any) {
+      console.error("[CreateProcess] Error en validación:", error);
+      setWarning({
+        open: true,
+        message: "Error al verificar las condiciones. Intente nuevamente.",
+      });
+    }
   };
 
   const handleConfirmSave = async () => {
@@ -79,18 +100,32 @@ const CreateAssignmentProcess: React.FC<AssignmentProcessProps> = ({
       }
     } catch (error: any) {
       console.error("[CreateProcess] Error creando proceso:", error);
-      const message = error.message;
-      if (
-        message.includes(
-          "The fields pa_anio, pa_num_semestre must make a unique set."
-        )
+
+      // Manejo de errores específicos
+      const message = error.message || "";
+
+      if (message.includes("must make a unique set")) {
+        // Ya existe para ese año/semestre
+        setWarning({
+          open: true,
+          message: `Ya existe un proceso de asignación para el periodo ${year}-${semester}.`,
+        });
+      } else if (
+        message.includes("proceso activo") ||
+        message.includes("activo")
       ) {
+        // Ya hay un proceso activo (independiente del año/semestre)
         setWarning({
           open: true,
           message:
-            "Ya existe un proceso de asignación para el año y semestre seleccionados.",
+            "Ya existe un proceso de asignación Activo. Debe finalizar el proceso actual antes de crear uno nuevo.",
         });
       } else {
+        setWarning({
+          open: true,
+          message:
+            "Error al crear el proceso de asignación. Por favor, intente nuevamente.",
+        });
       }
     }
   };
@@ -153,14 +188,6 @@ const CreateAssignmentProcess: React.FC<AssignmentProcessProps> = ({
 
         {/* Mostrar estado de carga y error */}
         {loading && <p>Creando proceso de asignación...</p>}
-        {error && (
-          <div
-            className="error-message"
-            style={{ color: "red", marginBottom: "16px" }}
-          >
-            Error: {"Ha ocurrido un error al crear el proceso de asignación."}
-          </div>
-        )}
 
         <div
           className="form-create-actions"
@@ -172,20 +199,20 @@ const CreateAssignmentProcess: React.FC<AssignmentProcessProps> = ({
           }}
         >
           <Button
-            variant="primary"
-            onClick={handleSave}
-            className="btn-save-assignment-process"
-            disabled={loading}
-          >
-            {loading ? "Creando..." : "Guardar"}
-          </Button>
-          <Button
             variant="secondary"
             onClick={onCancel}
             className="btn-cancel-assignment-process"
             disabled={loading}
           >
             Cancelar
+          </Button>
+          <Button
+            variant="primary"
+            onClick={handleSave}
+            className="btn-save-assignment-process"
+            disabled={loading}
+          >
+            {loading ? "Creando..." : "Guardar"}
           </Button>
         </div>
       </div>

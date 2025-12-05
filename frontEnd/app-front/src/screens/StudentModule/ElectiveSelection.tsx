@@ -113,14 +113,16 @@ const ElectiveSelection: React.FC = () => {
         (e: IElective) => e.ele_codigo === intem.ele_codigo
       );
       if (!elective) {
-        throw new Error(`Electiva con código ${intem.ele_codigo} no encontrada`);
+        throw new Error(
+          `Electiva con código ${intem.ele_codigo} no encontrada`
+        );
       }
       return {
         ele_codigo: elective.ele_codigo,
         sel_prioridad: i + 1,
         ele_nombre: elective.ele_nombre,
-      }
-    })
+      };
+    });
 
     // Construir ISelectionStudentElective
     const selectionsPayload: ISelectionStudentElective = {
@@ -132,24 +134,25 @@ const ElectiveSelection: React.FC = () => {
     };
 
     try {
-    await addSelection(selectionsPayload);
-    setShowSuccess(true);
-  } catch (error: any) {
-    console.log("[ElectiveSelection] Error al registrar selección:", error);
-    
-    // Usar el mensaje del error capturado
-    const errorMessage = error.message || 
-      "Error al registrar la selección de electivas. Por favor, intenta nuevamente.";
-    
-    setWarning({
-      open: true,
-      message: errorMessage,
-    });
-  }
-};
+      await addSelection(selectionsPayload);
+      setShowSuccess(true);
+    } catch (error: any) {
+      console.log("[ElectiveSelection] Error al registrar selección:", error);
+
+      // Usar el mensaje del error capturado
+      const errorMessage =
+        error.message ||
+        "Error al registrar la selección de electivas. Por favor, intenta nuevamente.";
+
+      setWarning({
+        open: true,
+        message: errorMessage,
+      });
+    }
+  };
 
   const handleBack = () => {
-    navigate("/personal-info");
+    navigate("/login-student");
   };
 
   if (!studentData) {
@@ -157,18 +160,21 @@ const ElectiveSelection: React.FC = () => {
   }
 
   return (
-    <div className="form-page-container" style={{
-      display: "flex",
-      flexDirection: "column",
-      height: "100vh"
-    }}>
+    <div
+      className="form-page-container"
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        height: "100vh",
+      }}
+    >
       <Header />
 
       <div
         className="form-page-content"
         style={{
           flex: 1,
-          overflowY: "auto"
+          overflowY: "auto",
         }}
       >
         <div style={{ maxWidth: "800px", width: "100%" }}>
@@ -279,7 +285,6 @@ const ElectiveSelection: React.FC = () => {
               )}
             </div>
 
-            {/* Botones de Acción - Mismos colores que Offer */}
             <div
               style={{
                 display: "flex",
@@ -288,18 +293,18 @@ const ElectiveSelection: React.FC = () => {
                 gap: "var(--space-md)",
               }}
             >
-              {/* Botón Volver - Color secundario (gris) como en Offer */}
-              <Button variant="primary" onClick={handleBack} disabled={loading}>
-                Volver
+              <Button
+                variant="secondary"
+                onClick={handleBack}
+                disabled={loading}
+              >
+                Cancelar
               </Button>
 
-              {/* Botón Finalizar - Color primario (azul) como en Offer */}
               <Button
                 variant="primary"
                 onClick={handleSubmit}
-                disabled={
-                  hasDuplicateElectives()
-                }
+                disabled={hasDuplicateElectives()}
               >
                 {loading ? "Registrando..." : "Finalizar Registro"}
               </Button>

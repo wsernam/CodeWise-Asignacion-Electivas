@@ -358,7 +358,7 @@ const CreateProgram: React.FC = () => {
               <div
                 style={{
                   display: "flex",
-                  gap: "1rem",
+                  justifyContent: "space-between",
                   width: "100%",
                 }}
               >

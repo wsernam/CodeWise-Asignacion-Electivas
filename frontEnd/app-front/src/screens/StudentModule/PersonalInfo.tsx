@@ -9,12 +9,13 @@ import Footer from "../../components/layout/Footer/Footer";
 import Card from "../../components/ui/Card/Card";
 import Button from "../../components/ui/Button/Button";
 import WarningModal from "../../components/shared/WarningModal/WarningModal";
+import ConfirmModal from "../../components/shared/ConfirmModal/ConfirmModal";
+
 // Stores
 import { useStudentStore } from "../../store/Form/studentStore";
 import { useProgramStore } from "../../store/Form/programStore";
 import { getStudentById } from "../../services/Form/studentService";
 import { useLocation } from "react-router";
-
 
 const { Option } = Select;
 
@@ -39,6 +40,8 @@ const PersonalInfo: React.FC = () => {
     open: false,
     message: "",
   });
+
+  const [showConfirm, setShowConfirm] = useState(false);
 
   useEffect(() => {
     fetchPrograms();
@@ -87,7 +90,6 @@ const PersonalInfo: React.FC = () => {
   const handleBack = () => {
     navigate("/login-student");
   };
-
   const handleNext = async () => {
     // Validar todos los campos
     const codigoError = validateCodigo(formData.codigo);
@@ -110,6 +112,12 @@ const PersonalInfo: React.FC = () => {
       setWarning({ open: true, message: errors.join(". ") });
       return;
     }
+    setShowConfirm(true);
+  };
+
+  // ✅ CORRECTO: handleConfirmSubmit es una función separada
+  const handleConfirmSubmit = async () => {
+    setShowConfirm(false);
 
     // Guardar los datos del estudiante
     try {
@@ -138,7 +146,6 @@ const PersonalInfo: React.FC = () => {
       console.log("[student Screen] Error al agregar estudiante:", error);
     }
   };
-
   return (
     <div className="form-page-container">
       <Header />
@@ -376,11 +383,23 @@ const PersonalInfo: React.FC = () => {
               </div>
             </div>
 
-            {/* Botón Siguiente - Color primario como en Offer */}
-            <div style={{ textAlign: "center", marginTop: "var(--space-xl)" }}>
+            {/* Botones de Acción - Volver a la izquierda, Siguiente a la derecha */}
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                marginTop: "var(--space-xl)",
+                gap: "var(--space-md)",
+              }}
+            >
+              {/* Botón Volver - Color secundario */}
+              <Button variant="ghost" onClick={handleBack}>
+                Volver
+              </Button>
+
+              {/* Botón Siguiente - Color primario */}
               <Button
                 variant="primary"
-                size="medium"
                 onClick={handleNext}
                 disabled={
                   !formData.codigo ||
@@ -393,15 +412,19 @@ const PersonalInfo: React.FC = () => {
                 Siguiente
               </Button>
             </div>
-            {/* Sección del botón volver */}
-            <div className="back-button-section">
-              <Button onClick={handleBack}>Volver</Button>
-            </div>
           </Card>
         </div>
       </div>
 
       <Footer />
+
+      {/* AGREGAR MODAL DE CONFIRMACIÓN */}
+      <ConfirmModal
+        open={showConfirm}
+        message="¿Estás seguro de registrar tus datos personales? Esta información quedará guardada de forma permanente y no podrá ser modificada."
+        onConfirm={handleConfirmSubmit}
+        onCancel={() => setShowConfirm(false)}
+      />
 
       <WarningModal
         open={warning.open}

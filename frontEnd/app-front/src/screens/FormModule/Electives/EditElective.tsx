@@ -261,11 +261,11 @@ const EditElective: React.FC = () => {
             </Form.Item>
 
             {/* Botones */}
-            <Form.Item>
+            <Form.Item style={{ marginTop: "2rem" }}>
               <div
                 style={{
                   display: "flex",
-                  gap: "1rem",
+                  justifyContent: "space-between",
                   width: "100%",
                 }}
               >
@@ -286,16 +286,6 @@ const EditElective: React.FC = () => {
                   Guardar
                 </Button>
               </div>
-            </Form.Item>
-
-            <Form.Item>
-              <Button
-                variant="ghost"
-                onClick={() => navigate("/electives")}
-                size="medium"
-              >
-                Volver
-              </Button>
             </Form.Item>
           </Form>
         </Card>

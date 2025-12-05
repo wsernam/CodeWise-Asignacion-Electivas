@@ -77,6 +77,7 @@
   display: grid;
 
   /* Flexbox y Grid */
+  justify-content: center;
   gap: 1.5rem;
   align-items: end;
 
@@ -89,6 +90,7 @@
   display: flex;
 
   /* Flexbox y Grid */
+  justify-content: center;
   flex-direction: column;
 }
 
