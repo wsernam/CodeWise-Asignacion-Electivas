@@ -53,34 +53,57 @@ const AddElective: React.FC = () => {
 
   // ===== Validaciones =====
   const validateEleCodigo = (_: any, value: string) => {
-    if (!value) return Promise.reject("Por favor ingresa el código");
-    if (value.length < 2 || value.length > 10)
+    // 🔹 Quita solo espacios al final
+    const sanitized = (value ?? "").replace(/\s+$/, "");
+
+    if (!sanitized) {
+      return Promise.reject("Por favor ingresa el código");
+    }
+    if (sanitized.length < 2 || sanitized.length > 10) {
       return Promise.reject("El código debe tener entre 2 y 10 caracteres");
-    if (!/[a-zA-Z]/.test(value))
+    }
+    if (!/[a-zA-Z]/.test(sanitized)) {
       return Promise.reject("El código debe contener al menos una letra");
-    if (!/\d/.test(value))
+    }
+    if (!/\d/.test(sanitized)) {
       return Promise.reject("El código debe contener al menos un número");
-    if (!/^[a-zA-Z0-9]+$/.test(value))
-      return Promise.reject("El código solo puede contener letras y números");
+    }
+    if (!/^[a-zA-Z0-9]+$/.test(sanitized)) {
+      return Promise.reject(
+        "El código solo puede contener letras y números"
+      );
+    }
+
     return Promise.resolve();
   };
 
+
   const validateEleNombre = (_: any, value: string) => {
-    if (!value) return Promise.reject("Por favor ingresa el nombre");
-    if (value.length < 3)
+    const sanitized = (value ?? "").trimEnd(); // 🔹 Ignora solo espacios del final
+
+    if (!sanitized) {
+      return Promise.reject("Por favor ingresa el nombre");
+    }
+    if (sanitized.length < 3) {
       return Promise.reject("El nombre debe tener al menos 3 caracteres");
-    if (value.length > 100)
+    }
+    if (sanitized.length > 100) {
       return Promise.reject("El nombre no puede exceder 100 caracteres");
-    if (/^\s+|\s+$/.test(value))
-      return Promise.reject(
-        "El nombre no puede empezar o terminar con espacios"
-      );
-    if (/\d/.test(value))
+    }
+    // Si quieres seguir evitando espacios al inicio:
+    if (/^\s+/.test(value)) {
+      return Promise.reject("El nombre no puede empezar con espacios");
+    }
+    if (/\d/.test(sanitized)) {
       return Promise.reject("El nombre no puede contener números");
-    if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]+$/.test(value))
+    }
+    if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]+$/.test(sanitized)) {
       return Promise.reject("El nombre solo puede contener letras y espacios");
+    }
+
     return Promise.resolve();
   };
+
 
   const handleFieldTouch = (field: keyof typeof touchedFields) =>
     setTouchedFields((prev) => ({ ...prev, [field]: true }));
@@ -195,14 +218,21 @@ const AddElective: React.FC = () => {
               label="Código"
               rules={[{ validator: validateEleCodigo }]}
               hasFeedback={touchedFields.ele_codigo}
-              validateStatus={touchedFields.ele_codigo ? undefined : ""}
-            >
+              validateStatus={touchedFields.ele_codigo ? undefined : ""}>
               <Input
                 placeholder="Ejemplo: ES104"
                 size="large"
                 maxLength={10}
                 showCount
-                onBlur={() => handleFieldTouch("ele_codigo")}
+                onBlur={(e) => {
+                  const input = e.target as HTMLInputElement;
+                  // Mayúsculas
+                  input.value = input.value.toUpperCase();
+                  // Quitar solo espacios del final
+                  const cleaned = input.value.replace(/\s+$/, "");
+                  form.setFieldsValue({ ele_codigo: cleaned });
+                  handleFieldTouch("ele_codigo");
+                }}
                 onInput={(e: React.FormEvent<HTMLInputElement>) => {
                   const input = e.target as HTMLInputElement;
                   input.value = input.value.toUpperCase();
@@ -210,19 +240,26 @@ const AddElective: React.FC = () => {
               />
             </Form.Item>
 
+
             <Form.Item
               name="ele_nombre"
               label="Nombre de la Electiva"
               rules={[{ validator: validateEleNombre }]}
               hasFeedback={touchedFields.ele_nombre}
               validateStatus={touchedFields.ele_nombre ? undefined : ""}
-            >
+             >
               <Input
                 placeholder="Ejemplo: Desarrollo Web Avanzado"
                 size="large"
                 maxLength={100}
                 showCount
-                onBlur={() => handleFieldTouch("ele_nombre")}
+                onBlur={(e) => {
+                  const value = e.target.value;
+                  // 🔹 Elimina solo espacios del final
+                  const cleaned = value.replace(/\s+$/, "");
+                  form.setFieldsValue({ ele_nombre: cleaned });
+                  handleFieldTouch("ele_nombre");
+                }}
               />
             </Form.Item>
 
