@@ -182,7 +182,8 @@ services:
         # IMPORTANTE: usar la misma convención en todos los microservicios
 
     #SE ELIMINA EL PUERTO EXPUESTO PARA QUE SOLO SEA ACCESIBLE VIA KONG UWU
-      
+    ports:
+      - "8001:8000" # Expone el puerto 8002 para acceder al servicio  
     env_file:
       - .env
     environment:
@@ -225,7 +226,35 @@ services:
       python manage.py run_consumer & 
       python manage.py runserver 0.0.0.0:8000
       "
+#--------------------------------
+#   Micro de notificaciones
+#--------------------------------
+  servicio_envio_notificaciones:
 
+    build:
+      context: ./servicio_envio_notificaciones 
+      dockerfile: Dockerfile
+    container_name: servicio_notificaciones
+    depends_on:
+      - rabbitmq
+    command: >
+      sh -c " python -u ./notificacion/config_rabbit.py &  python -u manage.py migrate && python -u manage.py runserver 0.0.0.0:8002 "
+    ports:
+      - "8004:8000"
+    restart: unless-stopped
+
+    env_file:
+      - .env
+    environment:
+      #__________________________________
+      #RABBITMQ
+      RABBITMQ_HOST: ${RABBITMQ_HOST}
+      RABBITMQ_PORT: ${RABBITMQ_PORT}
+      RABBITMQ_USER: ${RABBITMQ_USER}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
+      RABBITMQ_EXCHANGE: ${RABBITMQ_EXCHANGE}
+      RABBITMQ_DLX: ${RABBITMQ_DLX}
+  
   # -------------------------------
   # RABBITMQ
   # -------------------------------
@@ -319,7 +348,7 @@ services:
       KONG_ADMIN_ERROR_LOG: /dev/stderr
     ports:
       - "8000:8000" # Proxy
-      - "8001:8001" # Admin API
+      - "8005:8001" # Admin API
     volumes:
       - ./kong/kong.yml:/opt/kong/deck/kong.yml
     healthcheck:
