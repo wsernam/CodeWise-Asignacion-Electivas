@@ -16,9 +16,23 @@ class SeleccionEstudianteElectivaViewSet(mixins.CreateModelMixin,
                                        mixins.ListModelMixin,
                                        mixins.RetrieveModelMixin,
                                        viewsets.GenericViewSet):
-    ...
+    
 
     def create(self, request):
+        """
+        Crea una selección de electivas para un estudiante.
+        Recibe:
+        {
+            "est_codigo": 123,
+            "sel_anio": 2025,
+            "sel_num_semestre": 1,
+            "est_correo": ashleecampaz"
+            "electivas": [
+                {"ele_codigo": 101, "sel_prioridad": 1},
+                {"ele_codigo": 102, "sel_prioridad": 2},
+            ]
+        }
+        """
         serializer = CrearSeleccionElectivaDTO(data=request.data)
         serializer.is_valid(raise_exception=True)
 
@@ -28,7 +42,9 @@ class SeleccionEstudianteElectivaViewSet(mixins.CreateModelMixin,
         sel_num_semestre = validated_data["sel_num_semestre"]
         electivas_data = validated_data["electivas"]
 
+        # Usamos una transacción para asegurar que todas las selecciones se creen o ninguna.
         with transaction.atomic():
+            # Creamos una lista de objetos para insertar en lote
             selecciones_a_crear = [
                 SeleccionEstudianteElectiva(
                     est_codigo_id=est_codigo,
@@ -40,32 +56,27 @@ class SeleccionEstudianteElectivaViewSet(mixins.CreateModelMixin,
                 for electiva in electivas_data
             ]
 
-            created_instances = SeleccionEstudianteElectiva.objects.bulk_create(
-                selecciones_a_crear
-            )
-
-            # 👉 Publicar UN evento por cada selección creada
-            def publicar_eventos():
-                for sel in created_instances:
-                    payload = {
-                        "sel_codigo": sel.sel_codigo,
-                        "est_codigo": sel.est_codigo_id,
-                        "sel_anio": sel.sel_anio,
-                        "sel_num_semestre": sel.sel_num_semestre,
-                        "sel_prioridad": sel.sel_prioridad,
-                        "ele_codigo": sel.ele_codigo_id,
-                    }
-                    publish_seleccion_creada(payload)
-
-            transaction.on_commit(publicar_eventos)
-
+            # Usamos bulk_create para una inserción eficiente en la base de datos
+            created_instances = SeleccionEstudianteElectiva.objects.bulk_create(selecciones_a_crear)
+            electivas_prioridad_nombre = []
+            for ele in serializer.data.get("electivas", []):
+                electiva_prioridad =ele
+                electiva =  Electiva.objects.filter(ele_codigo = electiva_prioridad["ele_codigo"]).first()
+                electiva_prioridad["ele_nombre"] = electiva.ele_nombre
+                electivas_prioridad_nombre.append(electiva_prioridad)
+            print(electivas_prioridad_nombre,flush=True)
+            datos_correo = request.data
+            datos_correo["electivas"] = electivas_prioridad_nombre
+            print(datos_correo, flush=True)
+            # Publicamos un evento por cada selección creada
+            transaction.on_commit(lambda: publish_seleccion_creada(datos_correo))
+            
         return Response(
             {
                 "detail": f"Se han registrado {len(created_instances)} electivas para el estudiante {est_codigo}."
             },
             status=status.HTTP_201_CREATED,
         )
-
     
     
 def _serialize_seleccion(s: SeleccionEstudianteElectiva) -> dict:
