@@ -13,7 +13,7 @@ import NextButton from "../../../../components/ui/NextButton/NextButton";
 import SimpleModal from "../../../../components/shared/SimpleModal/SimpleModal";
 import MultipleFileUploader from "../../../../components/fileUploader/MultipleFileUploader";
 import ConfirmModal from "../../../../components/shared/ConfirmModal/ConfirmModal";
-import TooltipInfo from "../../../../components/ui/TooltipInfo/TooltipInfo";
+import TooltipInfo from "../../../../components/shared/TooltipInfo/TooltipInfo";
 import {
   useExcelProcessingStore,
   useAssignmentFlowStore,

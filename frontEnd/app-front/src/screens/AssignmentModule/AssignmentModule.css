@@ -99,6 +99,24 @@
   color: #333;
 }
 
+.process-status-info {
+  /* Modelo de caja */
+  display: flex;
+
+  /* Flexbox y Grid */
+  flex-direction: column;
+  gap: 4px;
+}
+
+.last-update {
+  /* Tipografía */
+  font-size: 12px;
+  font-style: italic;
+
+  /* Colores y efectos */
+  color: #666;
+}
+
 .process-status {
   /* Relleno */
   padding: 6px 16px;

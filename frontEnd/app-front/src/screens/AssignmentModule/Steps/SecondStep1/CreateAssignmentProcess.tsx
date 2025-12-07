@@ -23,12 +23,13 @@ const CreateAssignmentProcess: React.FC<AssignmentProcessProps> = ({
   const [isFormValid, setIsFormValid] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [validating, setValidating] = useState(false);
   const [warning, setWarning] = useState<{ open: boolean; message: string }>({
     open: false,
     message: "",
   });
 
-  const { crearProceso, loading, error, clearError } =
+  const { crearProceso, verificarCondicionesCreacion, loading, clearError } =
     useAssignmentProcessStore();
   const { setCurrentStep, addCompletedStep } = useAssignmentFlowStore();
 
@@ -46,7 +47,7 @@ const CreateAssignmentProcess: React.FC<AssignmentProcessProps> = ({
     return [currentYear, currentYear + 1, currentYear + 2];
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!isFormValid) {
       setWarning({
         open: true,
@@ -55,7 +56,33 @@ const CreateAssignmentProcess: React.FC<AssignmentProcessProps> = ({
       });
       return;
     }
-    setShowConfirm(true);
+
+    setValidating(true);
+
+    try {
+      // Validar condiciones antes de mostrar confirmación
+      const validacion = await verificarCondicionesCreacion(year!, semester!);
+
+      if (!validacion.puedeCrear) {
+        // ← CORRECCIÓN: "puedeCrear" NO "puedmeCrear"
+        // Mostrar todas las razones en un solo mensaje
+        const mensajeError = validacion.razones.join("\n• ");
+        setWarning({
+          open: true,
+          message: `No se puede crear el proceso porque:\n• ${mensajeError}`,
+        });
+        return;
+      }
+      setShowConfirm(true);
+    } catch (error: any) {
+      console.error("[CreateProcess] Error en validación:", error);
+      setWarning({
+        open: true,
+        message: "Error al verificar las condiciones. Intente nuevamente.",
+      });
+    } finally {
+      setValidating(false);
+    }
   };
 
   const handleConfirmSave = async () => {
@@ -167,14 +194,7 @@ const CreateAssignmentProcess: React.FC<AssignmentProcessProps> = ({
 
         {/* Mostrar estado de carga y error */}
         {loading && <p>Creando proceso de asignación...</p>}
-        {error && (
-          <div
-            className="error-message"
-            style={{ color: "red", marginBottom: "16px" }}
-          >
-            Error: {"Ha ocurrido un error al crear el proceso de asignación."}
-          </div>
-        )}
+        {validating && <p>Validando condiciones...</p>}
 
         <div
           className="form-create-actions"
@@ -189,7 +209,7 @@ const CreateAssignmentProcess: React.FC<AssignmentProcessProps> = ({
             variant="secondary"
             onClick={onCancel}
             className="btn-cancel-assignment-process"
-            disabled={loading}
+            disabled={loading || validating}
           >
             Cancelar
           </Button>
@@ -197,9 +217,9 @@ const CreateAssignmentProcess: React.FC<AssignmentProcessProps> = ({
             variant="primary"
             onClick={handleSave}
             className="btn-save-assignment-process"
-            disabled={loading}
+            disabled={loading || validating}
           >
-            {loading ? "Creando..." : "Guardar"}
+            {validating ? "Validando..." : loading ? "Creando..." : "Guardar"}
           </Button>
         </div>
       </div>

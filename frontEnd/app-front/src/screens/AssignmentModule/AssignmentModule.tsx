@@ -8,52 +8,38 @@ import CreateAssignmentProcess from "./Steps/CreateProcess/CreateAssignmentProce
 import ConfirmModal from "../../components/shared/ConfirmModal/ConfirmModal";
 import UploadFilesAP from "./Steps/FirstStep/UploadFilesAP";
 import InactivesManagementAP from "./Steps/SecondStep/InactivesManagementAP";
-import { useAssignmentProcessStore } from "../../store/Assignment";
 import LevelsManagementAP from "./Steps/ThirdStep/LevelsManagementAP";
 import AssignmentManagementAP from "./Steps/FourStep/AssignmentManagementAP";
-import TooltipInfo from "../../components/ui/TooltipInfo/TooltipInfo";
-import {
-  getFechaFinalizacion,
-  setFechaFinalizacion,
-} from "../../utils/dateUtils";
+import TooltipInfo from "../../components/shared/TooltipInfo/TooltipInfo";
+import { useAssignmentProcessStore } from "../../store/Assignment";
 
 type ProcessData = {
   year: number;
   semester: 1 | 2;
 };
 
-// Tipo temporal para el historial de procesos
-interface ProcessHistory {
-  pa_codigo: number;
-  pa_anio: number;
-  pa_num_semestre: number;
-  pa_activo: boolean;
-  fechaFinalizacion?: string;
-}
-
 const AssignmentModule: React.FC = () => {
-  // Estados para el manejo de modales
   const [showCreateModal, setShowCreateModal] = useState<boolean>(false);
   const [hasActiveProcess, setHasActiveProcess] = useState<boolean>(false);
   const [currentStepLocal, setCurrentStepLocal] = useState<number | null>(null);
   const [completedSteps, setCompletedSteps] = useState<number[]>([]);
   const [processData, setProcessData] = useState<ProcessData | null>(null);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showFinalizeConfirm, setShowFinalizeConfirm] = useState(false);
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
   const navigate = useNavigate();
-  // Helpers para persistir paso por roceso
+
   const storageKeyForProcess = (codigo: number) =>
     `assignment_process_${codigo}_current_step`;
 
   const loadPersistedState = (codigo: number) => {
     try {
       const raw = localStorage.getItem(storageKeyForProcess(codigo));
-      if (!raw) return null;
-      return JSON.parse(raw) as {
-        currentStepLocal?: number;
-        completedSteps?: number[];
-      };
+      return raw
+        ? (JSON.parse(raw) as {
+            currentStepLocal?: number;
+            completedSteps?: number[];
+          })
+        : null;
     } catch {
       return null;
     }
@@ -69,12 +55,9 @@ const AssignmentModule: React.FC = () => {
         storageKeyForProcess(codigo),
         JSON.stringify({ currentStepLocal: step, completedSteps: completed })
       );
-    } catch {
-      // No hacer nada
-    }
+    } catch {}
   };
 
-  // Estados para el manejo del proceso
   const {
     finalizarProceso,
     eliminarProcesoCompleto,
@@ -84,7 +67,6 @@ const AssignmentModule: React.FC = () => {
     allProcess,
   } = useAssignmentProcessStore();
 
-  // Manejadores
   const handleProcessCreated = (year: number, semester: 1 | 2) => {
     setShowCreateModal(false);
     setCurrentStepLocal(1);
@@ -98,40 +80,30 @@ const AssignmentModule: React.FC = () => {
     setCompletedSteps([]);
     setProcessData(null);
     setShowFinalizeConfirm(false);
-    setShowDeleteConfirm(false);
     setShowConfirmDelete(false);
   };
 
   const handleConfirmDelete = async () => {
     setShowConfirmDelete(false);
     if (!currentProcess) return;
-    console.log("DEBUG: Eliminando proceso", currentProcess.pa_codigo);
+
     try {
       await eliminarProcesoCompleto(currentProcess.pa_codigo);
-      console.log("DEBUG: elimininarProcesoCompleto ejecutado");
       await obtenerTodosLosProcesos();
-      console.log("DEBUG: Procesos refrescados después de eliminar");
+
       try {
-        // Limpiar paso del proceso
         localStorage.removeItem(storageKeyForProcess(currentProcess.pa_codigo));
-        // Limpiar fecha de finalización
-        localStorage.removeItem(
-          `process_${currentProcess.pa_codigo}_finalization`
-        );
-        // Limpiar cualquier otro dato relacionado
         for (let i = 0; i < localStorage.length; i++) {
           const key = localStorage.key(i);
           if (
             key &&
-            (key.includes(`assignment_process_${currentProcess.pa_codigo}`) ||
-              key.includes(`_${currentProcess.pa_codigo}_`))
+            key.includes(`assignment_process_${currentProcess.pa_codigo}`)
           ) {
             localStorage.removeItem(key);
           }
         }
-      } catch (storageError) {
-        console.error("Error limpiando el almacenamiento local:", storageError);
-      }
+      } catch {}
+
       handleCancelProcess();
     } catch (error) {
       console.error("Error eliminando proceso:", error);
@@ -147,11 +119,10 @@ const AssignmentModule: React.FC = () => {
 
   const handleNextStep = () => {
     if (currentStepLocal) {
-      // Marcar actual como completado
-      setCompletedSteps((prev) => [...new Set([...prev, currentStepLocal])]);
-      // Avanzar automáticamente al siguiente
       const nextStep = currentStepLocal + 1;
+      setCompletedSteps((prev) => [...new Set([...prev, currentStepLocal])]);
       setCurrentStepLocal(nextStep);
+
       if (currentProcess?.pa_codigo) {
         savePersistedState(currentProcess.pa_codigo, nextStep, [
           ...new Set([...completedSteps, currentStepLocal]),
@@ -161,7 +132,6 @@ const AssignmentModule: React.FC = () => {
   };
 
   const handleStepClick = (stepNumber: number) => {
-    // SOLO permitir click en el paso actual
     if (stepNumber === currentStepLocal) {
       console.log(`Navegando al paso actual: ${stepNumber}`);
     }
@@ -174,14 +144,10 @@ const AssignmentModule: React.FC = () => {
   const handleFinalizeProcess = async () => {
     if (currentProcess) {
       try {
-        console.log("DEBUG handleFinalizeProcess: Iniciando");
-
         await finalizarProceso(currentProcess.pa_codigo);
-        setFechaFinalizacion(currentProcess.pa_codigo);
         await obtenerTodosLosProcesos();
         setShowFinalizeConfirm(false);
         handleCancelProcess();
-        console.log("DEBUG handleFinalizeProcess: Completado");
       } catch (error) {
         console.error("Error finalizando proceso:", error);
       }
@@ -190,7 +156,6 @@ const AssignmentModule: React.FC = () => {
 
   const handleSeeReport = () => {
     if (processData) {
-      // Navegar con estado de "vista previa"
       navigate(`/reports-assignment`, {
         state: {
           isPreview: true,
@@ -202,11 +167,10 @@ const AssignmentModule: React.FC = () => {
     }
   };
 
-  // Estado simple del proceso - SOLO EL NOMBRE
   const getProcessStatus = () => {
     const statusMap = {
       1: "Creado",
-      2: "Archivo Cargado",
+      2: "Archivos Cargados",
       3: "Archivo Guardado",
       4: "Nivelados Gestionados",
       5: "Asignaciones Completadas",
@@ -214,41 +178,32 @@ const AssignmentModule: React.FC = () => {
     return statusMap[currentStepLocal as keyof typeof statusMap] || "Creado";
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("es-ES");
-  };
-
-  // Efecto solo para cargar proceso activo el iniciar
   useEffect(() => {
     const cargarProcesos = async () => {
       try {
         await obtenerProcesoActivo();
         await obtenerTodosLosProcesos();
       } catch (error) {
-        console.error("Error al obtener proceso activo:", error);
-        console.error("Error al obtener todos los procesos:", error);
+        console.error("Error al obtener procesos:", error);
       }
     };
     cargarProcesos();
   }, [obtenerProcesoActivo, obtenerTodosLosProcesos]);
 
-  // Efecto para sincronizar si hay proceso activo
   useEffect(() => {
     if (currentProcess) {
       setHasActiveProcess(true);
-
-      // Cargar estado persistido
       const persisted = loadPersistedState(currentProcess.pa_codigo);
 
       if (persisted?.currentStepLocal) {
         setCurrentStepLocal(persisted.currentStepLocal);
         setCompletedSteps(persisted.completedSteps ?? []);
       } else {
-        // Por defecto inicia en 1
         setCurrentStepLocal(1);
         setCompletedSteps([]);
         savePersistedState(currentProcess.pa_codigo, 1, []);
       }
+
       setProcessData({
         year: currentProcess.pa_anio,
         semester: currentProcess.pa_num_semestre,
@@ -260,14 +215,6 @@ const AssignmentModule: React.FC = () => {
       setProcessData(null);
     }
   }, [currentProcess]);
-
-  // Debug del estado actual
-  useEffect(() => {
-    console.log("Debug - Estado actual:");
-    console.log("currentStepLocal:", currentStepLocal);
-    console.log("completedSteps:", completedSteps);
-    console.log("hasActiveProcess:", hasActiveProcess);
-  }, [currentStepLocal, completedSteps, hasActiveProcess]);
 
   return (
     <>
@@ -396,12 +343,7 @@ const AssignmentModule: React.FC = () => {
                   <div className="final-step-actions">
                     <p>La asignación se ha realizado correctamente.</p>
                     <div className="final-buttons">
-                      <p
-                        style={{
-                          color: "#666",
-                          marginBottom: "20px",
-                        }}
-                      >
+                      <p style={{ color: "#666", marginBottom: "20px" }}>
                         Puedes revisar los resultados antes de marcar el proceso
                         como finalizado.
                         <br />
@@ -440,34 +382,35 @@ const AssignmentModule: React.FC = () => {
                   {processData.year}-{processData.semester}
                 </div>
                 <div className="process-details">
-                  <div className="process-date"></div>
                   <span className="status">En Proceso</span>
                 </div>
               </div>
             )}
 
-            {/* Procesos finalizados desde el backend */}
+            {/* Procesos finalizados - LÓGICA SIMPLE QUE FUNCIONA */}
             {allProcess &&
-              (allProcess as ProcessHistory[])
+              allProcess
                 .filter((proceso) => {
-                  const fechaFinalizacion = getFechaFinalizacion(
-                    proceso.pa_codigo
-                  );
+                  // FILTRO SIMPLE: Procesos con estado 2 (inactivos)
+                  // Y que no sean el proceso actual
+                  const esProcesoActual =
+                    currentProcess &&
+                    proceso.pa_codigo === currentProcess.pa_codigo;
 
-                  // SOLO mostrar procesos que:
-                  // 1. NO son el proceso actual
-                  // 2. TIENEN fecha de finalización (fueron finalizados por el usuario)
-
-                  return (
-                    proceso.pa_codigo !== currentProcess?.pa_codigo &&
-                    fechaFinalizacion &&
-                    fechaFinalizacion !== "Fecha no disponible"
-                  );
+                  return proceso.pa_estado === 2 && !esProcesoActual;
+                })
+                .sort((a, b) => {
+                  // Ordenar por año y semestre descendente
+                  if (a.pa_anio !== b.pa_anio) {
+                    return b.pa_anio - a.pa_anio;
+                  }
+                  return b.pa_num_semestre - a.pa_num_semestre;
                 })
                 .map((proceso) => {
-                  const fechaFinalizacion = getFechaFinalizacion(
-                    proceso.pa_codigo
-                  );
+                  // Usar pa_ultima_fecha_actualizacion como fecha de finalización
+                  const fechaFinalizacion = new Date(
+                    proceso.pa_ultima_fecha_actualizacion
+                  ).toLocaleDateString("es-ES");
 
                   return (
                     <div
@@ -479,8 +422,7 @@ const AssignmentModule: React.FC = () => {
                       </div>
                       <div className="process-details">
                         <div className="process-date">
-                          Fecha finalización:{" "}
-                          {fechaFinalizacion || "Fecha no disponible"}
+                          Finalizado: {fechaFinalizacion}
                         </div>
                         <span className="status-finished">Finalizado</span>
                       </div>
@@ -491,7 +433,6 @@ const AssignmentModule: React.FC = () => {
         </div>
       </div>
 
-      {/* Modal para CREAR nuevo proceso */}
       <SimpleModal
         open={showCreateModal}
         onClose={() => setShowCreateModal(false)}
@@ -502,14 +443,14 @@ const AssignmentModule: React.FC = () => {
           onNext={handleProcessCreated}
         />
       </SimpleModal>
-      {/* Modal de confirmación para FINALIZAR proceso */}
+
       <ConfirmModal
         open={showFinalizeConfirm}
         message="¿Está seguro de finalizar el proceso de asignación? Esta acción no se puede deshacer."
         onConfirm={handleFinalizeProcess}
         onCancel={() => setShowFinalizeConfirm(false)}
       />
-      {/* Modal de confirmación para ELIMINAR proceso */}
+
       <ConfirmModal
         open={showConfirmDelete}
         message="¿Está seguro de eliminar el proceso de asignación activo? Esta acción no se puede deshacer."
