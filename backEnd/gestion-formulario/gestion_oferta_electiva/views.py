@@ -85,7 +85,7 @@ class OfertaElectivaUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
 # Endpoint para listar por año y semestre (todos los programas)
 # Este implementa 'Listar oferta_electiva por año y semestre'
 class OfertaElectivaListByAnioSemestreView(generics.ListAPIView):
-    serializer_class = ElectivaSerializer
+    serializer_class = OfertaElectivaSerializer
 
     def get_queryset(self):
         # Captura los parámetros de la URL. Si no existen, devuelve un valor por defecto.
@@ -98,19 +98,12 @@ class OfertaElectivaListByAnioSemestreView(generics.ListAPIView):
             ofe_num_semestre=semestre
         ).order_by('-ofe_anio', '-ofe_num_semestre')
         
-        lista_electivas = []
-        for oferta in queryset:
-            electiva_info = {
-                "ele_codigo": oferta.ele_codigo.ele_codigo,
-                "ele_nombre": oferta.ele_codigo.ele_nombre
-            }
-            lista_electivas.append(electiva_info)
-        return lista_electivas
+        return queryset
 
 # Endpoint para listar por año, semestre y programa
 # Este implementa 'Listar por año, semestre y programa'
 class OfertaElectivaListByAnioSemestreProgramaView(generics.ListAPIView):
-    serializer_class = ElectivaSerializer
+    serializer_class = OfertaElectivaSerializer
 
     def get_queryset(self):
         # Captura los parámetros de la URL
@@ -125,14 +118,7 @@ class OfertaElectivaListByAnioSemestreProgramaView(generics.ListAPIView):
             pro_codigo__pro_codigo=programa_codigo
         ).order_by('-ofe_anio', '-ofe_num_semestre')
         
-        lista_electivas = []
-        for oferta in queryset:
-            electiva_info = {
-                "ele_codigo": oferta.ele_codigo.ele_codigo,
-                "ele_nombre": oferta.ele_codigo.ele_nombre
-            }
-            lista_electivas.append(electiva_info)
-        return lista_electivas
+        return queryset 
     
 # ---------- Helper: payload para RabbitMQ ----------
 def _serialize_oferta(o: Oferta_electiva) -> dict:
