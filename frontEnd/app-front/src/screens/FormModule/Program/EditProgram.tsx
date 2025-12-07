@@ -15,8 +15,10 @@ const EditProgram: React.FC = () => {
   const navigate = useNavigate();
   const { codigo } = useParams<{ codigo: string }>();
   const formValues = Form.useWatch([], form);
+
   const faculties = useProgramStore((state) => state.faculties);
   const fetchFaculties = useProgramStore((state) => state.fetchFaculties);
+
   const [touchedFields, setTouchedFields] = useState({
     nombre: false,
     facultad: false,
@@ -32,11 +34,16 @@ const EditProgram: React.FC = () => {
     message: "",
   });
 
+  const [initialValues, setInitialValues] = useState<{
+    nombre: string;
+    facultad: string;
+  } | null>(null);
+  const [hasChanges, setHasChanges] = useState(false);
+
   const programs = useProgramStore((state) => state.programs);
   const updateProgram = useProgramStore((state) => state.updateProgram);
   const fetchPrograms = useProgramStore((state) => state.fetchPrograms);
 
-  // Obtener facultades únicas de los programas existentes
   const facultades = faculties.map((f) => f.fac_nombre);
 
   useEffect(() => {
@@ -63,6 +70,19 @@ const EditProgram: React.FC = () => {
           nombre: program.pro_nombre,
           facultad: program.fac_nombre,
         });
+
+        setInitialValues({
+          nombre: program.pro_nombre,
+          facultad: program.fac_nombre,
+        });
+
+        // 🔹 Marcar los campos como “tocados” desde el inicio
+        // para que al escribir se valide en tiempo real
+        setTouchedFields({
+          nombre: true,
+          facultad: true,
+        });
+
         setProgramFound(true);
       } else {
         setWarning({
@@ -74,29 +94,32 @@ const EditProgram: React.FC = () => {
   }, [codigo, programs, form]);
 
   const validateNombre = (_: any, value: string) => {
-    if (!value)
+    const sanitized = (value ?? "").replace(/\s+$/, ""); // quitar solo espacios del final
+
+    if (!sanitized)
       return Promise.reject("Por favor ingresa el nombre del programa");
-    if (value.length < 5)
+    if (sanitized.length < 5)
       return Promise.reject("El nombre debe tener al menos 5 caracteres");
-    if (value.length > 150)
+    if (sanitized.length > 150)
       return Promise.reject("El nombre no puede exceder 150 caracteres");
-    if (/^\s+|\s+$/.test(value))
-      return Promise.reject(
-        "El nombre no puede empezar o terminar con espacios"
-      );
-    if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]+$/.test(value))
+
+    if (/^\s+/.test(value ?? ""))
+      return Promise.reject("El nombre no puede empezar con espacios");
+
+    if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]+$/.test(sanitized))
       return Promise.reject("El nombre solo puede contener letras y espacios");
 
-    // CORREGIDO: usar pro_nombre en lugar de fac_nombre
     const existingProgram = programs.find(
       (p) =>
-        p.pro_nombre.toLowerCase() === value.toLowerCase() && // ← CAMBIADO
+        p.pro_nombre.toLowerCase().trim().replace(/\s+/g, " ") ===
+          sanitized.toLowerCase().trim().replace(/\s+/g, " ") &&
         p.pro_codigo.toString() !== codigo &&
         p.pro_activo !== false
     );
+
     if (existingProgram)
       return Promise.reject(
-        `Ya existe un programa activo con el nombre "${value}"`
+        `Ya existe un programa activo con el nombre "${sanitized}"`
       );
 
     return Promise.resolve();
@@ -106,7 +129,7 @@ const EditProgram: React.FC = () => {
     setTouchedFields((prev) => ({ ...prev, [fieldName]: true }));
   };
 
-  React.useEffect(() => {
+  useEffect(() => {
     const checkValidity = async () => {
       try {
         await form.validateFields();
@@ -121,6 +144,24 @@ const EditProgram: React.FC = () => {
     }
   }, [form, formValues, touchedFields]);
 
+  const normalizeForChange = (s: string | undefined | null) =>
+    (s ?? "").replace(/\s+$/, "");
+
+  useEffect(() => {
+    if (!initialValues) return;
+
+    const currentNombre = (formValues as any)?.nombre ?? "";
+    const currentFacultad = (formValues as any)?.facultad ?? "";
+
+    const changedNombre =
+      normalizeForChange(currentNombre) !==
+      normalizeForChange(initialValues.nombre);
+
+    const changedFacultad = currentFacultad !== initialValues.facultad;
+
+    setHasChanges(changedNombre || changedFacultad);
+  }, [formValues, initialValues]);
+
   const onFinish = async (values: any) => {
     if (!codigo) return;
 
@@ -128,10 +169,11 @@ const EditProgram: React.FC = () => {
       const facultadSeleccionada = faculties.find(
         (f) => f.fac_nombre === values.facultad
       );
+
       const cleanedValues: Program = {
         pro_codigo: codigo,
         pro_nombre: values.nombre.trim().replace(/\s+/g, " "),
-        fac_codigo: 1,
+        fac_codigo: facultadSeleccionada?.fac_codigo ?? 1,
         fac_nombre: values.facultad,
         pro_activo: true,
       };
@@ -210,7 +252,12 @@ const EditProgram: React.FC = () => {
                 size="large"
                 maxLength={150}
                 showCount
-                onBlur={() => handleFieldTouch("nombre")}
+                onBlur={(e) => {
+                  const value = e.target.value;
+                  const cleaned = value.replace(/\s+$/, "");
+                  form.setFieldsValue({ nombre: cleaned });
+                  handleFieldTouch("nombre");
+                }}
               />
             </Form.Item>
 
@@ -245,7 +292,6 @@ const EditProgram: React.FC = () => {
               </Select>
             </Form.Item>
 
-            {/* Botones */}
             <Form.Item>
               <div
                 style={{
@@ -266,7 +312,7 @@ const EditProgram: React.FC = () => {
                   type="submit"
                   variant="primary"
                   size="medium"
-                  disabled={!isFormValid}
+                  disabled={!isFormValid || !hasChanges}
                 >
                   Guardar
                 </Button>

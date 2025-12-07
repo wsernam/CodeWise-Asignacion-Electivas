@@ -206,6 +206,7 @@ services:
       Q_OFER_UPD: ${Q_OFER_UPD}
       Q_OFER_DEL: ${Q_OFER_DEL}
       Q_SEL: ${Q_SEL}
+      RABBITMQ_NOTIF_QUEUE: ${RABBITMQ_NOTIF_QUEUE}
       #__________________________________
 
     depends_on:

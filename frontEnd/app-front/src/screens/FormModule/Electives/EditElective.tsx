@@ -30,11 +30,14 @@ const EditElective: React.FC = () => {
     message: "",
   });
 
-  // Stores
+  const [initialValues, setInitialValues] = useState<{
+    ele_nombre: string;
+    pro_codigo: string | number;
+  } | null>(null);
+  const [hasChanges, setHasChanges] = useState(false);
   const electives = useElectiveStore((s) => s.electives);
   const updateElective = useElectiveStore((s) => s.updateElective);
   const fetchElectives = useElectiveStore((s) => s.fetchElectives);
-
   const programs = useProgramStore((s) => s.programs);
   const fetchPrograms = useProgramStore((s) => s.fetchPrograms);
 
@@ -55,16 +58,17 @@ const EditElective: React.FC = () => {
           pro_codigo: elective.pro_codigo,
         });
 
-        // 🔹 Marcar los campos como tocados automáticamente
+        setInitialValues({
+          ele_nombre: elective.ele_nombre,
+          pro_codigo: elective.pro_codigo,
+        });
+
+        // Marcar campos como tocados desde el inicio (para feedback)
         setTouchedFields({
           ele_nombre: true,
           pro_codigo: true,
         });
 
-        // 🔹 Forzar validación de los valores cargados
-        form.validateFields().then(() => {
-          setIsFormValid(true);
-        });
         setElectiveFound(true);
       } else {
         setWarning({
@@ -87,17 +91,19 @@ const EditElective: React.FC = () => {
     v === true || v === 1 || v === "A" || v === "ACTIVO";
 
   const validateNombre = (_: any, value: string) => {
-    if (!value) return Promise.reject("Por favor ingresa el nombre");
-    const v = value.trim();
+    const withoutTrailing = (value ?? "").replace(/\s+$/, "");
+    const v = withoutTrailing.trim(); // sin espacios al inicio/fin
 
+    if (!v) return Promise.reject("Por favor ingresa el nombre");
     if (v.length < 3)
       return Promise.reject("El nombre debe tener al menos 3 caracteres");
     if (v.length > 100)
       return Promise.reject("El nombre no puede exceder 100 caracteres");
-    if (/^\s+|\s+$/.test(value))
-      return Promise.reject(
-        "El nombre no puede empezar o terminar con espacios"
-      );
+
+    if (/^\s+/.test(value ?? "")) {
+      return Promise.reject("El nombre no puede empezar con espacios");
+    }
+
     if (/\d/.test(v))
       return Promise.reject("El nombre no puede contener números");
     if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]+$/.test(v))
@@ -105,7 +111,6 @@ const EditElective: React.FC = () => {
 
     const target = normalizeName(v);
 
-    // 1) Excluir la misma electiva (si no cambió el nombre, permitir)
     const current = electives.find(
       (e) => String(e.ele_codigo) === String(ele_codigo)
     );
@@ -113,12 +118,11 @@ const EditElective: React.FC = () => {
       return Promise.resolve();
     }
 
-    // 2) Chequear duplicados en OTRAS electivas activas
     const duplicated = electives.some(
       (e) =>
-        String(e.ele_codigo) !== String(ele_codigo) && // excluye la actual
-        isActive(e.ele_estado) && // solo activas
-        normalizeName(e.ele_nombre) === target // mismo nombre normalizado
+        String(e.ele_codigo) !== String(ele_codigo) &&
+        isActive(e.ele_estado) &&
+        normalizeName(e.ele_nombre) === target
     );
 
     return duplicated
@@ -133,16 +137,35 @@ const EditElective: React.FC = () => {
   useEffect(() => {
     const checkValidity = async () => {
       try {
-        await form.validateFields();
+        await form.validateFields({ validateOnly: true });
         setIsFormValid(true);
       } catch {
         setIsFormValid(false);
       }
     };
-    if (touchedFields.ele_nombre || touchedFields.pro_codigo) {
+
+    if (electiveFound) {
       checkValidity();
     }
-  }, [form, formValues, touchedFields]);
+  }, [form, formValues, electiveFound]);
+
+  const normalizeForChange = (s: string | undefined | null) =>
+    (s ?? "").replace(/\s+$/, "");
+
+  useEffect(() => {
+    if (!initialValues) return;
+
+    const currentNombre = (formValues as any)?.ele_nombre ?? "";
+    const currentPrograma = (formValues as any)?.pro_codigo ?? "";
+
+    const changedNombre =
+      normalizeForChange(currentNombre) !==
+      normalizeForChange(initialValues.ele_nombre);
+
+    const changedPrograma = String(currentPrograma) !== String(initialValues.pro_codigo);
+
+    setHasChanges(changedNombre || changedPrograma);
+  }, [formValues, initialValues]);
 
   const onFinish = async (values: IElective) => {
     if (!ele_codigo) return;
@@ -150,6 +173,7 @@ const EditElective: React.FC = () => {
       const cleanedValues: IElective = {
         ...values,
         ele_codigo: ele_codigo,
+        // Limpieza final: quita espacios al inicio/fin y colapsa internos
         ele_nombre: values.ele_nombre.trim().replace(/\s+/g, " "),
         ele_estado: true,
       };
@@ -231,7 +255,13 @@ const EditElective: React.FC = () => {
                 size="large"
                 maxLength={100}
                 showCount
-                onBlur={() => handleFieldTouch("ele_nombre")}
+                onChange={() => handleFieldTouch("ele_nombre")}
+                onBlur={(e) => {
+                  const value = e.target.value;
+                  // Elimina solo espacios del final al salir del campo
+                  const cleaned = value.replace(/\s+$/, "");
+                  form.setFieldsValue({ ele_nombre: cleaned });
+                }}
               />
             </Form.Item>
 
@@ -255,8 +285,7 @@ const EditElective: React.FC = () => {
                     .includes(input.toLowerCase())
                 }
                 notFoundContent="No se encontraron programas"
-                onBlur={() => handleFieldTouch("pro_codigo")}
-                onSelect={() => handleFieldTouch("pro_codigo")}
+                onChange={() => handleFieldTouch("pro_codigo")}
               />
             </Form.Item>
 
@@ -281,7 +310,7 @@ const EditElective: React.FC = () => {
                   type="submit"
                   variant="primary"
                   size="medium"
-                  disabled={!isFormValid}
+                  disabled={!isFormValid || !hasChanges}
                 >
                   Guardar
                 </Button>
