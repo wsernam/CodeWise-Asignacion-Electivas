@@ -4,12 +4,12 @@ import "./AssignmentModule.css";
 import Card from "../../components/ui/Card/Card";
 import Button from "../../components/ui/Button/Button";
 import SimpleModal from "../../components/shared/SimpleModal/SimpleModal";
-import CreateAssignmentProcess from "./Steps/CreateProcess/CreateAssignmentProcess";
+import CreateAssignmentProcess from "./FirstStep/CreateAssignmentProcess";
 import ConfirmModal from "../../components/shared/ConfirmModal/ConfirmModal";
-import UploadFilesAP from "./Steps/FirstStep/UploadFilesAP";
-import InactivesManagementAP from "./Steps/SecondStep/InactivesManagementAP";
-import LevelsManagementAP from "./Steps/ThirdStep/LevelsManagementAP";
-import AssignmentManagementAP from "./Steps/FourStep/AssignmentManagementAP";
+import UploadFilesAP from "./SecondStep/UploadFilesAP";
+import InactivesManagementAP from "./ThirdStep/InactivesManagementAP";
+import LevelsManagementAP from "./FourthStep/LevelsManagementAP";
+import AssignmentManagementAP from "./FifthStep/AssignmentManagementAP";
 import TooltipInfo from "../../components/shared/TooltipInfo/TooltipInfo";
 import { useAssignmentProcessStore } from "../../store/Assignment";
 

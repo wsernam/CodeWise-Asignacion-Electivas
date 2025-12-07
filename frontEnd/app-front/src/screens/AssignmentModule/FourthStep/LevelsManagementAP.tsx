@@ -1,4 +1,4 @@
-import React, { act, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import "../AssignmentProcessSteps.css";
 import {
   FaUserSlash,
@@ -6,16 +6,16 @@ import {
   FaFileAlt,
   FaClipboardList,
 } from "react-icons/fa";
-import Button from "../../../../components/ui/Button/Button";
-import BackButton from "../../../../components/ui/BackButton/BackButton";
-import NextButton from "../../../../components/ui/NextButton/NextButton";
-import SimpleModal from "../../../../components/shared/SimpleModal/SimpleModal";
-import ConfirmModal from "../../../../components/shared/ConfirmModal/ConfirmModal";
-
+import Button from "../../../components/ui/Button/Button";
+import BackButton from "../../../components/ui/BackButton/BackButton";
+import NextButton from "../../../components/ui/NextButton/NextButton";
+import SimpleModal from "../../../components/shared/SimpleModal/SimpleModal";
+import ConfirmModal from "../../../components/shared/ConfirmModal/ConfirmModal";
+import apiClient from "../../../services/Auth/apiClient";
 import {
   useAssignmentProcessStore,
   useNiveladosStore,
-} from "../../../../store/Assignment";
+} from "../../../store/Assignment";
 import { message } from "antd";
 
 type AssignmentProcessProps = {
@@ -123,6 +123,35 @@ const LevelsManagementAP: React.FC<AssignmentProcessProps> = ({
     }
   };
 
+  useEffect(() => {
+    if (leveledStudents.length === 0 && showModal) {
+      console.warn("⚠️ DIAGNÓSTICO: No hay estudiantes nivelados");
+
+      // Intentar obtener data de estudiantes para debug
+      const debugEstudiantes = async () => {
+        try {
+          const response = await apiClient.get(
+            `/api/estudiantes/periodo/${activeProcess?.pa_anio}/${activeProcess?.pa_num_semestre}/`
+          );
+          console.log("Estudiantes en periodo:", response.data.length);
+
+          if (response.data.length > 0) {
+            const primerEst = response.data[0];
+            console.log("Ejemplo estudiante:", {
+              codigo: primerEst.est_codigo,
+              creditos: primerEst.creditos_aprobados,
+              promedio: primerEst.promedio_carrera,
+              activo: primerEst.est_activo,
+            });
+          }
+        } catch (err) {
+          console.log("No se pudo obtener data de estudiantes para debug");
+        }
+      };
+
+      debugEstudiantes();
+    }
+  }, [leveledStudents, showModal, activeProcess]);
   const handleSave = async () => {
     console.log("[LevelsManagementAP] handleSave called");
     if (!activeProcess) {

@@ -6,24 +6,22 @@ import {
   FaFileAlt,
   FaClipboardList,
 } from "react-icons/fa";
-import WarningModal from "../../../../components/shared/WarningModal/WarningModal";
-import Button from "../../../../components/ui/Button/Button";
-import BackButton from "../../../../components/ui/BackButton/BackButton";
-import NextButton from "../../../../components/ui/NextButton/NextButton";
-import SimpleModal from "../../../../components/shared/SimpleModal/SimpleModal";
-import MultipleFileUploader from "../../../../components/fileUploader/MultipleFileUploader";
-import ConfirmModal from "../../../../components/shared/ConfirmModal/ConfirmModal";
-import TooltipInfo from "../../../../components/shared/TooltipInfo/TooltipInfo";
+import Button from "../../../components/ui/Button/Button";
+import BackButton from "../../../components/ui/BackButton/BackButton";
+import NextButton from "../../../components/ui/NextButton/NextButton";
+import SimpleModal from "../../../components/shared/SimpleModal/SimpleModal";
+import ConfirmModal from "../../../components/shared/ConfirmModal/ConfirmModal";
+import TooltipInfo from "../../../components/shared/TooltipInfo/TooltipInfo";
 import {
   useExcelProcessingStore,
   useAssignmentFlowStore,
-} from "../../../../store/Assignment";
+} from "../../../store/Assignment";
 import {
   useCodeBatchStore,
   useAssignmentProcessStore,
-} from "../../../../store/Assignment/assignmentProcessStore";
-import type { ValidationResult } from "../../../../models/Assignment/assignmentProcess";
-import type { CodeBatchesResponse } from "../../../../models/Assignment/assignmentProcess";
+} from "../../../store/Assignment/assignmentProcessStore";
+import type { ValidationResult } from "../../../models/Assignment/assignmentProcess";
+import type { CodeBatchesResponse } from "../../../models/Assignment/assignmentProcess";
 
 type AssignmentProcessProps = {
   onNext: () => void;
@@ -69,7 +67,7 @@ const UploadFilesAP: React.FC<AssignmentProcessProps> = ({
 }) => {
   const [showModal, setShowModal] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
-  const [showWarningModal, setShowWarningModal] = useState(false);
+  const [, setShowWarningModal] = useState(false);
 
   // Archivos subidos
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
@@ -116,6 +114,12 @@ const UploadFilesAP: React.FC<AssignmentProcessProps> = ({
       console.log("Validando formato de archivos Excel...", uploadedFiles);
 
       const resultado = await validarExcel(uploadedFiles);
+      sessionStorage.setItem("excel_cache_key", resultado.cache_key);
+
+      if (resultado.cache_key) {
+        localStorage.setItem("excel_cache_key", resultado.cache_key);
+        console.log("CacheKey guardado:", resultado.cache_key);
+      }
       console.log("Resultado del backend:", resultado);
 
       // Verificar formato

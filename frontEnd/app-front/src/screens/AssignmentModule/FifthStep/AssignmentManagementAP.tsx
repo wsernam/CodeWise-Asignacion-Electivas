@@ -1,14 +1,15 @@
 import React from "react";
-import "../AssignmentProcessSteps.css";
 import {
   FaUserSlash,
   FaUserCheck,
   FaFileAlt,
   FaClipboardList,
 } from "react-icons/fa";
-import Button from "../../../../components/ui/Button/Button";
-import SimpleModal from "../../../../components/shared/SimpleModal/SimpleModal";
-import { useAssignmentProcessStore } from "../../../../store/Assignment";
+import Button from "../../../components/ui/Button/Button";
+import SimpleModal from "../../../components/shared/SimpleModal/SimpleModal";
+import { useAssignmentProcessStore } from "../../../store/Assignment";
+import "../AssignmentModule.css";
+import "../AssignmentProcessSteps.css";
 
 type AssignmentProcessProps = {
   onNext: () => void;
