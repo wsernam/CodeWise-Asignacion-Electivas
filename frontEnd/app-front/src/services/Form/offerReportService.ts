@@ -33,6 +33,18 @@ async function fetchPdf(url: string): Promise<Blob> {
 
 export const offerReportService = {
   getElectiveOfferReport(year: number, semester: number): Promise<Blob> {
-    return fetchPdf(`${OFFER_REPORT_URL_PRIVATE}/${year}/${semester}/`);
+    return fetchPdf(`${OFFER_REPORT_URL_PRIVATE}/reporte-oferta/${year}/${semester}/`);
   },
+
+  async getGeneralSelectionReport( year: number, semester: number): Promise<Blob> {
+    const url = `${OFFER_REPORT_URL_PRIVATE}/reporte-seleccion-general/${year}/${semester}/`;
+    try {
+      const blob = await fetchPdf(url);
+      console.log("[offerReportService] PDF de reporte general de selección obtenido con éxito.");
+      return blob;
+    } catch (error) {
+      console.error("[offerReportService] Error obteniendo PDF de reporte general de selección:", error);
+      throw error;
+    }
+  }
 };

@@ -22,7 +22,7 @@ export const OFFER_URL_PRIVATE = `${API_BASE_URL_FORM_PRIVATE}`;
 export const SELECTION_URL_PRIVATE = `${API_BASE_URL_FORM_PRIVATE}selecciones/seleccion-electivas/`;
 // Endpoints para reportes de formularios
 export const SELECTION_REPORT_URL_PRIVATE = `${API_BASE_URL_FORM_PRIVATE}reporte-seleccion`;
-export const OFFER_REPORT_URL_PRIVATE = `${API_BASE_URL_FORM_PRIVATE}reporte-oferta`;
+export const OFFER_REPORT_URL_PRIVATE = `${API_BASE_URL_FORM_PRIVATE}`;
 
 
 //------------------------------------------------------------------------------

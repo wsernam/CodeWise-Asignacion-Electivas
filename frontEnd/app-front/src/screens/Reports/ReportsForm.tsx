@@ -101,6 +101,13 @@ const ReportsForm: React.FC = () => {
           );
           break;
 
+        case "general-report":
+          blob = await offerReportService.getGeneralSelectionReport(
+            selectedYear,
+            selectedSemester
+          );
+          break;
+
         default:
           throw new Error("Tipo de reporte no válido");
       }
@@ -176,6 +183,10 @@ const ReportsForm: React.FC = () => {
                 value: "offer-report",
                 label: "Reporte de Oferta de Electivas",
               },
+              {
+                value: "general-report",
+                label: "Reporte General de Selección de Electivas",
+              }
             ]}
             availableYears={finalYears} // Pasa los años disponibles
           />
