@@ -19,7 +19,7 @@ import { useAuthStore } from "../../store/Auth/authStore";
  */
 const LoginAdmin: React.FC = () => {
   const navigate = useNavigate();
-  const { loginAdmin, loading, error } = useAuthStore();
+  const { loginAdmin, error } = useAuthStore();
 
   /**
    * handleBack - Volver a la selección de roles

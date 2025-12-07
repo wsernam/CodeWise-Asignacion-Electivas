@@ -1,34 +1,50 @@
-/* Fondo y bordes del modal */
 .warning-modal .ant-modal-content {
-  border: 2px solid #ff4d4f; /* rojo advertencia */
+  /* Bordes */
+  border: 2px solid #ff4d4f;
   border-radius: 12px;
 }
 
-/* Estilo del título */
 .warning-title {
-  color: #d4380d; /* rojo institucional de advertencia */
+  /* Tipografía */
   font-weight: bold;
   font-size: 18px;
+
+  /* Colores y efectos */
+  color: #d4380d;
 }
 
-/* Mensaje principal */
 .warning-message {
-  font-size: 16px;
-  color: #1f1f1f;
+  /* Márgenes */
   margin-top: 10px;
+
+  /* Tipografía */
+  font-size: 16px;
+
+  /* Colores y efectos */
+  color: #1f1f1f;
+
+  /* Otras propiedades */
+  white-space: pre-line;
+  white-space: pre-line;
 }
 
-/* Botón de aceptar */
 .warning-modal .ant-btn-primary {
-  background-color: #d4380d;
+  /* Bordes */
   border-color: #d4380d;
+
+  /* Fondos */
+  background-color: #d4380d;
 }
 
 .warning-modal .ant-btn-primary:hover {
-  background-color: #a52a2a;
+  /* Bordes */
   border-color: #a52a2a;
+
+  /* Fondos */
+  background-color: #a52a2a;
 }
 
 .warning-modal-backdrop {
-  z-index: 2000; /* Asegura que el modal esté por encima de otros elementos */
+  /* Posicionamiento */
+  z-index: 2000;
 }

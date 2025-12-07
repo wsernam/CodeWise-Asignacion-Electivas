@@ -1,90 +1,133 @@
-/* Fondo oscuro transparente */
 .modal-overlay {
+/* Posicionamiento */
   position: fixed;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.45);
+  z-index: 2000;
+
+  /* Modelo de caja */
   display: flex;
+
+  /* Flexbox y Grid */
   justify-content: center;
   align-items: center;
-  z-index: 2000;
-}
 
-/* Caja del modal */
+  /* Dimensiones */
+  width: 100%;
+  height: 100%;
+
+  /* Fondos */
+  background: rgba(0, 0, 0, 0.45);}
+
 .modal-card {
-  background: #fff;
-  border-radius: 16px;
-  padding: 2rem;
+/* Dimensiones */
   width: 380px;
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.15);
-  text-align: center;
-  animation: fadeIn 0.25s ease-in-out;
-}
 
-/* Animación suave */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
+  /* Relleno */
+  padding: 2rem;
+
+  /* Bordes */
+  border-radius: 16px;
+
+  /* Fondos */
+  background: #fff;
+
+  /* Tipografía */
+  text-align: center;
+
+  /* Colores y efectos */
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.15);
+
+  /* Transiciones y animaciones */
+  animation: fadeIn 0.25s ease-in-out;}
 
 .modal-title {
+/* Márgenes */
+  margin-bottom: 0.8rem;
+
+  /* Tipografía */
   font-size: 1.3rem;
   font-weight: 600;
-  margin-bottom: 0.8rem;
-  color: #1f297f; /* azul institucional */
-}
+
+  /* Colores y efectos */
+  color: #1f297f;}
 
 .modal-message {
-  font-size: 1rem;
+/* Márgenes */
   margin-bottom: 1.5rem;
-  color: #444;
-}
 
-/* Botones */
+  /* Tipografía */
+  font-size: 1rem;
+
+  /* Colores y efectos */
+  color: #444;}
+
 .modal-actions {
+/* Modelo de caja */
   display: flex;
+
+  /* Flexbox y Grid */
   justify-content: center;
-  gap: 1rem;
-}
+  gap: 1rem;}
 
 .btn-cancel {
-  background: #f5f5f5;
-  color: #8e211c;
-  border: 1px solid #ddd;
+/* Relleno */
   padding: 0.6rem 1.2rem;
+
+  /* Bordes */
+  border: 1px solid #ddd;
   border-radius: 8px;
+
+  /* Fondos */
+  background: #f5f5f5;
+
+  /* Tipografía */
   font-size: 1rem;
-  cursor: pointer;
+
+  /* Colores y efectos */
+  color: #8e211c;
+
+  /* Transiciones y animaciones */
   transition: all 0.2s;
-}
+
+  /* Interactividad */
+  cursor: pointer;}
 
 .btn-cancel:hover {
-  background: #ffeaea;
-}
+/* Fondos */
+  background: #ffeaea;}
 
 .btn-confirm {
-  background: #1f297f;
-  color: #fff;
-  border: none;
+/* Relleno */
   padding: 0.6rem 1.2rem;
+
+  /* Bordes */
+  border: none;
   border-radius: 8px;
+
+  /* Fondos */
+  background: #1f297f;
+
+  /* Tipografía */
   font-size: 1rem;
-  cursor: pointer;
+
+  /* Colores y efectos */
+  color: #fff;
+
+  /* Transiciones y animaciones */
   transition: all 0.2s;
-}
+
+  /* Interactividad */
+  cursor: pointer;}
 
 .btn-confirm:hover {
-  background: #14206d;
-}
+/* Fondos */
+  background: #14206d;}
 
 .confirm-modal-backdrop {
-  z-index: 2000; /* Asegura que el modal esté por encima de otros elementos */
-}
+/* Posicionamiento */
+  z-index: 2000;}
+
+.confirm-message {
+/* Otras propiedades */
+  white-space: pre-line;}

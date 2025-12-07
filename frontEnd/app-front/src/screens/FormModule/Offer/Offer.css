@@ -1,329 +1,484 @@
-/* Contenedor principal de Offer */
 .offer-container {
+/* Modelo de caja */
+  display: flex;
+
+  /* Flexbox y Grid */
+  flex-direction: column;
+
+  /* Dimensiones */
   min-height: 100vh;
   width: 100%;
-  display: flex;
-  flex-direction: column;
+
+  /* Fondos */
   background: transparent;
-  font-family: var(--font-family);
-}
+
+  /* Tipografía */
+  font-family: var(--font-family);}
 
 .offer-content {
-  flex: 1;
+/* Modelo de caja */
   display: flex;
+
+  /* Flexbox y Grid */
+  flex: 1;
   justify-content: center;
   align-items: flex-start;
-  padding: 2rem;
-}
+
+  /* Relleno */
+  padding: 2rem;}
+
+.offer-electiva-item.already-offered {
+/* Bordes */
+  border-left: 4px solid #28a745;}
+
+.offer-electiva-item.already-offered:hover {
+/* Fondos */
+  background-color: #f8f9fa;}
 
 .offer-card {
+/* Dimensiones */
   max-width: 1000px;
-  width: 100%;
-}
+  width: 100%;}
 
 .offer-title {
+/* Márgenes */
   margin-bottom: 1.5rem;
-  font-weight: 600;
-  color: #222;
-  text-align: center;
-}
 
-/* Panel de configuración */
+  /* Tipografía */
+  font-weight: 600;
+  text-align: center;
+
+  /* Colores y efectos */
+  color: #222;}
+
 .offer-config-panel {
+/* Modelo de caja */
   display: flex;
+
+  /* Flexbox y Grid */
   align-items: center;
   gap: var(--space-xl);
-  margin-bottom: var(--space-xl);
-  padding: var(--space-md);
-  background: #f8f9fa;
-  border-radius: 8px;
   flex-wrap: wrap;
-}
+
+  /* Márgenes */
+  margin-bottom: var(--space-xl);
+
+  /* Relleno */
+  padding: var(--space-md);
+
+  /* Bordes */
+  border-radius: 8px;
+
+  /* Fondos */
+  background: #f8f9fa;}
 
 .offer-config-item {
+/* Modelo de caja */
   display: flex;
+
+  /* Flexbox y Grid */
   align-items: center;
-  gap: var(--space-sm);
-}
+  gap: var(--space-sm);}
 
 .offer-config-program {
+/* Modelo de caja */
   display: flex;
+
+  /* Flexbox y Grid */
   align-items: center;
-  gap: var(--space-sm);
-}
+  gap: var(--space-sm);}
 
 .offer-config-label {
+/* Tipografía */
   font-weight: 600;
-  color: #495057;
-}
 
-/* Facultades desplegables */
+  /* Colores y efectos */
+  color: #495057;}
+
 .offer-facultad-container {
-  border: 1px solid #dee2e6;
-  border-radius: 8px;
+/* Modelo de caja */
   overflow: hidden;
+
+  /* Márgenes */
   margin-bottom: var(--space-md);
-}
+
+  /* Bordes */
+  border: 1px solid #dee2e6;
+  border-radius: 8px;}
 
 .offer-facultad-header {
-  background: #e9ecef;
-  padding: var(--space-md) var(--space-lg);
-  cursor: pointer;
+/* Modelo de caja */
   display: flex;
+
+  /* Flexbox y Grid */
   justify-content: space-between;
   align-items: center;
+
+  /* Relleno */
+  padding: var(--space-md) var(--space-lg);
+
+  /* Fondos */
+  background: #e9ecef;
+
+  /* Transiciones y animaciones */
   transition: background-color 0.2s ease;
-}
+
+  /* Interactividad */
+  cursor: pointer;}
 
 .offer-facultad-header:hover {
-  background: #dee2e6;
-}
+/* Fondos */
+  background: #dee2e6;}
 
 .offer-facultad-title {
+/* Márgenes */
   margin: 0;
+
+  /* Tipografía */
   font-size: 1.1rem;
-  color: #495057;
-}
+
+  /* Colores y efectos */
+  color: #495057;}
 
 .offer-facultad-count {
-  font-size: 0.9rem;
-  color: #6c757d;
+/* Márgenes */
   margin-left: var(--space-sm);
+
+  /* Tipografía */
+  font-size: 0.9rem;
   font-weight: normal;
-}
+
+  /* Colores y efectos */
+  color: #6c757d;}
 
 .offer-facultad-arrow {
+/* Tipografía */
   font-size: 1.2rem;
+
+  /* Colores y efectos */
   color: #6c757d;
-  transition: transform 0.2s ease;
-}
+
+  /* Transiciones y animaciones */
+  transition: transform 0.2s ease;}
 
 .offer-facultad-arrow.expanded {
-  transform: rotate(180deg);
-}
+/* Otras propiedades */
+  transform: rotate(180deg);}
 
 .offer-facultad-content {
-  background: white;
+/* Relleno */
   padding: var(--space-lg);
-}
 
-/* Mensajes de vacío */
+  /* Fondos */
+  background: white;}
+
 .offer-empty-message {
-  text-align: center;
+/* Relleno */
   padding: var(--space-xl);
-  color: #6c757d;
+
+  /* Tipografía */
+  text-align: center;
   font-style: italic;
-}
+
+  /* Colores y efectos */
+  color: #6c757d;}
 
 .offer-empty-program {
-  color: #6c757d;
+/* Relleno */
+  padding: var(--space-sm);
+
+  /* Tipografía */
   font-style: italic;
   text-align: center;
-  padding: var(--space-sm);
-}
 
-/* Grid de programas */
+  /* Colores y efectos */
+  color: #6c757d;}
+
 .offer-programas-grid {
+/* Modelo de caja */
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-  gap: var(--space-lg);
-}
 
-/* Tarjeta de programa */
+  /* Flexbox y Grid */
+  gap: var(--space-lg);
+
+  /* Otras propiedades */
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));}
+
 .offer-programa-card {
-  background: #f8f9fa;
+/* Relleno */
+  padding: var(--space-md);
+
+  /* Bordes */
   border: 1px solid #dee2e6;
   border-radius: 8px;
-  padding: var(--space-md);
-}
+
+  /* Fondos */
+  background: #f8f9fa;}
 
 .offer-programa-header {
+/* Modelo de caja */
   display: flex;
+
+  /* Flexbox y Grid */
   justify-content: space-between;
   align-items: flex-start;
+
+  /* Márgenes */
   margin-bottom: var(--space-md);
+
+  /* Relleno */
   padding-bottom: var(--space-sm);
-  border-bottom: 2px solid #dee2e6;
-}
+
+  /* Bordes */
+  border-bottom: 2px solid #dee2e6;}
 
 .offer-programa-info {
-  flex: 1;
-}
+/* Flexbox y Grid */
+  flex: 1;}
 
 .offer-programa-name {
+/* Márgenes */
   margin: 0 0 var(--space-xs) 0;
+
+  /* Tipografía */
   font-size: 1rem;
-  color: #495057;
-}
+
+  /* Colores y efectos */
+  color: #495057;}
 
 .offer-programa-code {
-  color: #6c757d;
+/* Tipografía */
   font-size: 0.8rem;
   font-style: italic;
-}
+
+  /* Colores y efectos */
+  color: #6c757d;}
 
 .offer-programa-count {
-  color: #1e40af;
+/* Tipografía */
   font-size: 0.85rem;
   font-weight: 600;
   text-align: right;
-}
 
-/* Lista de electivas */
+  /* Colores y efectos */
+  color: #1e40af;}
+
 .offer-electivas-list {
+/* Modelo de caja */
   display: flex;
+
+  /* Flexbox y Grid */
   flex-direction: column;
   gap: var(--space-sm);
-  min-height: 50px;
-}
 
-/* Item de electiva */
+  /* Dimensiones */
+  min-height: 50px;}
+
 .offer-electiva-item {
+/* Modelo de caja */
   display: flex;
+
+  /* Flexbox y Grid */
   align-items: center;
   gap: var(--space-sm);
+
+  /* Relleno */
   padding: var(--space-sm);
+
+  /* Bordes */
   border-radius: 4px;
-  cursor: pointer;
-  background: white;
   border: 1px solid #dee2e6;
+
+  /* Fondos */
+  background: white;
+
+  /* Transiciones y animaciones */
   transition: all 0.2s ease;
-}
+
+  /* Interactividad */
+  cursor: pointer;}
 
 .offer-electiva-item.selected {
-  background: #e3f2fd;
+/* Bordes */
   border: 1px solid #90caf9;
-}
+
+  /* Fondos */
+  background: #e3f2fd;}
 
 .offer-electiva-item:hover {
-  background: #f8f9fa;
-}
+/* Fondos */
+  background: #f8f9fa;}
 
 .offer-electiva-checkbox {
+/* Dimensiones */
   width: 16px;
   height: 16px;
-  accent-color: var(--primary-blue);
-}
+
+  /* Otras propiedades */
+  accent-color: var(--primary-blue);}
 
 .offer-electiva-name {
+/* Flexbox y Grid */
   flex: 1;
+
+  /* Tipografía */
   font-size: 0.9rem;
-  color: #495057;
-}
+
+  /* Colores y efectos */
+  color: #495057;}
 
 .offer-electiva-code {
-  color: #6c757d;
+/* Relleno */
+  padding: 2px 6px;
+
+  /* Bordes */
+  border-radius: 4px;
+
+  /* Fondos */
+  background: #e9ecef;
+
+  /* Tipografía */
   font-size: 0.8rem;
   font-weight: 600;
-  background: #e9ecef;
-  padding: 2px 6px;
-  border-radius: 4px;
-}
 
-/* Botón guardar */
+  /* Colores y efectos */
+  color: #6c757d;}
+
 .offer-save-button {
-  text-align: center;
+/* Márgenes */
   margin-top: var(--space-xl);
-}
 
-/* Responsive */
-@media (max-width: 768px) {
-  .offer-content {
-    padding: 1rem;
-  }
+  /* Tipografía */
+  text-align: center;}
 
-  .offer-config-panel {
-    gap: var(--space-md);
-    justify-content: center;
-  }
-
-  .offer-programas-grid {
-    grid-template-columns: 1fr;
-    gap: var(--space-md);
-  }
-
-  .offer-facultad-header {
-    padding: var(--space-md);
-  }
-
-  .offer-facultad-content {
-    padding: var(--space-md);
-  }
-}
 .offer-actions {
+/* Modelo de caja */
   display: flex;
-  gap: 12px;
-  margin: 20px 0;
-  justify-content: flex-end;
-  padding: 0 10px;
-}
 
-/* ===== CAPA DE BLOQUEO ===== */
+  /* Flexbox y Grid */
+  gap: 12px;
+  justify-content: flex-end;
+
+  /* Márgenes */
+  margin: 20px 0;
+
+  /* Relleno */
+  padding: 0 10px;}
+
 .offer-blocking-overlay {
+/* Posicionamiento */
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(1.5px);
+  z-index: 1000;
+
+  /* Modelo de caja */
   display: flex;
+
+  /* Flexbox y Grid */
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+
+  /* Bordes */
   border-radius: 12px;
+
+  /* Fondos */
+  background: rgba(255, 255, 255, 0.7);
+
+  /* Interactividad */
   cursor: not-allowed;
-}
+
+  /* Otras propiedades */
+  backdrop-filter: blur(1.5px);}
 
 .offer-blocking-message {
-  background: white;
-  padding: 2rem;
-  border-radius: 12px;
-  text-align: center;
+/* Dimensiones */
   max-width: 400px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+
+  /* Relleno */
+  padding: 2rem;
+
+  /* Bordes */
+  border-radius: 12px;
   border: 2px solid #e74c3c;
-}
+
+  /* Fondos */
+  background: white;
+
+  /* Tipografía */
+  text-align: center;
+
+  /* Colores y efectos */
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);}
 
 .offer-blocking-icon {
-  font-size: 3rem;
+/* Márgenes */
   margin-bottom: 1rem;
-}
+
+  /* Tipografía */
+  font-size: 3rem;}
 
 .offer-blocking-message h3 {
-  color: #e74c3c;
+/* Márgenes */
   margin-bottom: 1rem;
+
+  /* Tipografía */
   font-size: 1.3rem;
-}
+
+  /* Colores y efectos */
+  color: #e74c3c;}
 
 .offer-blocking-message p {
-  color: #666;
+/* Márgenes */
   margin-bottom: 0.5rem;
+
+  /* Tipografía */
   line-height: 1.4;
-}
 
-/* Deshabilitar interacción cuando está bloqueado */
+  /* Colores y efectos */
+  color: #666;}
+
 .offer-blocking-overlay ~ .offer-card {
-  pointer-events: none;
+/* Colores y efectos */
   opacity: 0.7;
-}
 
-/* Efecto hover para la capa de bloqueo */
+  /* Interactividad */
+  pointer-events: none;}
+
 .offer-blocking-overlay:hover {
-  background: rgba(255, 255, 255, 0.7);
-}
+/* Fondos */
+  background: rgba(255, 255, 255, 0.7);}
 
 .offer-blocking-overlay:hover .offer-blocking-message {
-  transform: scale(1.02);
+/* Transiciones y animaciones */
   transition: transform 0.2s ease;
-}
+
+  /* Otras propiedades */
+  transform: scale(1.02);}
+
 .offer-status-badge {
+/* Modelo de caja */
   display: inline-block;
-  background: #e74c3c;
-  color: white;
-  padding: 0.3rem 0.8rem;
-  border-radius: 20px;
-  font-size: 0.8rem;
+
+  /* Márgenes */
   margin-left: 1rem;
-  vertical-align: middle;
-}
+
+  /* Relleno */
+  padding: 0.3rem 0.8rem;
+
+  /* Bordes */
+  border-radius: 20px;
+
+  /* Fondos */
+  background: #e74c3c;
+
+  /* Tipografía */
+  font-size: 0.8rem;
+
+  /* Colores y efectos */
+  color: white;
+
+  /* Otras propiedades */
+  vertical-align: middle;}
