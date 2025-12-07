@@ -442,3 +442,68 @@ class AsignacionOrquestadorViewSet(viewsets.ViewSet):
             "total_registros": len(items),
             "estudiantes": items,
         }, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=["post"], url_path="notificar-estudiantes")
+    def notificar_estudiantes(self, request):
+        """
+        POST /api/asignacion/notificar-estudiantes/
+
+        Body:
+        {
+          "anio": 2025,
+          "semestre": 2,
+          "pro_codigo": "PIS"   # opcional: si lo envías, solo notifica estudiantes de ese programa
+        }
+
+        Se asume que el proceso de asignación ya se ejecutó y revisó.
+        Solo se notifican estudiantes que tengan al menos una Asignacion
+        (cupo firme o lista de espera) en el periodo indicado.
+        """
+        try:
+            anio = int(request.data["anio"])
+            semestre = int(request.data["semestre"])
+        except (KeyError, ValueError):
+            return Response(
+                {"detail": "Parámetros requeridos: anio (int), semestre (int)."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        pro_codigo = request.data.get("pro_codigo") or None
+
+        # 1) Validación mínima: que sí haya asignaciones en ese periodo/programa
+        qs = Asignacion.objects.filter(anio=anio, asi_num_semestre=semestre)
+        if pro_codigo:
+            qs = qs.filter(est_codigo__pro_codigo__pro_codigo=pro_codigo)
+
+        if not qs.exists():
+            return Response(
+                {
+                    "detail": (
+                        "No existen asignaciones para el periodo/programa indicado. "
+                        "Ejecuta primero el proceso de asignación y revisa que todo esté bien "
+                        "antes de enviar las notificaciones."
+                    )
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # 2) Calcular cuántos estudiantes distintos tienen asignación
+        est_ids = set(qs.values_list("est_codigo_id", flat=True))
+
+        # 3) Enviar notificaciones (solo a esos estudiantes)
+        notificaciones_enviadas = enviar_notificaciones_asignacion_periodo(
+            anio=anio,
+            semestre=semestre,
+            pro_codigo=pro_codigo,
+        )
+
+        return Response(
+            {
+                "periodo": f"{anio}-{semestre}",
+                "pro_codigo": pro_codigo,
+                "total_estudiantes_con_asignacion": len(est_ids),
+                "notificaciones_enviadas": notificaciones_enviadas,
+            },
+            status=status.HTTP_200_OK,
+        )
+

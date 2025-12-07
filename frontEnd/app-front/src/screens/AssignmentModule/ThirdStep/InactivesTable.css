@@ -1,0 +1,199 @@
+.inactives-table-container {
+  /* Modelo de caja */
+  overflow-x: auto;
+
+  /* Dimensiones */
+  width: 100%;
+
+  /* Fondos */
+  background: white;
+}
+
+.inactives-table {
+  /* Dimensiones */
+  width: 100%;
+
+  /* Bordes */
+  border: 1px solid #e0e0e0;
+
+  /* Fondos */
+  background: white;
+
+  /* Tipografía */
+  font-size: 14px;
+
+  /* Otras propiedades */
+  border-collapse: collapse;
+}
+
+.inactives-table th {
+  /* Posicionamiento */
+  position: sticky;
+  top: 0;
+  z-index: 10;
+
+  /* Relleno */
+  padding: 12px 8px;
+
+  /* Bordes */
+  border: 1px solid #e0e0e0;
+
+  /* Fondos */
+  background-color: #f8f9fa;
+
+  /* Tipografía */
+  text-align: left;
+  font-weight: 600;
+
+  /* Otras propiedades */
+  white-space: nowrap;
+}
+
+.inactives-table td {
+  /* Relleno */
+  padding: 4px;
+
+  /* Bordes */
+  border: 1px solid #e0e0e0;
+
+  /* Otras propiedades */
+  vertical-align: middle;
+}
+
+.inactives-input {
+  /* Modelo de caja */
+  box-sizing: border-box;
+
+  /* Dimensiones */
+  width: 100%;
+
+  /* Relleno */
+  padding: 8px;
+
+  /* Bordes */
+  border: 1px solid #d9d9d9;
+  border-radius: 4px;
+
+  /* Fondos */
+  background-color: white;
+
+  /* Tipografía */
+  font-size: 14px;
+
+  /* Otras propiedades */
+  outline: none;
+}
+
+.inactives-input:focus {
+  /* Bordes */
+  border-color: #1890ff;
+
+  /* Colores y efectos */
+  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+}
+
+.inactives-table th:nth-child(1),
+.inactives-table td:nth-child(1) {
+  /* Dimensiones */
+  width: 120px;
+  min-width: 120px;
+}
+
+.inactives-table th:nth-child(2),
+.inactives-table td:nth-child(2) {
+  /* Dimensiones */
+  width: 120px;
+  min-width: 120px;
+}
+
+.inactives-table th:nth-child(3),
+.inactives-table td:nth-child(3) {
+  /* Dimensiones */
+  width: 120px;
+  min-width: 120px;
+}
+
+.inactives-table th:nth-child(4),
+.inactives-table td:nth-child(4) {
+  /* Dimensiones */
+  width: 150px;
+  min-width: 150px;
+}
+
+.inactives-table th:nth-child(5),
+.inactives-table td:nth-child(5) {
+  /* Dimensiones */
+  width: 90px;
+  min-width: 90px;
+}
+
+.inactives-table th:nth-child(6),
+.inactives-table td:nth-child(6) {
+  /* Dimensiones */
+  width: 90px;
+  min-width: 90px;
+}
+
+.inactives-table th:nth-child(7),
+.inactives-table td:nth-child(7) {
+  /* Dimensiones */
+  width: 90px;
+  min-width: 90px;
+}
+
+.inactives-table th:nth-child(8),
+.inactives-table td:nth-child(8) {
+  /* Dimensiones */
+  width: 90px;
+  min-width: 90px;
+}
+
+.inactives-table th:nth-child(9),
+.inactives-table td:nth-child(9) {
+  /* Dimensiones */
+  width: 100px;
+  min-width: 100px;
+}
+
+.status {
+  /* Modelo de caja */
+  display: inline-block;
+
+  /* Dimensiones */
+  min-width: 80px;
+
+  /* Relleno */
+  padding: 4px 12px;
+
+  /* Bordes */
+  border-radius: 12px;
+
+  /* Tipografía */
+  font-size: 0.8rem;
+  font-weight: bold;
+  text-align: center;
+}
+
+.status.active {
+  /* Fondos */
+  background: #28a745;
+
+  /* Colores y efectos */
+  color: white;
+}
+
+.status.inactive {
+  /* Fondos */
+  background: #6c757d;
+
+  /* Colores y efectos */
+  color: white;
+}
+
+.input-invalid {
+  /* Bordes */
+  border-color: #dc3545;
+
+  /* Fondos */
+  background-color: #fff8f8;
+}

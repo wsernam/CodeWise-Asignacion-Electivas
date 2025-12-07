@@ -1,15 +1,15 @@
 import React from "react";
-import "../AssignmentProcessSteps.css";
 import {
   FaUserSlash,
   FaUserCheck,
   FaFileAlt,
   FaClipboardList,
 } from "react-icons/fa";
-import Button from "../../../../components/ui/Button/Button";
-import SimpleModal from "../../../../components/shared/SimpleModal/SimpleModal";
-import ConfirmModal from "../../../../components/shared/ConfirmModal/ConfirmModal";
-import { useAssignmentProcessStore } from "../../../../store/Assignment";
+import Button from "../../../components/ui/Button/Button";
+import SimpleModal from "../../../components/shared/SimpleModal/SimpleModal";
+import { useAssignmentProcessStore } from "../../../store/Assignment";
+import "../AssignmentModule.css";
+import "../AssignmentProcessSteps.css";
 
 type AssignmentProcessProps = {
   onNext: () => void;
@@ -18,7 +18,6 @@ type AssignmentProcessProps = {
   currentStep: number;
   completedSteps: number[];
   getStepBorderClass: (stepNumber: number) => string;
-  // No necesitamos processData aquí, solo en AssignmentModule
 };
 
 const cards = [
@@ -55,8 +54,6 @@ const AssignmentManagementAP: React.FC<AssignmentProcessProps> = ({
   getStepBorderClass,
 }) => {
   const [showModal, setShowModal] = React.useState(false);
-  const [showConfirm, setShowConfirm] = React.useState(false);
-
   // Acciones del store
   const ejecutarAsignacion = useAssignmentProcessStore(
     (s: any) => s.ejecutarAsignacion
@@ -76,7 +73,7 @@ const AssignmentManagementAP: React.FC<AssignmentProcessProps> = ({
     try {
       await ejecutarAsignacion(); // Solo ejecuta la asignación
       setShowModal(false);
-      onNext(); // ✅ Avanza al paso 5 (para ver asignación y finalizar proceso)
+      onNext();
     } catch (e: any) {
       console.error("Error ejecutando la asignación:", e?.message || e);
     }

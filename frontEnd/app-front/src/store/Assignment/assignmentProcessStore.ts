@@ -18,6 +18,8 @@ interface AssignmentProcessState {
   eliminarProceso: (procesoId: number) => Promise<void>;
   eliminarProcesoCompleto: (procesoId: number) => Promise<void>;
   ejecutarAsignacion: () => Promise<any>;
+  obtenerUltimoProcesoFinalizado: () => Promise<AssignmentProcess | null>;
+  verificarOfertasActivas: (anio: number, semestre: number) => Promise<boolean>;
   verificarCondicionesCreacion: (
     anio: number,
     semestre: number
@@ -55,41 +57,6 @@ export const useAssignmentProcessStore = create<AssignmentProcessState>(
     error: null,
 
     // ========== ACCIONES ==========
-
-    /**
-     * VERIFICAR CONDICIONES PARA CREAR PROCESO
-     * @param anio - Año del proceso
-     * @param semestre - Semestre del proceso
-     * @returns Objeto con si se puede crear y las razones en caso negativo
-     */
-    verificarCondicionesCreacion: async (anio: number, semestre: number) => {
-      set({ loading: true, error: null });
-
-      const razones: string[] = [];
-
-      try {
-        // 1. Verificar si ya existe un proceso para ese periodo
-        const todosProcesos =
-          await assignmentProcessService.obtenerTodosLosProcesos();
-
-        const procesoExistente = todosProcesos.find(
-          (p) => p.pa_anio === anio && p.pa_num_semestre === semestre
-        );
-
-        if (procesoExistente) {
-          razones.push(
-            `Ya existe un proceso de asignación para el periodo ${anio}-${semestre}`
-          );
-        }
-        const puedeCrear = razones.length === 0;
-
-        set({ loading: false });
-        return { puedeCrear, razones };
-      } catch (error: any) {
-        set({ loading: false, error: error.message });
-        throw error;
-      }
-    },
 
     /**
      * CREAR NUEVO PROCESO DE ASIGNACIÓN
@@ -156,11 +123,18 @@ export const useAssignmentProcessStore = create<AssignmentProcessState>(
     finalizarProceso: async (codigo: number) => {
       set({ loading: true, error: null });
       try {
-        await assignmentProcessService.finalizarProceso(codigo);
-        set({
+        // Llamar al servicio
+        const procesoActualizado =
+          await assignmentProcessService.finalizarProceso(codigo);
+
+        // Actualizar en la lista de procesos
+        set((state) => ({
+          allProcess: state.allProcess.map((p) =>
+            p.pa_codigo === codigo ? procesoActualizado : p
+          ),
           currentProcess: null,
           loading: false,
-        });
+        }));
       } catch (error: any) {
         set({
           loading: false,
@@ -247,6 +221,71 @@ export const useAssignmentProcessStore = create<AssignmentProcessState>(
         );
         set({ loading: false });
         return result;
+      } catch (error: any) {
+        set({ loading: false, error: error.message });
+        throw error;
+      }
+    },
+
+    /*
+     * Obtiene el último proceso finalizado.Filtra por estado
+     * finalizado y ordena por año y semestre para obtener el último
+     */
+    obtenerUltimoProcesoFinalizado: async () => {
+      set({ loading: true, error: null });
+      try {
+        const proceso =
+          await assignmentProcessService.obtenerUltimoProcesoFinalizado();
+        set({ loading: false });
+        return proceso;
+      } catch (error: any) {
+        set({ loading: false, error: error.message });
+        throw error;
+      }
+    },
+
+    verificarCondicionesCreacion: async (anio: number, semestre: number) => {
+      set({ loading: true, error: null });
+
+      const razones: string[] = [];
+
+      try {
+        // 1. Verificar si ya existe un proceso para ese periodo
+        const todosProcesos =
+          await assignmentProcessService.obtenerTodosLosProcesos();
+
+        const procesoExistente = todosProcesos.find(
+          (p) => p.pa_anio === anio && p.pa_num_semestre === semestre
+        );
+
+        if (procesoExistente) {
+          razones.push(
+            `Ya existe un proceso de asignación para el periodo ${anio}-${semestre}`
+          );
+        }
+        const puedeCrear = razones.length === 0;
+
+        set({ loading: false });
+        return { puedeCrear, razones };
+      } catch (error: any) {
+        set({ loading: false, error: error.message });
+        throw error;
+      }
+    },
+
+    /**
+     * VERIFICAR SI YA EXISTEN OFERTAS ACTIVAS PARA UN PERÍODO
+     */
+    verificarOfertasActivas: async (anio: number, semestre: number) => {
+      set({ loading: true, error: null });
+      try {
+        const hayOfertas =
+          await assignmentProcessService.verificarOfertasActivas(
+            anio,
+            semestre
+          );
+        set({ loading: false });
+        return hayOfertas;
       } catch (error: any) {
         set({ loading: false, error: error.message });
         throw error;

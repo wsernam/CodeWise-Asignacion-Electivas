@@ -8,6 +8,7 @@ import Button from "../../../components/ui/Button/Button";
 import WarningModal from "../../../components/shared/WarningModal/WarningModal";
 import ConfirmModal from "../../../components/shared/ConfirmModal/ConfirmModal";
 import SuccessModal from "../../../components/shared/SuccessModal/SuccessModal";
+import TooltipInfo from "../../../components/shared/TooltipInfo/TooltipInfo";
 
 // Stores
 import { useElectiveStore } from "../../../store/Form/electiveStore";
@@ -15,6 +16,7 @@ import { useProgramStore } from "../../../store/Form/programStore";
 import type { IOffer } from "../../../models/Form/offer";
 import { useOfferStore } from "../../../store/Form/offerStore";
 import { useFormStatusStore } from "../../../store/Form/formStatusStore";
+import { useAssignmentProcessStore } from "../../../store/Assignment/assignmentProcessStore";
 
 const { Option } = Select;
 
@@ -22,8 +24,9 @@ const Offer: React.FC = () => {
   // ========== STORES ==========
   const { electives, fetchElectives } = useElectiveStore();
   const { programs, fetchPrograms } = useProgramStore();
-  const { createBulkOffer } = useOfferStore();
+  const { createBulkOffer, getOffersByProgram, deleteOffer } = useOfferStore();
   const { formStatus } = useFormStatusStore();
+  const { obtenerTodosLosProcesos } = useAssignmentProcessStore();
 
   // ========== ESTADO LOCAL ==========
   const [year, setYear] = useState<number>(new Date().getFullYear());
@@ -35,6 +38,18 @@ const Offer: React.FC = () => {
     [key: string]: boolean;
   }>({});
   const [program, setProgram] = useState<string>("");
+
+  const [, setProcesos] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  // Estados para ofertas existentes y cambios
+  const [existingOffers, setExistingOffers] = useState<any[]>([]);
+  const [loadingOffers, setLoadingOffers] = useState(false);
+  const [cambiosPendientes, setCambiosPendientes] = useState<{
+    agregar: string[];
+    quitar: number[];
+  }>({ agregar: [], quitar: [] });
+  const [mensajeConfirmacion, setMensajeConfirmacion] = useState("");
 
   const [showConfirm, setShowConfirm] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
@@ -49,6 +64,50 @@ const Offer: React.FC = () => {
     fetchElectives();
     fetchPrograms();
   }, [fetchElectives, fetchPrograms]);
+
+  // Efecto para cargar ofertas cuando cambie programa, año o semestre
+  useEffect(() => {
+    if (program) {
+      cargarOfertasExistentes();
+    } else {
+      setExistingOffers([]);
+    }
+  }, [program, year, semester]);
+
+  // Efecto para sincronizar ofertas existentes al seleccionar programa
+  useEffect(() => {
+    if (program && existingOffers.length > 0) {
+      // Agregar automáticamente las electivas ya ofertadas al estado selectedElectives
+      existingOffers.forEach((oferta) => {
+        const electiva = electives.find(
+          (e) => e.ele_codigo === oferta.ele_codigo
+        );
+        if (electiva) {
+          // Encontrar el nombre del programa de esta electiva
+          const programaElectiva = programs.find(
+            (p) => p.pro_codigo.toString() === electiva.pro_codigo.toString()
+          );
+
+          if (programaElectiva) {
+            setSelectedElectives((prev) => {
+              const electivasDelPrograma =
+                prev[programaElectiva.pro_nombre] || [];
+              if (!electivasDelPrograma.includes(oferta.ele_codigo)) {
+                return {
+                  ...prev,
+                  [programaElectiva.pro_nombre]: [
+                    ...electivasDelPrograma,
+                    oferta.ele_codigo,
+                  ],
+                };
+              }
+              return prev;
+            });
+          }
+        }
+      });
+    }
+  }, [existingOffers, program, programs, electives]);
 
   useEffect(() => {
     if (programs.length > 0) {
@@ -68,6 +127,130 @@ const Offer: React.FC = () => {
       setExpandedFacultades(initialExpandedState);
     }
   }, [programs]);
+
+  // ========== FUNCIONES DE VALIDACIÓN ==========
+
+  // Verificar si existe proceso finalizado o activo para el período seleccionado
+  const verificarPeriodoBloqueado = async (): Promise<{
+    bloqueado: boolean;
+    mensaje: string;
+  }> => {
+    try {
+      setLoading(true);
+
+      // Obtener todos los procesos
+      const todosProcesos = await obtenerTodosLosProcesos();
+      setProcesos(todosProcesos);
+
+      // Buscar procesos para este período específico
+      const procesosParaPeriodo = todosProcesos.filter(
+        (p) => p.pa_anio === year && p.pa_num_semestre === semester
+      );
+
+      if (procesosParaPeriodo.length === 0) {
+        return { bloqueado: false, mensaje: "" };
+      }
+
+      // Verificar si hay proceso FINALIZADO para este período
+      const procesoFinalizado = procesosParaPeriodo.find(
+        (p) => p.pa_estado === 2
+      );
+
+      if (procesoFinalizado) {
+        return {
+          bloqueado: true,
+          mensaje: `Ya se realizó la asignación para el período ${year}-${semester}. No se puede crear una nueva oferta.`,
+        };
+      }
+
+      // Verificar si hay proceso ACTIVO/EN CURSO para este período
+      const procesoActivo = procesosParaPeriodo.find((p) => p.pa_estado === 1);
+
+      if (procesoActivo) {
+        return {
+          bloqueado: true,
+          mensaje: `Hay un proceso de asignación en curso para el período ${year}-${semester}. Debe cancelar el proceso actual para modificar una oferta.`,
+        };
+      }
+
+      return { bloqueado: false, mensaje: "" };
+    } catch (error) {
+      console.error("[Offer] Error verificando procesos:", error);
+      return {
+        bloqueado: false,
+        mensaje: "Error verificando procesos. Intente nuevamente.",
+      };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ========== FUNCIONES PARA CARGAR OFERTAS EXISTENTES ==========
+
+  const cargarOfertasExistentes = async () => {
+    if (!program) return;
+
+    try {
+      setLoadingOffers(true);
+      const ofertas = await getOffersByProgram(program, year, semester);
+      setExistingOffers(ofertas);
+    } catch (error) {
+      console.error("[Offer] Error cargando ofertas existentes:", error);
+      // Si no hay ofertas o hay error, limpiar el estado
+      setExistingOffers([]);
+    } finally {
+      setLoadingOffers(false);
+    }
+  };
+
+  // ========== FUNCIÓN PARA OBTENER ELECTIVAS YA OFERTADAS ==========
+
+  const obtenerElectivasOfertadas = () => {
+    if (existingOffers.length === 0) return [];
+
+    // Extraer los códigos de electivas de las ofertas existentes
+    const codigosElectivasOfertadas = existingOffers.map(
+      (oferta) => oferta.ele_codigo
+    );
+
+    return codigosElectivasOfertadas;
+  };
+
+  // ========== FUNCIÓN PARA CALCULAR CAMBIOS ==========
+
+  const calcularCambios = () => {
+    const electivasOfertadas = obtenerElectivasOfertadas();
+    const electivasSeleccionadas = Object.values(selectedElectives).flat();
+
+    // Obtener los ofe_codigo de las electivas que se quitarán
+    const quitar = existingOffers
+      .filter((oferta) => !electivasSeleccionadas.includes(oferta.ele_codigo))
+      .map((oferta) => oferta.ofe_codigo);
+
+    // Electivas que se AGREGARÁN (están seleccionadas pero NO estaban ofertadas)
+    const agregar = electivasSeleccionadas.filter(
+      (codigo) => !electivasOfertadas.includes(codigo)
+    );
+
+    return { agregar, quitar };
+  };
+
+  // ========== FUNCIÓN PARA OBTENER NOMBRE DE ELECTIVA ==========
+
+  const obtenerNombreElectiva = (codigo: string) => {
+    const electiva = electives.find((e) => e.ele_codigo === codigo);
+    return electiva ? electiva.ele_nombre : codigo;
+  };
+
+  // ========== FUNCIÓN PARA OBTENER NOMBRE DE ELECTIVA POR ofe_codigo ==========
+
+  const obtenerElectivaPorOfeCodigo = (ofe_codigo: number) => {
+    const oferta = existingOffers.find((o) => o.ofe_codigo === ofe_codigo);
+    if (oferta) {
+      return obtenerNombreElectiva(oferta.ele_codigo);
+    }
+    return `Código ${ofe_codigo}`;
+  };
 
   // ========== ESTRUCTURA DE DATOS ==========
 
@@ -131,15 +314,15 @@ const Offer: React.FC = () => {
   };
 
   const handleElectiveSelection = (
-    program: string,
+    programName: string,
     codigo: string,
     isChecked: boolean
   ) => {
     setSelectedElectives((prev) => {
-      const programElectives = prev[program] || [];
+      const programElectives = prev[programName] || [];
       return {
         ...prev,
-        [program]: isChecked
+        [programName]: isChecked
           ? [...programElectives, codigo]
           : programElectives.filter((id) => id !== codigo),
       };
@@ -151,15 +334,8 @@ const Offer: React.FC = () => {
     return [currentYear, currentYear + 1, currentYear + 2];
   };
 
-  const hasSelectedElectives = Object.values(selectedElectives).some(
-    (electives) => electives.length > 0
-  );
-
-  const handleSave = () => {
-    if (!hasSelectedElectives) {
-      setWarning({ open: true, message: "Selecciona al menos una electiva." });
-      return;
-    }
+  const handleSave = async () => {
+    // 1. Validaciones básicas
     if (!program) {
       setWarning({
         open: true,
@@ -168,10 +344,70 @@ const Offer: React.FC = () => {
       return;
     }
 
+    // 2. Verificar si el período está bloqueado
+    const { bloqueado, mensaje } = await verificarPeriodoBloqueado();
+    if (bloqueado) {
+      setWarning({ open: true, message: mensaje });
+      return;
+    }
+
+    // 3. Calcular cambios
+    const { agregar, quitar } = calcularCambios();
+
+    // 4. Si hay oferta existente pero no hay selecciones
+    const electivasOfertadas = obtenerElectivasOfertadas();
+    const electivasSeleccionadas = Object.values(selectedElectives).flat();
+
+    if (electivasOfertadas.length > 0 && electivasSeleccionadas.length === 0) {
+      // Mostrar confirmación especial para eliminar toda la oferta
+      setMensajeConfirmacion(
+        `¿Está seguro de eliminar la oferta existente para ${year}-${semester}?\n\n` +
+          `Al no seleccionar ninguna electiva, la oferta será eliminada del sistema.`
+      );
+      setCambiosPendientes({
+        agregar: [],
+        quitar: electivasOfertadas
+          .map((_, index) => existingOffers[index]?.ofe_codigo)
+          .filter(Boolean),
+      });
+      setShowConfirm(true);
+      return;
+    }
+
+    // 5. Preparar mensaje de confirmación normal
+    let mensajeConfirmacion = `¿Confirmar cambios para el período ${year}-${semester}?\n`;
+
+    if (agregar.length > 0) {
+      mensajeConfirmacion += `Se agregará:\n`;
+      agregar.forEach((codigo) => {
+        mensajeConfirmacion += ` ${obtenerNombreElectiva(
+          codigo
+        )} (${codigo})\n`;
+      });
+    }
+
+    if (quitar.length > 0) {
+      mensajeConfirmacion += `Se eliminará:\n`;
+      quitar.forEach((ofe_codigo) => {
+        const nombre = obtenerElectivaPorOfeCodigo(ofe_codigo);
+        mensajeConfirmacion += ` ${nombre}\n`;
+      });
+    }
+
+    if (agregar.length === 0 && quitar.length === 0) {
+      setWarning({
+        open: true,
+        message: `No realizó ningún cambio para el período ${year}-${semester}.`,
+      });
+      return;
+    }
+
+    // Guardar los cambios calculados para usarlos en handleConfirmSave
+    setCambiosPendientes({ agregar, quitar });
+    setMensajeConfirmacion(mensajeConfirmacion);
     setShowConfirm(true);
   };
 
-  // Modificar las funciones de manejo
   const handleConfirmSave = async () => {
     setShowConfirm(false);
     try {
@@ -183,33 +419,82 @@ const Offer: React.FC = () => {
         return;
       }
 
-      // Construir la oferta con el programa seleccionado
-      const oferta = Object.values(selectedElectives)
-        .flat()
-        .map((ele_codigo) => ({
-          ele_codigo,
-          pro_codigo: program, //  código seleccionado en el Select
-        }));
+      const { agregar, quitar } = cambiosPendientes;
+      const errores: string[] = [];
 
-      if (oferta.length === 0) {
-        setWarning({
-          open: true,
-          message: "No se seleccionaron electivas para ofertar.",
-        });
-        return;
+      // 1. ELIMINAR ofertas que ya no están seleccionadas
+      if (quitar.length > 0) {
+        console.log(`[Offer] Eliminando ${quitar.length} ofertas:`, quitar);
+
+        for (const ofe_codigo of quitar) {
+          try {
+            await deleteOffer(ofe_codigo);
+            console.log(`[Offer] Oferta ${ofe_codigo} eliminada exitosamente`);
+          } catch (error) {
+            console.error(
+              `[Offer] Error eliminando oferta ${ofe_codigo}:`,
+              error
+            );
+            errores.push(`No se pudo eliminar la oferta ${ofe_codigo}`);
+          }
+        }
       }
 
-      const bulkData: IOffer = {
-        ofe_anio: year,
-        ofe_num_semestre: semester,
-        ofertas: oferta,
-      };
+      // 2. CREAR nuevas ofertas
+      if (agregar.length > 0) {
+        // Construir la oferta SOLO con las nuevas electivas
+        const oferta = agregar.map((ele_codigo) => ({
+          ele_codigo,
+          pro_codigo: program,
+        }));
 
-      console.log("[FRONT] Enviando oferta:", bulkData);
+        const bulkData: IOffer = {
+          ofe_anio: year,
+          ofe_num_semestre: semester,
+          ofertas: oferta,
+        };
 
-      await createBulkOffer(bulkData);
+        console.log("[Offer] Creando nuevas ofertas:", bulkData);
+        await createBulkOffer(bulkData);
+      }
 
-      setShowSuccess(true);
+      // 3. Manejar resultados
+      if (errores.length > 0) {
+        setWarning({
+          open: true,
+          message: `Operación completada con errores:\n${errores.join("\n")}`,
+        });
+      } else {
+        // Obtener nombre del programa para el mensaje
+        const programaSeleccionado = programs.find(
+          (p) => p.pro_codigo.toString() === program
+        );
+        const nombrePrograma = programaSeleccionado
+          ? programaSeleccionado.pro_nombre
+          : `Código ${program}`;
+
+        // Mensaje de éxito
+        let mensajeExito = `Oferta ${year}-${semester} actualizada para el programa ${nombrePrograma}.`;
+
+        if (agregar.length === 0 && quitar.length === existingOffers.length) {
+          mensajeExito = `Oferta ${year}-${semester} eliminada para el programa ${nombrePrograma} (no se seleccionó ninguna electiva).`;
+        } else if (agregar.length > 0 && quitar.length > 0) {
+          mensajeExito += `\nAgregadas: ${agregar.length} electiva(s)\nEliminadas: ${quitar.length} electiva(s)`;
+        } else if (agregar.length > 0) {
+          mensajeExito += `\nAgregadas: ${agregar.length} electiva(s)`;
+        } else if (quitar.length > 0) {
+          mensajeExito += `\nEliminadas: ${quitar.length} electiva(s)`;
+        }
+
+        // Mostrar éxito
+        setMensajeConfirmacion(mensajeExito);
+        setShowSuccess(true);
+      }
+
+      // 4. Recargar ofertas
+      if (program) {
+        await cargarOfertasExistentes();
+      }
     } catch (error) {
       console.error("[Offer] Error al guardar oferta:", error);
       setWarning({
@@ -241,10 +526,65 @@ const Offer: React.FC = () => {
                 </div>
               </div>
             )}
+            {/* Título con tooltip */}
+            <div
+              className="title-with-tooltip"
+              style={{ marginBottom: "1rem", justifyContent: "center" }}
+            >
+              <h2 className="offer-title">
+                Configuración de Oferta de Electivas
+              </h2>
+              <TooltipInfo
+                symbol="?"
+                title="Guía para Configuración de Ofertas"
+                description={
+                  <div>
+                    <p>
+                      <strong>Restricciones:</strong>
+                    </p>
+                    <ul style={{ marginLeft: "15px", marginBottom: "10px" }}>
+                      <li>
+                        Solo se puede crear oferta si <strong>no</strong> hay un
+                        proceso de asignación en curso o finalizado para este
+                        período.
+                      </li>
+                      <li>
+                        La oferta se crea para un programa específico
+                        seleccionado.
+                      </li>
+                    </ul>
 
-            <h2 className="offer-title">
-              Configuración de Oferta de Electivas
-            </h2>
+                    <p>
+                      <strong>Funcionamiento:</strong>
+                    </p>
+                    <ul style={{ marginLeft: "15px", marginBottom: "10px" }}>
+                      <li>
+                        Al seleccionar un programa, se marcan las electivas que
+                        están ofertando en ese periodo.
+                      </li>
+                      <li>Al guardar, se mostrarán los cambios realizados.</li>
+                      <li>
+                        <strong>Importante:</strong> Si una oferta existente se
+                        queda sin ninguna electiva seleccionada, se eliminará
+                        dicha oferta.
+                      </li>
+                    </ul>
+
+                    <p>
+                      <strong>Para estudiantes:</strong>
+                    </p>
+                    <ul style={{ marginLeft: "15px" }}>
+                      <li>
+                        El formulario mostrará la oferta más temprana que no
+                        tenga un proceso de asignación finalizado.
+                      </li>
+                    </ul>
+                  </div>
+                }
+                position="bottom"
+                size="small"
+              />
+            </div>
 
             {/* Panel de Configuración */}
             <div className="offer-config-panel">
@@ -360,43 +700,45 @@ const Offer: React.FC = () => {
                                       </div>
                                     ) : (
                                       electivasDeEstePrograma.map(
-                                        (elective) => (
-                                          <label
-                                            key={elective.ele_codigo}
-                                            className={`offer-electiva-item ${
-                                              selectedElectives[
-                                                programa.pro_nombre
-                                              ]?.includes(elective.ele_codigo)
-                                                ? "selected"
-                                                : ""
-                                            }`}
-                                          >
-                                            <input
-                                              type="checkbox"
-                                              className="offer-electiva-checkbox"
-                                              checked={
+                                        (elective) => {
+                                          return (
+                                            <label
+                                              key={elective.ele_codigo}
+                                              className={`offer-electiva-item ${
                                                 selectedElectives[
                                                   programa.pro_nombre
-                                                ]?.includes(
-                                                  elective.ele_codigo
-                                                ) || false
-                                              }
-                                              onChange={(e) =>
-                                                handleElectiveSelection(
-                                                  programa.pro_nombre,
-                                                  elective.ele_codigo,
-                                                  e.target.checked
-                                                )
-                                              }
-                                            />
-                                            <span className="offer-electiva-name">
-                                              {elective.ele_nombre}
-                                            </span>
-                                            <span className="offer-electiva-code">
-                                              {elective.ele_codigo}
-                                            </span>
-                                          </label>
-                                        )
+                                                ]?.includes(elective.ele_codigo)
+                                                  ? "selected"
+                                                  : ""
+                                              }`}
+                                            >
+                                              <input
+                                                type="checkbox"
+                                                className="offer-electiva-checkbox"
+                                                checked={
+                                                  selectedElectives[
+                                                    programa.pro_nombre
+                                                  ]?.includes(
+                                                    elective.ele_codigo
+                                                  ) || false
+                                                }
+                                                onChange={(e) =>
+                                                  handleElectiveSelection(
+                                                    programa.pro_nombre,
+                                                    elective.ele_codigo,
+                                                    e.target.checked
+                                                  )
+                                                }
+                                              />
+                                              <span className="offer-electiva-name">
+                                                {elective.ele_nombre}
+                                              </span>
+                                              <span className="offer-electiva-code">
+                                                {elective.ele_codigo}
+                                              </span>
+                                            </label>
+                                          );
+                                        }
                                       )
                                     )}
                                   </div>
@@ -418,9 +760,9 @@ const Offer: React.FC = () => {
                 variant="primary"
                 size="medium"
                 onClick={handleSave}
-                disabled={!hasSelectedElectives || formStatus}
+                disabled={formStatus || loading || loadingOffers}
               >
-                Guardar
+                {loadingOffers ? "Cargando ofertas..." : "Guardar"}
               </Button>
             </div>
           </Card>
@@ -429,15 +771,18 @@ const Offer: React.FC = () => {
 
       <ConfirmModal
         open={showConfirm}
-        message={`¿Estás seguro de guardar la oferta para el período ${year}-${semester}?`}
+        message={mensajeConfirmacion}
         onConfirm={handleConfirmSave}
         onCancel={() => setShowConfirm(false)}
       />
 
       <SuccessModal
         open={showSuccess}
-        message={`Oferta ${year}-${semester} guardada exitosamente.`}
-        onClose={() => setShowSuccess(false)}
+        message={mensajeConfirmacion}
+        onClose={() => {
+          setShowSuccess(false);
+          setMensajeConfirmacion("");
+        }}
       />
 
       <WarningModal

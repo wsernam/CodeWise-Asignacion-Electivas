@@ -326,7 +326,7 @@ class PrevisualizarIncompletosAPIView(APIView):
                             """
                             return value is None or not str(value).strip()
 
-                        otras_columnas_vacias = all(is_cell_empty(row.get(col)) for col in columnas_a_verificar)
+                        otras_columnas_vacias = any(is_cell_empty(row.get(col)) for col in columnas_a_verificar)
 
                         if otras_columnas_vacias:
                             # Limpiamos el código para asegurar que sea un entero
@@ -339,7 +339,6 @@ class PrevisualizarIncompletosAPIView(APIView):
                                 'fila': i + 2, # i es 0-indexed, la data empieza en la fila 2
                                 'archivo': excel_file.name
                             })
-
             except Exception as e:
                 msg = f"Error crítico al procesar el archivo '{excel_file.name}': {e}"
                 logger.error(msg, exc_info=True)

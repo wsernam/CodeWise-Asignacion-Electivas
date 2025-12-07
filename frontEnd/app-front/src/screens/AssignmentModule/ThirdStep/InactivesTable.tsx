@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useProgramStore } from "../../../../store/Form/programStore";
+import { useProgramStore } from "../../../store/Form/programStore";
 import "./InactivesTable.css";
 
 export type InactiveRow = {
@@ -9,6 +9,7 @@ export type InactiveRow = {
   apellido: string;
   programa: string;
   creditosObligatorios: string;
+  aprobadas: string; // ← NUEVO
   periodosMatriculados: string;
   porcentajeAvance: string;
 };
@@ -38,18 +39,18 @@ const InactivesTable: React.FC<InactivesTableProps> = ({
   }, [fetchPrograms]);
 
   const validarSoloLetras = (valor: string): boolean => {
-    if (!valor) return true;
+    if (!valor) return false;
     return /^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]+$/.test(valor);
   };
 
   const validarPorcentaje = (valor: string): boolean => {
-    if (!valor) return true;
+    if (!valor) return false;
     const num = Number(valor);
     return !isNaN(num) && num >= 0 && num <= 100;
   };
 
   const validarNumeroPositivo = (valor: string): boolean => {
-    if (!valor) return true;
+    if (!valor) return false;
     const num = Number(valor);
     return !isNaN(num) && num >= 0;
   };
@@ -78,6 +79,7 @@ const InactivesTable: React.FC<InactivesTableProps> = ({
       }));
     } else if (
       field === "creditosObligatorios" ||
+      field === "aprobadas" || // ← NUEVO
       field === "periodosMatriculados"
     ) {
       const esValido = validarNumeroPositivo(value);
@@ -91,24 +93,41 @@ const InactivesTable: React.FC<InactivesTableProps> = ({
   };
 
   const isActive = (row: InactiveRow) => {
-    // Validar que todos los campos obligatorios estén llenos
+    // VALIDACIÓN ESTRICTA: TODO DEBE ESTAR LLENO Y VÁLIDO
     const camposObligatoriosLlenos =
-      row.codigo && row.nombre && row.apellido && row.programa;
+      row.codigo &&
+      row.codigo.trim() !== "" &&
+      row.nombre &&
+      row.nombre.trim() !== "" &&
+      row.apellido &&
+      row.apellido.trim() !== "" &&
+      row.programa &&
+      row.programa.trim() !== "" &&
+      row.creditosObligatorios &&
+      row.creditosObligatorios.trim() !== "" &&
+      row.aprobadas &&
+      row.aprobadas.trim() !== "" &&
+      row.periodosMatriculados &&
+      row.periodosMatriculados.trim() !== "" &&
+      row.porcentajeAvance &&
+      row.porcentajeAvance.trim() !== "";
 
-    // Validar que nombre y apellido solo tengan letras
+    if (!camposObligatoriosLlenos) return false;
+
+    // VALIDACIÓN DE FORMATO
     const nombreValido = validarSoloLetras(row.nombre);
     const apellidoValido = validarSoloLetras(row.apellido);
-
-    // Validar que los campos numéricos tengan formato correcto
     const creditosValidos = validarNumeroPositivo(row.creditosObligatorios);
+    const aprobadasValidas = validarNumeroPositivo(row.aprobadas);
     const periodosValidos = validarNumeroPositivo(row.periodosMatriculados);
     const porcentajeValido = validarPorcentaje(row.porcentajeAvance);
 
+    // SOLO ES ACTIVO SI TODO ESTÁ LLENO Y VÁLIDO
     return (
-      camposObligatoriosLlenos &&
       nombreValido &&
       apellidoValido &&
       creditosValidos &&
+      aprobadasValidas &&
       periodosValidos &&
       porcentajeValido
     );
@@ -124,9 +143,10 @@ const InactivesTable: React.FC<InactivesTableProps> = ({
             <th>Apellido</th>
             <th>Programa</th>
             <th>Cr. oblig.</th>
+            <th>Aprobadas</th> {/* ← NUEVA COLUMNA */}
             <th>Periodos</th>
             <th>% avance</th>
-            <th>Estado</th>
+            <th>Estado</th> {/* ← SE MANTIENE */}
           </tr>
         </thead>
         <tbody>
@@ -213,6 +233,22 @@ const InactivesTable: React.FC<InactivesTableProps> = ({
                   }
                   className={`inactives-input ${
                     validaciones[`${row.id}-creditosObligatorios`] === false
+                      ? "input-invalid"
+                      : ""
+                  }`}
+                  placeholder="0"
+                  min="0"
+                />
+              </td>
+              <td>
+                <input
+                  type="number"
+                  defaultValue={row.aprobadas}
+                  onBlur={(e) =>
+                    handleInputChange(row.id, "aprobadas", e.target.value)
+                  }
+                  className={`inactives-input ${
+                    validaciones[`${row.id}-aprobadas`] === false
                       ? "input-invalid"
                       : ""
                   }`}

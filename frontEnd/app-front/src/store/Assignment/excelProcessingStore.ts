@@ -33,9 +33,14 @@ interface ExcelProcessingState {
       archivo: string;
       fila: number;
       datos: Record<string, any>;
+      externalCacheKey?: string;
     }>
   ) => Promise<any>;
-  importarPerfiles: (files: File[]) => Promise<any>;
+  importarPerfiles: (
+    files: File[],
+    anio?: number,
+    semester?: number
+  ) => Promise<any>;
   clearError: () => void;
   reset: () => void;
 }
@@ -116,9 +121,20 @@ export const useExcelProcessingStore = create<ExcelProcessingState>(
     completarYProcesar: async (filasACompletar = []) => {
       set({ loading: true, error: null });
       try {
-        const { cacheKey } = get();
-        if (!cacheKey)
-          throw new Error("No hay archivos en caché para procesar");
+        // 1. Primero buscar en store
+        let { cacheKey } = get();
+
+        // 2. Si no está en store, buscar en localStorage
+        if (!cacheKey) {
+          cacheKey = localStorage.getItem("excel_cache_key");
+          console.log("[DEBUG] cacheKey desde localStorage:", cacheKey);
+        }
+
+        if (!cacheKey) {
+          throw new Error(
+            "No hay archivos en caché para procesar. Vuelve al paso 1."
+          );
+        }
 
         const result = await excelProcessingService.completarYProcesar(
           cacheKey,
@@ -134,21 +150,91 @@ export const useExcelProcessingStore = create<ExcelProcessingState>(
 
     /**
      * IMPORTAR PERFILES ACADÉMICOS A LA BASE DE DATOS
-     * Se conecta con: excelProcessingService.importarPerfiles()
+     * Se conecta con: excelProcessingService.completarYProcesar()
      * @param files - Archivos Excel procesados
+     * @param anio - Año del proceso (opcional, para logging)
+     * @param semestre - Semestre del proceso (opcional, para logging)
      * @returns Resultado de la importación
      * Paso final después de completar todas las validaciones
      */
-    importarPerfiles: async (files: File[]) => {
-      // REUTILIZACIÓN DE LÓGICA:
-      // En lugar de tener una llamada de API separada, reutilizamos
-      // `completarYProcesar`. Si no se pasan filas, simplemente le pide
-      // al backend que procese los archivos en caché y los importe.
-      // Esto soluciona el bug donde la importación final no se llamaba.
-      // El parámetro `files` se ignora, ya que los archivos ya están en caché.
-      return get().completarYProcesar();
-    },
+    importarPerfiles: async (
+      files: File[],
+      anio?: number,
+      semestre?: number
+    ) => {
+      set({ loading: true, error: null });
 
+      try {
+        // 1. Buscar cacheKey
+        let { cacheKey } = get();
+
+        if (!cacheKey) {
+          cacheKey = localStorage.getItem("excel_cache_key");
+          console.log("[DEBUG] cacheKey desde localStorage:", cacheKey);
+        }
+
+        if (!cacheKey) {
+          throw new Error(
+            "No hay archivos en caché para procesar. Vuelve al paso 1."
+          );
+        }
+
+        // 2. Registrar año/semestre si están disponibles (solo para logs)
+        if (anio !== undefined && semestre !== undefined) {
+          console.log(
+            "[DEBUG] Importando perfiles para periodo:",
+            anio,
+            "-",
+            semestre
+          );
+        }
+
+        // 3. Importar perfiles (reutilizar completarYProcesar)
+        console.log("[DEBUG] Importando perfiles con cacheKey:", cacheKey);
+        const result = await excelProcessingService.completarYProcesar(
+          cacheKey,
+          [] // Sin filas a completar - solo importar
+        );
+
+        console.log("[DEBUG] Resultado de importar perfiles:", result);
+
+        // 4. Verificación BÁSICA basada en la respuesta
+        if (result.resumen) {
+          const { total_registros, creados, actualizados } = result.resumen;
+          console.log(
+            `[DEBUG] Resumen importación: ${total_registros} total, ${creados} creados, ${actualizados} actualizados`
+          );
+
+          // Advertencia si no se creó ningún perfil nuevo
+          if (creados === 0 && actualizados === 0) {
+            console.warn(
+              "[ADVERTENCIA] No se crearon ni actualizaron perfiles"
+            );
+          }
+        }
+
+        // 5. Advertencia sobre ranking si tenemos año/semestre
+        if (anio !== undefined && semestre !== undefined) {
+          console.warn(
+            `[ADVERTENCIA IMPORTANTE] Verificar manualmente si se generó ranking para ${anio}-${semestre}`
+          );
+          console.warn(`[ADVERTENCIA] Sin ranking, la asignación estará vacía`);
+
+          // Añadir warning al resultado
+          result.warning = `Importación completada. Verifica que el ranking se generó para ${anio}-${semestre}. Sin ranking, la asignación estará vacía.`;
+        }
+
+        set({ loading: false });
+        return result;
+      } catch (error: any) {
+        console.error("[DEBUG] Error en importarPerfiles:", error);
+        set({
+          loading: false,
+          error: error.message || "Error al importar perfiles",
+        });
+        throw error;
+      }
+    },
     clearError: () => set({ error: null }),
 
     reset: () =>

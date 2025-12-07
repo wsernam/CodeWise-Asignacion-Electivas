@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { Form, Row, Col, Select } from "antd";
-import "../../AssignmentModule.css";
-import WarningModal from "../../../../components/shared/WarningModal/WarningModal";
-import ConfirmModal from "../../../../components/shared/ConfirmModal/ConfirmModal";
-import SuccessModal from "../../../../components/shared/SuccessModal/SuccessModal";
-import Button from "../../../../components/ui/Button/Button";
-import { useAssignmentProcessStore } from "../../../../store/Assignment";
-import { useAssignmentFlowStore } from "../../../../store/Assignment";
+import "../AssignmentModule.css";
+import WarningModal from "../../../components/shared/WarningModal/WarningModal";
+import ConfirmModal from "../../../components/shared/ConfirmModal/ConfirmModal";
+import SuccessModal from "../../../components/shared/SuccessModal/SuccessModal";
+import Button from "../../../components/ui/Button/Button";
+import { useAssignmentProcessStore } from "../../../store/Assignment";
+import { useAssignmentFlowStore } from "../../../store/Assignment";
 
 type AssignmentProcessProps = {
   onNext: (year: number, semester: 1 | 2) => void;
@@ -28,8 +28,7 @@ const CreateAssignmentProcess: React.FC<AssignmentProcessProps> = ({
     message: "",
   });
 
-  const { crearProceso, verificarCondicionesCreacion, loading, clearError } =
-    useAssignmentProcessStore();
+  const { crearProceso, loading, clearError } = useAssignmentProcessStore();
   const { setCurrentStep, addCompletedStep } = useAssignmentFlowStore();
 
   useEffect(() => {
@@ -46,7 +45,7 @@ const CreateAssignmentProcess: React.FC<AssignmentProcessProps> = ({
     return [currentYear, currentYear + 1, currentYear + 2];
   };
 
-  const handleSave = async () => {
+  const handleSave = () => {
     if (!isFormValid) {
       setWarning({
         open: true,
@@ -55,28 +54,7 @@ const CreateAssignmentProcess: React.FC<AssignmentProcessProps> = ({
       });
       return;
     }
-
-    try {
-      // Validar condiciones antes de mostrar confirmación
-      const validacion = await verificarCondicionesCreacion(year!, semester!);
-
-      if (!validacion.puedeCrear) {
-        // Mostrar todas las razones en un solo mensaje
-        const mensajeError = validacion.razones.join("\n• ");
-        setWarning({
-          open: true,
-          message: `No se puede crear el proceso porque:\n ${mensajeError}`,
-        });
-        return;
-      }
-      setShowConfirm(true);
-    } catch (error: any) {
-      console.error("[CreateProcess] Error en validación:", error);
-      setWarning({
-        open: true,
-        message: "Error al verificar las condiciones. Intente nuevamente.",
-      });
-    }
+    setShowConfirm(true);
   };
 
   const handleConfirmSave = async () => {

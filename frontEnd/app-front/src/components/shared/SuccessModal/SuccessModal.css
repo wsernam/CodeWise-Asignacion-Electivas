@@ -1,34 +1,49 @@
-/* Fondo y bordes del modal */
 .success-modal .ant-modal-content {
-  border: 2px solid #40891b; /* verde éxito */
+  /* Bordes */
+  border: 2px solid #40891b;
   border-radius: 12px;
 }
 
-/* Estilo del título */
 .success-title {
-  color: #40891b; /* verde éxito */
+  /* Tipografía */
   font-weight: bold;
   font-size: 18px;
+
+  /* Colores y efectos */
+  color: #40891b;
 }
 
-/* Mensaje principal */
 .success-message {
-  font-size: 16px;
-  color: #1f1f1f;
+  /* Márgenes */
   margin-top: 10px;
+
+  /* Tipografía */
+  font-size: 16px;
+
+  /* Colores y efectos */
+  color: #1f1f1f;
+
+  /* Otras propiedades */
+  white-space: pre-line;
 }
 
-/* Botón de aceptar */
 .success-modal .ant-btn-primary {
-  background-color: #40891b;
+  /* Bordes */
   border-color: #40891b;
+
+  /* Fondos */
+  background-color: #40891b;
 }
 
 .success-modal .ant-btn-primary:hover {
-  background-color: #40891b;
+  /* Bordes */
   border-color: #40891b;
+
+  /* Fondos */
+  background-color: #40891b;
 }
 
 .success-modal-backdrop {
-  z-index: 2000; /* Asegura que el modal esté por encima de otros elementos */
+  /* Posicionamiento */
+  z-index: 2000;
 }

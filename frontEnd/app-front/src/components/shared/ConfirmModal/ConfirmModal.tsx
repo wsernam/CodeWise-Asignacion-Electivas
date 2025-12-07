@@ -24,8 +24,7 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
   onCancel,
   confirmDisabled = false,
   cancelDisabled = false,
-  confirmLoading = false
-  
+  confirmLoading = false,
 }) => {
   return (
     <Modal

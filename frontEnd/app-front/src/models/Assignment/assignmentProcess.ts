@@ -2,10 +2,11 @@ export interface AssignmentProcess {
   pa_codigo: number;
   pa_anio: number;
   pa_num_semestre: 1 | 2;
-  pa_activo: boolean;
-  fechaFinalizacion?: string;
+  pa_estado: number; // 1=activo, 2=inactivo
+  pa_paso_actual: number; // 1=creado, 2=archivos-guardados, 4=nivelados-gestionados, 5=asignacion-realizada, 6=finalizado
+  pa_fecha_creacion: string;
+  pa_ultima_fecha_actualizacion: string;
 }
-
 export interface ValidationResult {
   cache_key: string;
   faltantes: string[];
@@ -55,9 +56,9 @@ export interface ConfirmLeveledRequest {
 }
 
 export interface CodeBatchesResponse {
-  anio: number,
+  anio: number;
   semestre: number;
   total_estudiantes: number;
   lote_size: number;
-  lotes: number [][];
+  lotes: number[][];
 }
