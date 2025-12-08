@@ -82,18 +82,16 @@ const ReportFilters: React.FC<IReportFiltersProps> = ({
           <label htmlFor="year-select" className="filter-label">
             Año
           </label>
-          <select
+          <input
             id="year-select"
-            value={selectedYear}
-            onChange={(e) => onYearChange(Number(e.target.value))}
+            type="number"
+            value={selectedYear || ""}
+            onChange={(e) => onYearChange(e.target.value ? Number(e.target.value) : 0)}
             className="filter-select"
-          >
-            {yearOptions.map((year) => (
-              <option key={year} value={year}>
-                {year}
-              </option>
-            ))}
-          </select>
+            placeholder=" "
+            min={"2000"}
+            max={"3000"}
+          />
         </div>
 
         <div className="filter-group">
