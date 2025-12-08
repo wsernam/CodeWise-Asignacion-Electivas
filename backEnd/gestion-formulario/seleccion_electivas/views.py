@@ -1,4 +1,3 @@
-
 from rest_framework import viewsets, status, mixins
 from django.db.models import Count
 from rest_framework.response import Response
@@ -8,14 +7,22 @@ from .serializers import CrearSeleccionElectivaDTO, SeleccionEstudianteElectivaS
 from gestion_electivas.models import Electiva
 from django.db import transaction
 from events.seleccion_publisher import publish_seleccion_creada
-from core.permissions import IsAdministrador
 from rest_framework.permissions import AllowAny
 
 from events.seleccion_publisher import publish_seleccion_creada
 
 class SeleccionEstudianteElectivaViewSet(mixins.CreateModelMixin,
+                                       mixins.ListModelMixin,  # ✅ AÑADIDO
                                        viewsets.GenericViewSet):
-    
+    permission_classes = [AllowAny]
+    queryset = SeleccionEstudianteElectiva.objects.all()  # ✅ AÑADIDO
+    serializer_class = SeleccionEstudianteElectivaSerializer  # ✅ AÑADIDO
+
+    def get_serializer_class(self):
+        """Usa diferentes serializadores según la acción"""
+        if self.action == 'create':
+            return CrearSeleccionElectivaDTO
+        return SeleccionEstudianteElectivaSerializer
 
     def create(self, request):
         """
@@ -90,7 +97,6 @@ class SeleccionEstudianteElectivaViewSet(mixins.CreateModelMixin,
         methods=["get"],
         url_path=r"consulta/(?P<est_codigo>\d+)/(?P<sel_anio>\d+)/(?P<sel_num_semestre>\d+)"
     )
-
     def electivas_por_estudiante(self, request, est_codigo=None, sel_anio=None, sel_num_semestre=None):
         """
         Obtiene todas las electivas seleccionadas por un estudiante 
@@ -117,9 +123,9 @@ class SeleccionEstudianteElectivaViewSet(mixins.CreateModelMixin,
         return Response(data, status=status.HTTP_200_OK)
     
     @action(
-    detail=False,
-    methods=["get"],
-    url_path=r"consulta-dashboard/(?P<pro_codigo>[\w-]+)/(?P<sel_anio>\d+)/(?P<sel_num_semestre>\d+)"
+        detail=False,
+        methods=["get"],
+        url_path=r"consulta-dashboard/(?P<pro_codigo>[\w-]+)/(?P<sel_anio>\d+)/(?P<sel_num_semestre>\d+)"
     )
     def conteo_inscritos_por_electiva(self, request, pro_codigo=None, sel_anio=None, sel_num_semestre=None):
         """

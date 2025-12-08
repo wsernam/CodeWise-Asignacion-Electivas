@@ -113,26 +113,29 @@ const Dashboard: React.FC = () => {
   // ====== Procesamiento de datos ======
   // Cargar inscripciones reales desde el backend
 useEffect(() => {
-  const fetchEnrollments = async () => {
-    try {
-      const data = await getSelectionDashboardService(programaSeleccionadoCodigo, year, semester);
+    const fetchEnrollments = async () => {
+      // Solo ejecutar si el año ha sido cargado (es mayor que 0)
+      if (year === 0) return;
 
-      // Convertimos el array en un map: { ele_codigo : inscritos }
-      const map: Record<string, number> = {};
-      data.forEach(item => {
-        map[item.ele_codigo] = item.inscritos;
-      });
-      console.error("[Dashboard] inscritos", map)
-      setEnrollments(map);
-    } catch (error) {
-      console.error("[Dashboard] Error cargando inscritos reales:", error);
-      // Si falla, dejamos el map vacío o consideras fallback
-      setEnrollments({});
-    }
-  };
+      try {
+        const data = await getSelectionDashboardService(programaSeleccionadoCodigo, year, semester);
 
-  fetchEnrollments();
-}, [programaSeleccionado, year, semester]);
+        // Convertimos el array en un map: { ele_codigo : inscritos }
+        const map: Record<string, number> = {};
+        data.forEach(item => {
+          map[item.ele_codigo] = item.inscritos;
+        });
+        console.log("[Dashboard] inscritos", map)
+        setEnrollments(map);
+      } catch (error) {
+        console.error("[Dashboard] Error cargando inscritos reales:", error);
+        // Si falla, dejamos el map vacío o consideras fallback
+        setEnrollments({});
+      }
+    };
+
+    fetchEnrollments();
+}, [programaSeleccionadoCodigo, year, semester]);
 
 
   // Lista de programas disponibles para filtrar (basada en programas reales)

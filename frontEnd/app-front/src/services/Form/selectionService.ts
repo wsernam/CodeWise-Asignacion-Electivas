@@ -1,5 +1,5 @@
 import apiClient from "../Auth/apiClient";
-import { SELECTION_URL_PRIVATE, SELECTION_URL_PUBLIC, SELECTION_URL_DASHBOARD_PUBLIC, ESTADO_FORMULARIO_URL_PUBLIC } from "../config/config";
+import { SELECTION_URL_PUBLIC,  SELECTION_URL_DASHBOARD_PUBLIC, ESTADO_FORMULARIO_URL_PUBLIC } from "../config/config";
 import type { ISelectionStudentElective, ISelectionDashboard } from "../../models/Form/selection";
 
 // ========== HELPERS ==========
@@ -44,10 +44,10 @@ export const getSelectionsByStudent = async (
   try {
     console.log(
       "[selectionService] Conectando a:",
-      `${SELECTION_URL_PRIVATE}/${code}/${year}/${semester}`
+      `${SELECTION_URL_PUBLIC}/${code}/${year}/${semester}`
     );
     const response = await apiClient.get(
-      `${SELECTION_URL_PRIVATE}/${code}/${year}/${semester}`
+      `${SELECTION_URL_PUBLIC}/${code}/${year}/${semester}`
     );
     console.log("[selectionService] Datos CRUDOS del backend:", response.data);
     const transformed = transformSelection(response.data);
