@@ -250,6 +250,27 @@ services:
                 uri: /estado-formulario/
       
       # ------------------------------------------------
+      # Periodo Última Oferta - GET (Público)
+      # ------------------------------------------------
+      - name: gestion-formulario-periodo-ultima-oferta-public
+        protocols:
+          - http
+          - https
+        methods:
+          - GET
+          - OPTIONS
+        paths:
+          - /gestion-formulario/periodo-ultima-oferta
+        strip_path: false
+        preserve_host: true
+        plugins:
+          - name: request-transformer
+            enabled: true
+            config:
+              replace:
+                uri: /periodo-ultima-oferta/
+      
+      # ------------------------------------------------
       # Ofertas - GET (Público)
       # ------------------------------------------------
       - name: gestion-formulario-ofertas-public-list
@@ -291,8 +312,26 @@ services:
                 uri: /ofertas/$(uri_captures['anio'])/$(uri_captures['semestre'])/$(uri_captures['programa'])/
       
       # ------------------------------------------------
-      # Selecciones - POST (Público para estudiantes)
+      # Selecciones - GET y POST (Público)
       # ------------------------------------------------
+      - name: gestion-formulario-selecciones-public-list
+        protocols:
+          - http
+          - https
+        methods:
+          - GET
+          - OPTIONS
+        paths:
+          - /gestion-formulario/selecciones
+        strip_path: false
+        preserve_host: true
+        plugins:
+          - name: request-transformer
+            enabled: true
+            config:
+              replace:
+                uri: /seleccion-electivas/
+      
       - name: gestion-formulario-selecciones-public-post
         protocols:
           - http
@@ -310,6 +349,25 @@ services:
             config:
               replace:
                 uri: /seleccion-electivas/
+      
+      - name: gestion-formulario-selecciones-public-consulta-dashboard
+        protocols:
+          - http
+          - https
+        methods:
+          - GET
+          - OPTIONS
+        paths:
+          - ~/gestion-formulario/selecciones/consulta-dashboard/(?<programa>[^/]+)/(?<anio>\d+)/(?<semestre>\d+)/?
+        strip_path: false
+        preserve_host: true
+        regex_priority: 15
+        plugins:
+          - name: request-transformer
+            enabled: true
+            config:
+              replace:
+                uri: /seleccion-electivas/consulta-dashboard/$(uri_captures['programa'])/$(uri_captures['anio'])/$(uri_captures['semestre'])/
 
       # ------------------------------------------------
       # Estudiantes - TODAS LAS OPERACIONES (Público) 
@@ -623,7 +681,7 @@ services:
                 uri: /toggle-formulario/
       
       # ------------------------------------------------
-      # Selecciones - Admin (GET)
+      # Selecciones - Admin (GET consultas específicas)
       # ------------------------------------------------
       - name: gestion-formulario-selecciones-admin-list
         protocols:

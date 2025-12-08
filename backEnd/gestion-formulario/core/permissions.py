@@ -45,7 +45,7 @@ class IsAsignador(BasePermission):
             
             logger.info(f"[Auth] Validando IsAsignador - Rol: '{user_role}', User ID: '{user_id}'")
             
-            if user_role not in ['asignador', 'ambos']:  
+            if user_role_lower not in ['asignador', 'ambos']:  
                 raise PermissionDenied({
                     "error": "Permiso denegado",
                     "message": f"Esta acción requiere el rol 'asignador' o 'Ambos'. Tu rol actual es '{user_role}'."
@@ -107,7 +107,7 @@ class IsAdministrador(BasePermission):
             
             logger.info(f"[Auth] Validando IsAdministrador - Rol: '{user_role}'")
             
-            if user_role not in ['administrador', 'ambos']: 
+            if user_role_lower not in ['administrador', 'ambos']: 
                 logger.warning(f"[Auth] Acceso DENEGADO - Rol requerido: 'administrador' o 'ambos', Rol actual: '{user_role}'")
                 raise PermissionDenied({
                     "error": "Permiso denegado",
@@ -213,12 +213,15 @@ class TieneRoles(BasePermission):
             user_role = decoded.get('role', None)
             user_id = decoded.get('user_id', None)
             
+            # Normalizar a minúscula para comparación
+            user_role_lower = user_role.lower() if user_role else None
+            
             request.user_id = user_id
             request.user_role = user_role_lower
             
             logger.info(f"[Auth] Validando TieneRoles - Rol: '{user_role}', Permitidos: {roles_permitidos}")
             
-            if user_role not in roles_permitidos:
+            if user_role_lower not in roles_permitidos:
                 roles_str = "', '".join(roles_permitidos)
                 raise PermissionDenied({
                     "error": "Permiso denegado",

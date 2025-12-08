@@ -20,7 +20,7 @@ interface DecodedToken {
  * @param access - El token de acceso.
  * @param refresh - El token de refresco.
  */
-const setAuthTokens = (access: string, refresh: string): void => {
+export const setAuthTokens = (access: string, refresh: string): void => {
   localStorage.setItem("accessToken", access);
   localStorage.setItem("refreshToken", refresh);
 };
@@ -28,7 +28,7 @@ const setAuthTokens = (access: string, refresh: string): void => {
 /**
  * Elimina los tokens de autenticación de localStorage.
  */
-const removeAuthTokens = (): void => {
+export const removeAuthTokens = (): void => {
   localStorage.removeItem("accessToken");
   localStorage.removeItem("refreshToken");
 };
@@ -40,8 +40,8 @@ const removeAuthTokens = (): void => {
  * @returns Una promesa que se resuelve con la respuesta de autenticación.
  */
 export const login = async (
-  username: any,
-  password: any
+  username: string,
+  password: string
 ): Promise<AuthResponse> => {
   try {
     const response = await axios.post<AuthResponse>(AUTH_API_BASE_URL, {

@@ -1,5 +1,10 @@
 import axios from "axios";
-import { getAccessToken, getRefreshToken } from "./authService";
+import {
+  getAccessToken,
+  getRefreshToken,
+  removeAuthTokens,
+  setAuthTokens,
+} from "./authService";
 
 const apiClient = axios.create({
   baseURL: "http://localhost:8000",
@@ -45,16 +50,15 @@ apiClient.interceptors.response.use(
           }
         );
 
-        const { access } = response.data;
-        localStorage.setItem("accessToken", access);
+        const { access, refresh } = response.data;
+        setAuthTokens(access, refresh || refreshToken); // Usa el nuevo refresh token si el backend lo envía
 
         // Reintentar la petición original con el nuevo token
         originalRequest.headers["Authorization"] = `Bearer ${access}`;
         return apiClient(originalRequest);
       } catch (refreshError) {
         // Si falla el refresh, cerrar sesión
-        localStorage.removeItem("accessToken");
-        localStorage.removeItem("refreshToken");
+        removeAuthTokens();
         window.location.href = "/";
         return Promise.reject(refreshError);
       }
