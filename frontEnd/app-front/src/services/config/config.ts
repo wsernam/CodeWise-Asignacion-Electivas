@@ -17,6 +17,7 @@ export const OFFER_URL_PUBLIC = `${API_BASE_UR_FORM_PUBLIC}`;
 export const SELECTION_URL_PUBLIC = `${API_BASE_UR_FORM_PUBLIC}selecciones/seleccion-electivas/`;
 // endpoint directo al servicio, debe cambiarse
 export const SELECTION_URL_DASHBOARD_PUBLIC = `${API_BASE_URL_FORM_AUX}seleccion-electivas/consulta-dashboard/`;
+export const ESTADO_FORMULARIO_URL_PUBLIC = `${API_BASE_UR_FORM_PUBLIC}`;
 //PRIVADOS
 export const PROGRAMS_URL_PRIVATE = `${API_BASE_URL_FORM_PRIVATE}programas`;
 export const ELECTIVES_URL_PRIVATE = `${API_BASE_URL_FORM_PRIVATE}electivas`;
