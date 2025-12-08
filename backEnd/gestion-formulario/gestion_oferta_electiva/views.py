@@ -8,6 +8,7 @@ from .serializers import ElectivaSerializer
 from events.oferta_publisher import publish_oferta_creada, publish_oferta_actualizada, publish_oferta_eliminada
 from django.db import transaction # IMPORT
 from core.permissions import IsAdministrador
+from rest_framework.views import APIView
 
 # Endpoint para crear y listar (todos los años/semestres)
 # Utilizaremos este para 'Crear oferta_electiva'
@@ -119,7 +120,38 @@ class OfertaElectivaListByAnioSemestreProgramaView(generics.ListAPIView):
         ).order_by('-ofe_anio', '-ofe_num_semestre')
         
         return queryset 
-    
+
+class UltimoPeriodoOfertaView(APIView):
+    """
+    Retorna el último periodo académico disponible en las ofertas.
+    Formato:
+    {
+        "ofe_anio": 2025,
+        "ofe_num_semestre": 1
+    }
+    """
+
+    def get(self, request, *args, **kwargs):
+        # Obtener la última oferta por año y semestre
+        ultima = (
+            Oferta_electiva.objects
+            .order_by("-ofe_anio", "-ofe_num_semestre")
+            .first()
+        )
+
+        if not ultima:
+            return Response(
+                {"detail": "No existen ofertas registradas."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        # Construir respuesta
+        data = {
+            "ofe_anio": ultima.ofe_anio,
+            "ofe_num_semestre": ultima.ofe_num_semestre,
+        }
+
+        return Response(data, status=status.HTTP_200_OK)
 # ---------- Helper: payload para RabbitMQ ----------
 def _serialize_oferta(o: Oferta_electiva) -> dict:
     """

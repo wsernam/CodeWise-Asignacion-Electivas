@@ -4,7 +4,8 @@ from .views import (
     OfertaElectivaBulkCreateView,
     OfertaElectivaUpdateDeleteView,
     OfertaElectivaListByAnioSemestreView,
-    OfertaElectivaListByAnioSemestreProgramaView
+    OfertaElectivaListByAnioSemestreProgramaView,
+    UltimoPeriodoOfertaView
 )
 
 urlpatterns = [
@@ -26,4 +27,8 @@ urlpatterns = [
     # Endpoint para 'Listar por año, semestre y programa'
     # Acceder con GET a /api/ofertas/2025/1/'PIS'/
     path('ofertas/<int:anio>/<int:semestre>/<str:programa_codigo>/', OfertaElectivaListByAnioSemestreProgramaView.as_view(), name='listar_oferta_por_anio_semestre_programa'),
+
+    # Endpoint para 'obtener el último periodo académico disponible en las ofertas'
+    # Acceder con GET a /periodo-ultima-oferta/
+    path('periodo-ultima-oferta/', UltimoPeriodoOfertaView.as_view(), name='obtener_ultimo_periodo_oferta'),
 ]
