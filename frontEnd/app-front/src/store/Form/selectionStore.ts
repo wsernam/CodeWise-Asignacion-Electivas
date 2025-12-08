@@ -20,6 +20,7 @@ interface SelectionState {
     year: number,
     semester: number
   ) => Promise<void>;
+  getLastOfferDate: () => Promise< { ofe_anio: number; ofe_num_semestre: number } >;
   clearError: () => void;
   logout: () => void;
 }
@@ -114,6 +115,22 @@ addSelection: async (selection: ISelectionStudentElective) => {
         loading: false,
         error: "[selectionStore] Error al cargar electivas activas",
       });
+    }
+  },
+
+  getLastOfferDate: async (): Promise< { ofe_anio: number; ofe_num_semestre: number } > => {
+    const offerStore = useOfferStore.getState();
+    set({ loading: true, error: null });
+    try {
+      const result = await offerStore.getLastOffersPeriod();
+      set({ loading: false });
+      return result;
+    } catch (error: any) {
+      set({
+        loading: false,
+        error: error.message || "Error al obtener la última fecha de oferta",
+      });
+      throw error;
     }
   },
 

@@ -29,18 +29,9 @@ const ElectiveSelection: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Determinar año y semestre actual
-  const getCurrentSemester = () => {
-    const month = new Date().getMonth() + 1; // getMonth() is zero-based
-    return month <= 6 ? 1 : 2;
-  };
-
-  const semester = getCurrentSemester();
-  const year = new Date().getFullYear();
-
   // Obtener funciones y estados de los stores
   const { loading } = useStudentStore();
-  const { fetchActiveElectives, activeElectives, addSelection } =
+  const { fetchActiveElectives, activeElectives, addSelection, getLastOfferDate } =
     useSelectionStore() as any;
 
   // Datos del estudiante pasados desde la pantalla anterior
@@ -55,6 +46,10 @@ const ElectiveSelection: React.FC = () => {
   const [selectedElectives, setSelectedElectives] = useState<string[]>(
     Array(5).fill("")
   );
+
+  // Manejo de fecha
+  const [year, setYear] = useState<number>(new Date().getFullYear());
+  const [semester, setSemester] = useState<number | 1 | 2>(1);
 
   const [showConfirm, setShowConfirm] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
@@ -75,7 +70,21 @@ const ElectiveSelection: React.FC = () => {
       }
 
       try {
-        // 1. Verificar estado del formulario
+
+        // 1. Obtener periodo de la ultima oferta
+        try {
+          const lastOffer = await getLastOfferDate();
+          setYear(lastOffer.ofe_anio);
+          setSemester(lastOffer.ofe_num_semestre);
+          console.log(`Última oferta obtenida: ${lastOffer.ofe_anio}-${lastOffer.ofe_num_semestre}`);
+        } catch (err) {
+          console.error(
+            "[ElectiveSelection] Error al obtener última oferta:",
+            err
+          );
+        }
+
+        // 2. Verificar estado del formulario
         const estado = await getFormularioEstadoService();
         setFormActive(estado);
 
@@ -88,7 +97,8 @@ const ElectiveSelection: React.FC = () => {
           return; // no seguimos cargando electivas si está inactivo
         }
 
-        // 2. Si está activo, cargamos electivas
+        // 3. Si está activo, cargamos electivas
+        console.log(`Obteniendo electivas del periodo: ${year}-${semester}`);
         await fetchActiveElectives(studentData.programa, year, semester);
       } catch (err) {
         console.error("[ElectiveSelection] Error al verificar formulario:", err);
@@ -103,7 +113,7 @@ const ElectiveSelection: React.FC = () => {
     };
 
     init();
-  }, [studentData, fetchActiveElectives, navigate, year, semester]);
+  }, [studentData, fetchActiveElectives, navigate, getLastOfferDate]);
 
   const handleElectiveChange = (index: number, value: string) => {
     const newElectives = [...selectedElectives];
