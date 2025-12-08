@@ -19,8 +19,6 @@ const LoginStudent: React.FC = () => {
   const validateCodigo = (value: string) => {
     if (!value) return "Por favor ingresa el código";
     if (!/^\d+$/.test(value)) return "El código debe contener solo números";
-    if (value.length !== 12)
-      return "El código debe tener exactamente 12 dígitos";
     return null;
   };
 
@@ -80,7 +78,6 @@ const LoginStudent: React.FC = () => {
                 prefix={<UserOutlined />}
                 placeholder="Código estudiante"
                 size="large"
-                maxLength={12}
               />
             </Form.Item>
 

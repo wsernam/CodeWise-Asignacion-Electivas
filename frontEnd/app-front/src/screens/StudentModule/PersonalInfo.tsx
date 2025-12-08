@@ -61,8 +61,6 @@ const PersonalInfo: React.FC = () => {
 
     if (!value) return "Por favor ingresa el código";
     if (!/^\d+$/.test(value)) return "El código debe contener solo números";
-    if (value.length !== 12)
-      return "El código debe tener exactamente 12 dígitos";
     return null;
   };
 
@@ -175,14 +173,13 @@ const PersonalInfo: React.FC = () => {
                 </label>
                 <input
                   type="text"
-                  placeholder="123456789012 (12 dígitos)"
+                  placeholder="Código de estudiante"
                   value={formData.codigo}
                   onChange={(e) => {
                     if (!prefilledCode) {
                       // ← solo permite escribir si NO viene del login
                       const value = e.target.value
-                        .replace(/\D/g, "")
-                        .slice(0, 12);
+                        .replace(/\D/g, "");
                       handleInputChange("codigo", value);
                     }
                   }}
