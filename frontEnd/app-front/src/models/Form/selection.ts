@@ -8,3 +8,10 @@ export interface ISelectionStudentElective {
     sel_prioridad: number;
   }[];
 }
+
+export interface ISelectionDashboard {
+  ele_codigo: string;
+  ele_nombre: string;
+  inscritos: number;
+  pro_codigo: string;
+}

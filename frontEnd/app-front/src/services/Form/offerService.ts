@@ -1,6 +1,6 @@
 import apiClient from "../Auth/apiClient";
 import type { IOffer } from "../../models/Form/offer";
-import { OFFER_URL_PUBLIC, OFFER_URL_PRIVATE } from "../config/config";
+import { OFFER_URL_PUBLIC, OFFER_URL_PRIVATE, API_BASE_URL_FORM_AUX } from "../config/config";
 
 export const createBulkOffer = async (offerData: IOffer): Promise<any> => {
   console.log("[offerService] Creando ofertas en lote: ", offerData);
@@ -88,5 +88,37 @@ export const deleteOffer = async (ofe_codigo: number): Promise<any> => {
         error?.message ||
         "No se pudo eliminar la oferta"
     );
+  }
+};
+
+/**
+ * Consultar el periodo de la última oferta registrada  
+ * Endpoint: GET /periodo-ultima-oferta/
+ * @returns { ofe_anio: number, ofe_num_semestre: number }
+ */
+export const getLastOffersPeriod = async (): Promise<{ ofe_anio: number; ofe_num_semestre: number }> => {
+  try {
+    const response = await apiClient.get(
+      `${API_BASE_URL_FORM_AUX}periodo-ultima-oferta/`
+    );
+
+    console.log(
+      "[offerService] periodo de la última oferta obtenido exitosamente:",
+      response.data
+    );
+
+    // La respuesta del backend debe ser un objeto como: { ofe_anio, ofe_num_semestre }
+    const { ofe_anio, ofe_num_semestre } = response.data;
+
+    return { ofe_anio, ofe_num_semestre };
+
+  } catch (error: any) {
+    console.error(
+      "[offerService] Error obteniendo periodo de la última oferta:",
+      error?.response?.data
+    );
+
+    // Propagar error original de Axios si existe
+    throw error;
   }
 };

@@ -6,6 +6,7 @@
 export const API_BASE_UR_FORM_PUBLIC = "http://localhost:8000/gestion-formulario/";
 //PRIVADOS
 export const API_BASE_URL_FORM_PRIVATE = "http://localhost:8000/gestion-formulario/admin/";
+export const API_BASE_URL_FORM_AUX = "http://localhost:8002/";
 // Endpoints para el servicio de formularios (puerto 8001)
 //PUBLICOS
 export const PROGRAMS_URL_PUBLIC = `${API_BASE_UR_FORM_PUBLIC}programas`;
@@ -14,6 +15,8 @@ export const STUDENT_URL_PUBLIC = `${API_BASE_UR_FORM_PUBLIC}estudiantes`;
 export const FORM_STATUS_URL_PUBLIC = `${API_BASE_UR_FORM_PUBLIC}`;
 export const OFFER_URL_PUBLIC = `${API_BASE_UR_FORM_PUBLIC}`;
 export const SELECTION_URL_PUBLIC = `${API_BASE_UR_FORM_PUBLIC}selecciones/seleccion-electivas/`;
+// endpoint directo al servicio, debe cambiarse
+export const SELECTION_URL_DASHBOARD_PUBLIC = `${API_BASE_URL_FORM_AUX}seleccion-electivas/consulta-dashboard/`;
 //PRIVADOS
 export const PROGRAMS_URL_PRIVATE = `${API_BASE_URL_FORM_PRIVATE}programas`;
 export const ELECTIVES_URL_PRIVATE = `${API_BASE_URL_FORM_PRIVATE}electivas`;

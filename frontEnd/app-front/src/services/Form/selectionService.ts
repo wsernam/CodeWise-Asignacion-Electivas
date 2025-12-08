@@ -1,6 +1,6 @@
 import apiClient from "../Auth/apiClient";
-import { SELECTION_URL_PRIVATE, SELECTION_URL_PUBLIC } from "../config/config";
-import type { ISelectionStudentElective } from "../../models/Form/selection";
+import { SELECTION_URL_PRIVATE, SELECTION_URL_PUBLIC, SELECTION_URL_DASHBOARD_PUBLIC } from "../config/config";
+import type { ISelectionStudentElective, ISelectionDashboard } from "../../models/Form/selection";
 
 // ========== HELPERS ==========
 const transformSelection = (data: any): ISelectionStudentElective => ({
@@ -15,6 +15,19 @@ const transformSelection = (data: any): ISelectionStudentElective => ({
       ele_nombre: item.ele_nombre || "",
     })) || [],
 });
+
+// ========== HELPERS ==========
+
+export const transformSelectionDashboard = (data: any): ISelectionDashboard => ({
+  ele_codigo: data.ele_codigo,
+  ele_nombre: data.ele_nombre || "",
+  inscritos: data.inscritos ?? 0, // usa 0 si no viene definido
+  pro_codigo: data.pro_codigo || "",
+});
+
+export const transformSelectionDashboardList = (data: any[]): ISelectionDashboard[] =>
+  data?.map(item => transformSelectionDashboard(item)) || [];
+
 
 // ========== FUNCIONES DE CONEXIÓN CON BACKEND ==========
 /**
@@ -75,3 +88,27 @@ export const createSelectionService = async (
     throw error;
   }
 };
+
+/**
+ * Obtener la seleccion de todos los programas o de un programa para un periodo académico
+ */
+export const getSelectionDashboardService = async (
+  programa_seleccionado: string,
+  year: number,
+  semester: number
+): Promise<ISelectionDashboard []> => {
+  try {
+    console.log("[selectionService] consultando selecciones para el dashboard:", programa_seleccionado, year, semester);
+    const response = await apiClient.get(`${SELECTION_URL_DASHBOARD_PUBLIC}${programa_seleccionado}/${year}/${semester}`);
+    const query = transformSelectionDashboardList(response.data.data);
+    console.log("[selectionService] selecciones consultadas:", query);
+    return query;
+  } catch (error: any) {
+    console.error("[selectionService] Error consultando selecciones:", error);
+    console.error("[selectionService] Error response data:", error?.response?.data);
+    
+    // NO crear un nuevo Error, solo propagar el error original de Axios
+    throw error;
+  }
+};
+

@@ -22,6 +22,8 @@ import {
   Pie,
   Cell,
 } from "recharts";
+import { getSelectionDashboardService } from "../../../services/Form/selectionService";
+import { getLastOffersPeriod } from "../../../services/Form/offerService";
 
 // Colores para gráficas
 const COLORS = [
@@ -44,7 +46,32 @@ const Dashboard: React.FC = () => {
   const fetchPrograms = useProgramStore((s) => s.fetchPrograms); // ✅ AGREGADO
   const { formStatus, changeFormStatus, fetchFormStatus } =
     useFormStatusStore();
+  
+  // ====== Estado local para año y semestre ======
+  const [year, setYear] = useState<number>(0);
+  const [semester, setSemester] = useState<number>(1);
 
+
+  // ====== Consultar el periodo de la última oferta ======
+  // ====== Cargar año y semestre desde backend ======
+  useEffect(() => {
+    const loadPeriod = async () => {
+      try {
+        const period = await getLastOffersPeriod(); 
+        // period = { ofe_anio: 2024, ofe_num_semestre: 1 }
+
+        setYear(period.ofe_anio);
+        setSemester(period.ofe_num_semestre);
+
+        console.log("[Dashboard] Periodo cargado:", period);
+
+      } catch (err) {
+        console.error("[Dashboard] Error cargando periodo", err);
+      }
+    };
+
+    loadPeriod();
+  }, []);
   // Cargar datos al montar el componente
   useEffect(() => {
     fetchElectives();
@@ -55,6 +82,7 @@ const Dashboard: React.FC = () => {
   // ====== Estado local ======
   const [enrollments, setEnrollments] = useState<Record<string, number>>({}); // inscritos por electiva
   const [programaSeleccionado, setProgramaSeleccionado] = useState("Todos"); // filtro
+  const [programaSeleccionadoCodigo, setProgramaSeleccionadoCodigo] = useState<string>("Todos");
   const [confirm, setConfirm] = useState<{ open: boolean; newStatus: boolean }>(
     {
       open: false,
@@ -83,16 +111,29 @@ const Dashboard: React.FC = () => {
   }, [programs]);
 
   // ====== Procesamiento de datos ======
-  // Simulación de inscripciones (basada en datos reales)
-  useEffect(() => {
-    const map: Record<string, number> = {};
-    activeElectives.forEach((e, i) => {
-      // Valor pseudoaleatorio pero basado en datos reales
-      const base = (i + e.ele_codigo.length) * 5;
-      map[e.ele_codigo] = base % (CAPACITY_PER_ELECTIVE + 1);
-    });
-    setEnrollments(map);
-  }, [activeElectives]);
+  // Cargar inscripciones reales desde el backend
+useEffect(() => {
+  const fetchEnrollments = async () => {
+    try {
+      const data = await getSelectionDashboardService(programaSeleccionadoCodigo, year, semester);
+
+      // Convertimos el array en un map: { ele_codigo : inscritos }
+      const map: Record<string, number> = {};
+      data.forEach(item => {
+        map[item.ele_codigo] = item.inscritos;
+      });
+      console.error("[Dashboard] inscritos", map)
+      setEnrollments(map);
+    } catch (error) {
+      console.error("[Dashboard] Error cargando inscritos reales:", error);
+      // Si falla, dejamos el map vacío o consideras fallback
+      setEnrollments({});
+    }
+  };
+
+  fetchEnrollments();
+}, [programaSeleccionado, year, semester]);
+
 
   // Lista de programas disponibles para filtrar (basada en programas reales)
   const programas = useMemo(() => {
@@ -110,7 +151,7 @@ const Dashboard: React.FC = () => {
   // Electivas filtradas por programa (solo activas)
   const filteredElectives = useMemo(() => {
     if (programaSeleccionado === "Todos") return activeElectives;
-    return activeElectives.filter((e) => e.pro_codigo === programaSeleccionado);
+    return activeElectives.filter((e) => e.pro_codigo === programaSeleccionadoCodigo);
   }, [activeElectives, programaSeleccionado]);
 
   // ====== KPIs CON DATOS REALES ======
@@ -246,7 +287,18 @@ const Dashboard: React.FC = () => {
                 <select
                   id="programa"
                   value={programaSeleccionado}
-                  onChange={(e) => setProgramaSeleccionado(e.target.value)}
+                  onChange={(e) => {
+                    const nombre = e.target.value;
+                    setProgramaSeleccionado(nombre);
+
+                    if (nombre === "Todos") {
+                      setProgramaSeleccionadoCodigo("Todos");
+                      return;
+                    }
+
+                    const programa = activePrograms.find(p => p.pro_nombre === nombre);
+                    setProgramaSeleccionadoCodigo(programa?.pro_codigo || "Todos");
+                  }}
                 >
                   {programas.map((p) => (
                     <option key={p} value={p}>
