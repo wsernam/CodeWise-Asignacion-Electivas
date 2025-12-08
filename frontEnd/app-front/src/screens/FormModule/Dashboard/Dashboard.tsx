@@ -36,7 +36,7 @@ const COLORS = [
 ];
 
 // Capacidad máxima de cada electiva
-const CAPACITY_PER_ELECTIVE = 30;
+const CAPACITY_PER_ELECTIVE = 18;
 
 const Dashboard: React.FC = () => {
   // ====== Datos globales desde el store ======
@@ -51,7 +51,9 @@ const Dashboard: React.FC = () => {
   const [year, setYear] = useState<number>(0);
   const [semester, setSemester] = useState<number>(1);
 
-
+  //======= Consultar los inscritos por filtro ======
+  const [inscritos, setInscritos] = useState<number>(0);
+  const [inscritosPorPrograma, setInscritosPorPrograma] = useState<Record<string, number>>({});
   // ====== Consultar el periodo de la última oferta ======
   // ====== Cargar año y semestre desde backend ======
   useEffect(() => {
@@ -116,10 +118,22 @@ useEffect(() => {
   const fetchEnrollments = async () => {
     try {
       const data = await getSelectionDashboardService(programaSeleccionadoCodigo, year, semester);
+      const dataElectivas = data.electivas;
+      if (programaSeleccionadoCodigo !== "Todos") {
+        setInscritos(data.totales.find(t => t.pro_codigo === programaSeleccionadoCodigo)?.total_inscritos || 0);
+      }
+      else {
+        const total = data.total || 0;
+        setInscritos(total);
+        setInscritosPorPrograma(data.totales.reduce((acc, curr) => {
+          acc[curr.pro_codigo] = curr.total_inscritos;
+          return acc;
+        }, {} as Record<string, number>));
+      }
 
       // Convertimos el array en un map: { ele_codigo : inscritos }
       const map: Record<string, number> = {};
-      data.forEach(item => {
+      dataElectivas.forEach(item => {
         map[item.ele_codigo] = item.inscritos;
       });
       console.error("[Dashboard] inscritos", map)
@@ -176,11 +190,7 @@ useEffect(() => {
   // ====== Datos para gráficas (REALES) ======
   // Distribución de inscritos por programa (solo programas con electivas activas)
   const pieData = useMemo(() => {
-    const grouped: Record<string, number> = {};
-    activeElectives.forEach((e) => {
-      const count = enrollments[e.ele_codigo] || 0;
-      grouped[e.pro_codigo] = (grouped[e.pro_codigo] || 0) + count;
-    });
+    const grouped = inscritosPorPrograma;
     return Object.entries(grouped).map(([name, value]) => ({ name, value }));
   }, [activeElectives, enrollments]);
 
@@ -352,7 +362,7 @@ useEffect(() => {
             <Card padding="lg">
               <div className="kpi-card">
                 <div className="kpi-title">Estudiantes inscritos</div>
-                <div className="kpi-value">{totalEnrollments}</div>
+                <div className="kpi-value">{inscritos}</div>
               </div>
             </Card>
             <Card padding="lg">
