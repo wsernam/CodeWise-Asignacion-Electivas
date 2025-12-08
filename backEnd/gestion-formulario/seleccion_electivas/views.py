@@ -117,12 +117,15 @@ class SeleccionEstudianteElectivaViewSet(mixins.CreateModelMixin,
         """
         Cuenta la cantidad de estudiantes inscritos por electiva,
         filtrando por programa, año y semestre.
-        
-        Si pro_codigo == "Todos", consulta todos los programas.
 
-        URL ejemplos:
-        GET /conteo/PIS/2025/1/
-        GET /conteo/Todos/2025/1/
+        Si pro_codigo == "Todos":
+            - Devuelve inscritos por electiva
+            - Total global de estudiantes
+            - Totales por programa
+
+        Si pro_codigo != "Todos":
+            - Devuelve inscritos por electiva
+            - Total global de estudiantes del programa
         """
 
         base_filter = {
@@ -130,10 +133,13 @@ class SeleccionEstudianteElectivaViewSet(mixins.CreateModelMixin,
             "sel_num_semestre": sel_num_semestre,
         }
 
-        # Si pro_codigo no es "Todos", filtramos por programa
+        # Si filtra por un programa específico
         if pro_codigo != "Todos":
             base_filter["est_codigo__pro_codigo__pro_codigo"] = pro_codigo
 
+        # ============================
+        # 1. Query: Inscritos por electiva
+        # ============================
         queryset = (
             SeleccionEstudianteElectiva.objects
             .filter(**base_filter)
@@ -143,7 +149,7 @@ class SeleccionEstudianteElectivaViewSet(mixins.CreateModelMixin,
                 "ele_codigo__ele_nombre",
                 "ele_codigo__pro_codigo__pro_codigo"
             )
-            .annotate(inscritos=Count("est_codigo"))
+            .annotate(inscritos=Count("est_codigo", distinct=True))
             .order_by("ele_codigo__ele_codigo")
         )
 
@@ -153,7 +159,8 @@ class SeleccionEstudianteElectivaViewSet(mixins.CreateModelMixin,
                 status=status.HTTP_404_NOT_FOUND
             )
 
-        resultado = [
+        # Convertimos a lista de salida
+        data = [
             {
                 "ele_codigo": item["ele_codigo__ele_codigo"],
                 "ele_nombre": item["ele_codigo__ele_nombre"],
@@ -163,7 +170,45 @@ class SeleccionEstudianteElectivaViewSet(mixins.CreateModelMixin,
             for item in queryset
         ]
 
-        return Response({"data": resultado}, status=status.HTTP_200_OK)
+        # ============================
+        # 2. TOTAL global de estudiantes inscritos
+        # ============================
+        total_estudiantes = (
+            SeleccionEstudianteElectiva.objects
+            .filter(**base_filter)
+            .values("est_codigo")
+            .distinct()
+            .count()
+        )
+
+        response_payload = {
+            "total": total_estudiantes,
+            "data": data
+        }
+
+        # ============================
+        # 3. Si pro_codigo == "Todos", agregar totales por programa
+        # ============================
+        if pro_codigo == "Todos":
+            totales_por_programa = (
+                SeleccionEstudianteElectiva.objects
+                .filter(sel_anio=sel_anio, sel_num_semestre=sel_num_semestre)
+                .values("est_codigo__pro_codigo__pro_codigo")
+                .annotate(total=Count("est_codigo", distinct=True))
+                .order_by("est_codigo__pro_codigo__pro_codigo")
+            )
+
+            response_payload["totales"] = [
+            {
+                "pro_codigo": item["est_codigo__pro_codigo__pro_codigo"],
+                "total_inscritos": item["total"]
+            }
+            for item in totales_por_programa
+]
+
+
+        return Response(response_payload, status=status.HTTP_200_OK)
+
 
 def _serialize_seleccion(s: SeleccionEstudianteElectiva) -> dict:
     """Convierte el objeto SeleccionEstudianteElectiva en un dict para RabbitMQ."""
