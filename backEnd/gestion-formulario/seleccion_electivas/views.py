@@ -1,5 +1,6 @@
 
 from rest_framework import viewsets, status, mixins
+from django.db.models import Count
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from .models import SeleccionEstudianteElectiva
@@ -13,8 +14,6 @@ from rest_framework.permissions import AllowAny
 from events.seleccion_publisher import publish_seleccion_creada
 
 class SeleccionEstudianteElectivaViewSet(mixins.CreateModelMixin,
-                                       mixins.ListModelMixin,
-                                       mixins.RetrieveModelMixin,
                                        viewsets.GenericViewSet):
     
 
@@ -78,7 +77,94 @@ class SeleccionEstudianteElectivaViewSet(mixins.CreateModelMixin,
             status=status.HTTP_201_CREATED,
         )
     
+    @action(
+        detail=False,
+        methods=["get"],
+        url_path=r"consulta/(?P<est_codigo>\d+)/(?P<sel_anio>\d+)/(?P<sel_num_semestre>\d+)"
+    )
+
+    def electivas_por_estudiante(self, request, est_codigo=None, sel_anio=None, sel_num_semestre=None):
+        """
+        Obtiene todas las electivas seleccionadas por un estudiante 
+        en un año y semestre específicos.
+        URL de ejemplo:
+        GET /consulta/1/2025/1/
+        """
+        queryset = SeleccionEstudianteElectiva.objects.filter(
+            est_codigo=est_codigo,
+            sel_anio=sel_anio,
+            sel_num_semestre=sel_num_semestre
+        ).select_related('ele_codigo').order_by('sel_prioridad')
+
+        if not queryset.exists():
+            return Response(
+                {"detail": "No se encontraron selecciones para los criterios especificados."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        
+        # Usamos un serializador para formatear la respuesta, es más limpio.
+        # select_related optimiza la consulta para evitar N+1 queries.
+        data = ConsultaElectivaEstudianteDTO(queryset, many=True).data
+        
+        return Response(data, status=status.HTTP_200_OK)
     
+    @action(
+    detail=False,
+    methods=["get"],
+    url_path=r"consulta-dashboard/(?P<pro_codigo>[\w-]+)/(?P<sel_anio>\d+)/(?P<sel_num_semestre>\d+)"
+    )
+    def conteo_inscritos_por_electiva(self, request, pro_codigo=None, sel_anio=None, sel_num_semestre=None):
+        """
+        Cuenta la cantidad de estudiantes inscritos por electiva,
+        filtrando por programa, año y semestre.
+        
+        Si pro_codigo == "Todos", consulta todos los programas.
+
+        URL ejemplos:
+        GET /conteo/PIS/2025/1/
+        GET /conteo/Todos/2025/1/
+        """
+
+        base_filter = {
+            "sel_anio": sel_anio,
+            "sel_num_semestre": sel_num_semestre,
+        }
+
+        # Si pro_codigo no es "Todos", filtramos por programa
+        if pro_codigo != "Todos":
+            base_filter["est_codigo__pro_codigo__pro_codigo"] = pro_codigo
+
+        queryset = (
+            SeleccionEstudianteElectiva.objects
+            .filter(**base_filter)
+            .select_related("ele_codigo")
+            .values(
+                "ele_codigo__ele_codigo",
+                "ele_codigo__ele_nombre",
+                "ele_codigo__pro_codigo__pro_codigo"
+            )
+            .annotate(inscritos=Count("est_codigo"))
+            .order_by("ele_codigo__ele_codigo")
+        )
+
+        if not queryset.exists():
+            return Response(
+                {"detail": "No se encontraron registros para los filtros especificados."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        resultado = [
+            {
+                "ele_codigo": item["ele_codigo__ele_codigo"],
+                "ele_nombre": item["ele_codigo__ele_nombre"],
+                "pro_codigo": item["ele_codigo__pro_codigo__pro_codigo"],
+                "inscritos": item["inscritos"]
+            }
+            for item in queryset
+        ]
+
+        return Response({"data": resultado}, status=status.HTTP_200_OK)
+
 def _serialize_seleccion(s: SeleccionEstudianteElectiva) -> dict:
     """Convierte el objeto SeleccionEstudianteElectiva en un dict para RabbitMQ."""
     return {
