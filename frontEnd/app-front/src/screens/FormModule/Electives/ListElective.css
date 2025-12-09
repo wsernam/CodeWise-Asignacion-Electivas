@@ -101,7 +101,17 @@
   border: none;
   background: none; /* Sin fondo */
   cursor: pointer;
+  color: #555;
   font-size: 1.1rem; /* Iconos un poco grandes */
+  transition: color 0.2s ease;
+}
+
+.btn-icon:hover {
+  color: #1f297f;
+}
+
+.btn-icon.btn-icon-delete:hover {
+  color: #d9534f; /* Un color rojo para el hover de eliminar */
 }
 
 .electives-table-container {
