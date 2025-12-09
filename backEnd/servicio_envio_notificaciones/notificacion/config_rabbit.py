@@ -65,40 +65,44 @@ def connect_rabbitmq(max_retries=10, delay=5):
     raise ConnectionError("No se pudo conectar a RabbitMQ después de varios intentos.")
 
 def main():
-    """Conecta a RabbitMQ y escucha la cola configurada en settings."""
-
-
     connection = connect_rabbitmq()
-
     channel = connection.channel()
 
     exchange_name = settings.RABBITMQ_EXCHANGE
     channel.exchange_declare(exchange=exchange_name, exchange_type="topic", durable=True)
 
+    # LISTA DE COLAS A ESCUCHAR
+    queues = [
+        "seleccion.creada.notificacion",
+        "asignacion.creada.notificacion",
+    ]
 
-    queue_name = settings.RABBITMQ_QUEUE
-    channel.queue_declare(queue=queue_name, durable=True)
+    for q in queues:
+        channel.queue_declare(queue=q, durable=True)
+        channel.queue_bind(
+            exchange=exchange_name,
+            queue=q,
+            routing_key=q
+        )
+        print(f"📌 Escuchando cola: {q}")
 
-   
-    channel.queue_bind(
-        exchange=exchange_name,
-        queue=queue_name,
-        routing_key=queue_name  
-    )    
+        channel.basic_consume(
+            queue=q,
+            on_message_callback=callback,
+            auto_ack=True
+        )
 
-    channel.basic_consume(
-        queue=queue_name,
-        on_message_callback=callback,
-        auto_ack=True
-    )
+    print("🚀 Consumidor de notificaciones iniciado. Esperando mensajes...")
+    
     try:
         channel.start_consuming()
     except KeyboardInterrupt:
-        print("\nEscucha detenida por el usuario.")
+        print("Deteniendo consumidor...")
         channel.stop_consuming()
     finally:
         connection.close()
-        print("Conexión a RabbitMQ cerrada.")
+        print("Conexión cerrada.")
+
 
 
 if __name__ == "__main__":

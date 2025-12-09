@@ -5,7 +5,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from .services.priority_service import construir_lista_prioridad
 from asignacion.services.asignador_Service import AsignadorService
-
+from asignacion.services.notificacion_asignacion_service import enviar_notificaciones_asignacion_periodo;
 from referencias.models import SeleccionEstudianteElectiva as Sel, Oferta as Oferta
 from gestion_hojas_de_calculo.models import PerfilAcademico
 from asignacion.models import Asignacion
