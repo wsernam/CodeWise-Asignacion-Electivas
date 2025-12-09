@@ -136,19 +136,19 @@ const InactivesTable: React.FC<InactivesTableProps> = ({
   return (
     <div className="inactives-table-container">
       <table className="inactives-table">
-        <thead>
-          <tr>
-            <th>Código</th>
-            <th>Nombre</th>
-            <th>Apellido</th>
-            <th>Programa</th>
-            <th>Cr. oblig.</th>
-            <th>Aprobadas</th> {/* ← NUEVA COLUMNA */}
-            <th>Periodos</th>
-            <th>% avance</th>
-            <th>Estado</th> {/* ← SE MANTIENE */}
-          </tr>
-        </thead>
+          <thead>
+            <tr>
+              <th>Código</th>
+              <th>Nombre</th>
+              <th>Apellido</th>
+              <th>Programa</th>
+              <th>Cr. oblig.</th>
+              <th>Aprobadas</th>
+              <th>Periodos</th>
+              <th>% avance</th>
+              <th>Estado</th>
+            </tr>
+          </thead>
         <tbody>
           {rows.map((row) => (
             <tr key={row.id}>
