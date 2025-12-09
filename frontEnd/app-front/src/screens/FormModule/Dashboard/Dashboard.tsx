@@ -116,6 +116,9 @@ const Dashboard: React.FC = () => {
   // Cargar inscripciones reales desde el backend
 useEffect(() => {
   const fetchEnrollments = async () => {
+    // No ejecutar la llamada si el año aún no se ha cargado desde el backend.
+    if (year === 0) return;
+
     try {
       const data = await getSelectionDashboardService(programaSeleccionadoCodigo, year, semester);
       const dataElectivas = data.electivas;

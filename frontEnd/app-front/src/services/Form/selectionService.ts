@@ -1,5 +1,5 @@
 import apiClient from "../Auth/apiClient";
-import { SELECTION_URL_PRIVATE, SELECTION_URL_PUBLIC, SELECTION_URL_DASHBOARD_PUBLIC, ESTADO_FORMULARIO_URL_PUBLIC } from "../config/config";
+import {  SELECTION_URL_PUBLIC, SELECTION_URL_DASHBOARD_PUBLIC, ESTADO_FORMULARIO_URL_PUBLIC } from "../config/config";
 import type { ISelectionStudentElective, ISelectionDashboard, ISelectionElectivaDashboard,  ISelectionTotalesDashboard } from "../../models/Form/selection";
 
 // ========== HELPERS ==========
