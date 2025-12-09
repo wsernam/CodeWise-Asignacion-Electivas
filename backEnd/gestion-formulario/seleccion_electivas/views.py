@@ -78,28 +78,25 @@ class SeleccionEstudianteElectivaViewSet(mixins.CreateModelMixin,
                     # agrega más campos si tu modelo los tiene y el otro micro también
                 })
 
-            data_notificacion = {
-                "est_codigo": est_codigo,
-                "est_correo": est_correo,
-                "sel_anio": sel_anio,
-                "sel_num_semestre": sel_num_semestre,
-                "selecciones": [
-                    {
-                        "sel_codigo": sel.sel_codigo,
-                        "ele_codigo": sel.ele_codigo_id,
-                        "ele_nombre": sel.ele_codigo.ele_nombre,
-                        "sel_prioridad": sel.sel_prioridad,
-                    }
-                    for sel in created_instances
-                ],
-            }
+            electivas_prioridad_nombre = []
+            for ele in serializer.data.get("electivas", []):
+                electiva_prioridad =ele
+                electiva =  Electiva.objects.filter(ele_codigo = electiva_prioridad["ele_codigo"]).first()
+                electiva_prioridad["ele_nombre"] = electiva.ele_nombre
+                electivas_prioridad_nombre.append(electiva_prioridad)
+            print(electivas_prioridad_nombre,flush=True)
+            datos_correo = request.data
+            datos_correo["electivas"] = electivas_prioridad_nombre
+            print(datos_correo, flush=True)
+            # Publicamos un evento por cada selección creada
+            transaction.on_commit(lambda: publish_seleccion_creada(datos_correo))
 
             # 3) Publicar un evento 'seleccion.creada' por cada selección
             def publish_all():
                 for p in payloads:
                     publish_seleccion_creada(p)
 
-                publish_seleccion_creada_notificacion(data_notificacion)
+                publish_seleccion_creada_notificacion(datos_correo)
 
             transaction.on_commit(publish_all)
             

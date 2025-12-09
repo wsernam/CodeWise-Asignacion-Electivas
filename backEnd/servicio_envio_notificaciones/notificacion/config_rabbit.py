@@ -34,7 +34,7 @@ def callback(ch, method, properties, body):
         else:
             json_seleccion = inner
 
-        print("Payload para correo (desenvuelto):", json_seleccion)
+        print("Payload para correo (desenvuelto):", json_seleccion, flush=True)
 
         send_html_email_with_logo(json_seleccion)
 
