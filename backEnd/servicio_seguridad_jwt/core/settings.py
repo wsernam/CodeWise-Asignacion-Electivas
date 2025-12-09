@@ -50,7 +50,7 @@ SECRET_KEY = config('SECRET_KEY')
 from datetime import timedelta
 
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=15), # Duración del token de acceso
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=5), # Duración del token de acceso
     "REFRESH_TOKEN_LIFETIME": timedelta(days=1), # Duración del token de refresco
     "ROTATE_REFRESH_TOKENS": True, # Permite rotar el token de refresco
     "BLACKLIST_TOKEN_ON_USAGE": True, # Invalida el token de refresco al usarlo

@@ -59,14 +59,8 @@ const AddElective: React.FC = () => {
     if (!sanitized) {
       return Promise.reject("Por favor ingresa el código");
     }
-    if (sanitized.length < 2 || sanitized.length > 10) {
-      return Promise.reject("El código debe tener entre 2 y 10 caracteres");
-    }
-    if (!/[a-zA-Z]/.test(sanitized)) {
-      return Promise.reject("El código debe contener al menos una letra");
-    }
-    if (!/\d/.test(sanitized)) {
-      return Promise.reject("El código debe contener al menos un número");
+    if (sanitized.length < 1 || sanitized.length > 10) {
+      return Promise.reject("El código debe tener entre 1 y 10 caracteres");
     }
     if (!/^[a-zA-Z0-9]+$/.test(sanitized)) {
       return Promise.reject(
