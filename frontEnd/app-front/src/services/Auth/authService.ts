@@ -98,3 +98,78 @@ export const getUserRole = (): string | null => {
     return null;
   }
 };
+
+
+
+/**
+ * Verifica si el token de acceso ha expirado
+ */
+export const isTokenExpired = (token: string): boolean => {
+  try {
+    const decoded: any = jwtDecode(token);
+    const currentTime = Date.now() / 1000; // Tiempo actual en segundos
+    return decoded.exp < currentTime;
+  } catch (error) {
+    console.error("Error al verificar expiración del token:", error);
+    return true; // Si hay error, asumimos que está expirado
+  }
+};
+
+/**
+ * Verifica y refresca el token si es necesario
+ * @returns Objeto con el nuevo access token y datos del usuario, o null si falla
+ */
+export const verifyAndRefreshToken = async (): Promise<{
+  access: string;
+  role: string;
+  username: string;
+  userId: string;
+} | null> => {
+  const accessToken = getAccessToken();
+  const refreshToken = getRefreshToken();
+
+  // Si no hay tokens, no hay sesión
+  if (!accessToken || !refreshToken) {
+    return null;
+  }
+
+  // Si el access token sigue válido, retornar sus datos
+  if (!isTokenExpired(accessToken)) {
+    try {
+      const decoded: any = jwtDecode(accessToken);
+      return {
+        access: accessToken,
+        role: decoded.role,
+        username: decoded.username,
+        userId: decoded.user_id,
+      };
+    } catch (error) {
+      console.error("Error al decodificar token:", error);
+      return null;
+    }
+  }
+
+  // El access token expiró, intentar refrescar
+  try {
+    const response = await axios.post(
+      "http://localhost:8000/auth/login/api/token/refresh/",
+      { refresh: refreshToken }
+    );
+
+    const { access, refresh } = response.data;
+    setAuthTokens(access, refresh || refreshToken);
+
+    // Decodificar el nuevo token
+    const decoded: any = jwtDecode(access);
+    return {
+      access,
+      role: decoded.role,
+      username: decoded.username,
+      userId: decoded.user_id,
+    };
+  } catch (error) {
+    console.error("Error al refrescar el token:", error);
+    removeAuthTokens();
+    return null;
+  }
+};
