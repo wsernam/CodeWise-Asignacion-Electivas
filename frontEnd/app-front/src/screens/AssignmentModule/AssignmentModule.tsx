@@ -28,7 +28,7 @@ const AssignmentModule: React.FC = () => {
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
   const navigate = useNavigate();
 
-  
+  // ----- helpers para persistir paso actual en localStorage -----
   const storageKeyForProcess = (codigo: number) =>
     `assignment_process_${codigo}_current_step`;
 
@@ -64,6 +64,7 @@ const AssignmentModule: React.FC = () => {
     eliminarProcesoCompleto,
     obtenerProcesoActivo,
     obtenerTodosLosProcesos,
+    notificarEstudiantesPeriodo,   
     currentProcess,
     allProcess,
   } = useAssignmentProcessStore();
@@ -142,16 +143,50 @@ const AssignmentModule: React.FC = () => {
     return completedSteps.includes(stepNumber) ? "green" : "red";
   };
 
+  // 🔥 Finalizar proceso + mandar correos
   const handleFinalizeProcess = async () => {
-    if (currentProcess) {
-      try {
-        await finalizarProceso(currentProcess.pa_codigo);
-        await obtenerTodosLosProcesos();
-        setShowFinalizeConfirm(false);
-        handleCancelProcess();
-      } catch (error) {
-        console.error("Error finalizando proceso:", error);
+    if (!currentProcess) return;
+
+    try {
+      // 1) Finalizar proceso en backend
+      const procesoFinalizado = await finalizarProceso(currentProcess.pa_codigo);
+      await obtenerTodosLosProcesos();
+
+      // 2) Obtener periodo (prefiere datos del backend)
+      const anio =
+        (procesoFinalizado && procesoFinalizado.pa_anio) ||
+        processData?.year;
+      const semestre =
+        (procesoFinalizado && procesoFinalizado.pa_num_semestre) ||
+        processData?.semester;
+
+      if (anio && semestre) {
+        console.log(
+          "[AssignmentModule] Enviando notificaciones para periodo",
+          `${anio}-${semestre}`
+        );
+        try {
+          const notifResp = await notificarEstudiantesPeriodo(anio, semestre);
+          console.log(
+            "[AssignmentModule] Resultado notificarEstudiantesPeriodo:",
+            notifResp
+          );
+        } catch (err) {
+          console.error(
+            "[AssignmentModule] Error enviando notificaciones:",
+            err
+          );
+        }
+      } else {
+        console.warn(
+          "[AssignmentModule] No se pudo obtener anio/semestre para notificar estudiantes."
+        );
       }
+
+      setShowFinalizeConfirm(false);
+      handleCancelProcess();
+    } catch (error) {
+      console.error("Error finalizando proceso:", error);
     }
   };
 
@@ -388,12 +423,10 @@ const AssignmentModule: React.FC = () => {
               </div>
             )}
 
-            {/* Procesos finalizados - LÓGICA SIMPLE QUE FUNCIONA */}
+            {/* Procesos finalizados */}
             {allProcess &&
               allProcess
                 .filter((proceso) => {
-                  // FILTRO SIMPLE: Procesos con estado 2 (inactivos)
-                  // Y que no sean el proceso actual
                   const esProcesoActual =
                     currentProcess &&
                     proceso.pa_codigo === currentProcess.pa_codigo;
@@ -401,14 +434,12 @@ const AssignmentModule: React.FC = () => {
                   return proceso.pa_estado === 2 && !esProcesoActual;
                 })
                 .sort((a, b) => {
-                  // Ordenar por año y semestre descendente
                   if (a.pa_anio !== b.pa_anio) {
                     return b.pa_anio - a.pa_anio;
                   }
                   return b.pa_num_semestre - a.pa_num_semestre;
                 })
                 .map((proceso) => {
-                  // Usar pa_ultima_fecha_actualizacion como fecha de finalización
                   const fechaFinalizacion = new Date(
                     proceso.pa_ultima_fecha_actualizacion
                   ).toLocaleDateString("es-ES");

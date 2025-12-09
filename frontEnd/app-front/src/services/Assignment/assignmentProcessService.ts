@@ -506,3 +506,54 @@ export function obtenerAniosDisponibles(
     return [periodoSiguiente.anio];
   }
 }
+
+/**
+ * NOTIFICAR ESTUDIANTES DEL PERÍODO
+ * Endpoint: POST /api/asignacion/notificar-estudiantes/
+ */
+
+export async function notificarEstudiantesPeriodo(
+  anio: number,
+  semestre: number,
+  proCodigo?: string
+  //): Promise<NotificarEstudiantesResponse> {
+): Promise<any> {
+  try {
+    console.log(
+      "[notificarEstudiantesPeriodo] Notificando estudiantes para:",
+      anio,
+      semestre,
+      "pro_codigo=",
+      proCodigo
+    );
+
+    const body: any = { anio, semestre };
+    if (proCodigo) {
+      body.pro_codigo = proCodigo;
+    }
+
+    const response = await apiClient.post(
+      `${ASSIGNMENT_API_BASE_URL_PRIVATE}api/asignacion/notificar-estudiantes/`,
+      body
+    );
+
+    console.log(
+      "[notificarEstudiantesPeriodo] Respuesta del backend:",
+      response.data
+    );
+
+    // return response.data as NotificarEstudiantesResponse;
+    return response.data;
+  } catch (error: any) {
+    console.error(
+      "[notificarEstudiantesPeriodo] Error notificando estudiantes:",
+      error
+    );
+
+    if (error.response?.data?.detail) {
+      throw new Error(error.response.data.detail);
+    }
+
+    throw error;
+  }
+}

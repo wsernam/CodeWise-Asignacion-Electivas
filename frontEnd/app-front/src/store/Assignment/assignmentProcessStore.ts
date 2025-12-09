@@ -2,31 +2,37 @@ import { create } from "zustand";
 import { assignmentProcessService } from "../../services/Assignment";
 import type { AssignmentProcess } from "../../models/Assignment/assignmentProcess";
 import type { CodeBatchesResponse } from "../../models/Assignment/assignmentProcess";
+import { notificarEstudiantesPeriodo } from "../../services/Assignment/assignmentProcessService";
 
 interface AssignmentProcessState {
   // ========== ESTADO ==========
-  currentProcess: AssignmentProcess | null; // Proceso de asignación actual
-  allProcess: AssignmentProcess[]; // Todos los procesos de asignación
-  loading: boolean; // Estado de carga para operaciones
-  error: string | null; // Mensajes de error
+  currentProcess: AssignmentProcess | null;
+  allProcess: AssignmentProcess[];
+  loading: boolean;
+  error: string | null;
 
   // ========== ACCIONES ==========
   crearProceso: (anio: number, semestre: number) => Promise<AssignmentProcess>;
   obtenerProcesoActivo: () => Promise<AssignmentProcess | null>;
   obtenerTodosLosProcesos: () => Promise<AssignmentProcess[]>;
-  finalizarProceso: (procesoId: number) => Promise<void>;
+  finalizarProceso: (procesoId: number) => Promise<AssignmentProcess>;
   eliminarProceso: (procesoId: number) => Promise<void>;
   eliminarProcesoCompleto: (procesoId: number) => Promise<void>;
   ejecutarAsignacion: () => Promise<any>;
   obtenerUltimoProcesoFinalizado: () => Promise<AssignmentProcess | null>;
+
   verificarOfertasActivas: (anio: number, semestre: number) => Promise<boolean>;
   verificarCondicionesCreacion: (
     anio: number,
     semestre: number
-  ) => Promise<{
-    puedeCrear: boolean;
-    razones: string[];
-  }>;
+  ) => Promise<{ puedeCrear: boolean; razones: string[] }>;
+
+  // 👇🔥 AGREGADO AQUÍ
+  notificarEstudiantesPeriodo: (
+    anio: number,
+    semestre: number
+  ) => Promise<any>;
+
   clearError: () => void;
   reset: () => void;
 }
@@ -43,30 +49,17 @@ interface CodeBatchState {
   clear: () => void;
 }
 
-/**
- * GESTIÓN DE PROCESOS DE ASIGNACIÓN
- * Este store maneja la creación y consulta de procesos de asignación.
- * Se usa en el componente CreateProcess para iniciar nuevos procesos.
- */
 export const useAssignmentProcessStore = create<AssignmentProcessState>(
   (set, get) => ({
-    // ========== ESTADO INICIAL ==========
     currentProcess: null,
     allProcess: [],
     loading: false,
     error: null,
 
-    // ========== ACCIONES ==========
-
-    /**
-     * CREAR NUEVO PROCESO DE ASIGNACIÓN
-     * Se conecta con: assignmentProcessService.crearProceso()
-     * @param anio - Año académico para el proceso
-     * @param semestre - Semestre (1 o 2) para el proceso
-     * @returns Proceso creado con código único
-     * En CreateProcess cuando se guarda un nuevo proceso
-     */
-    crearProceso: async (anio: number, semestre: number) => {
+    // ================================================================
+    // CREAR PROCESO
+    // ================================================================
+    crearProceso: async (anio, semestre) => {
       set({ loading: true, error: null });
       try {
         const proceso = await assignmentProcessService.crearProceso(
@@ -81,12 +74,9 @@ export const useAssignmentProcessStore = create<AssignmentProcessState>(
       }
     },
 
-    /**
-     * OBTENER PROCESO DE ASIGNACIÓN ACTIVO ACTUAL
-     * Se conecta con: assignmentProcessService.obtenerProcesoActivo()
-     * @returns Proceso activo actual o null si no hay ninguno
-     * Para verificar si ya existe un proceso en curso al cargar la app
-     */
+    // ================================================================
+    // OBTENER PROCESO ACTIVO
+    // ================================================================
     obtenerProcesoActivo: async () => {
       set({ loading: true, error: null });
       try {
@@ -99,11 +89,9 @@ export const useAssignmentProcessStore = create<AssignmentProcessState>(
       }
     },
 
-    /**
-     * OBTENER TODOS LOS PROCESOS DE ASIGNACIÓN
-     * Se conecta con: assignmentProcessService.obtenerTodosLosProcesos()
-     * @returns Lista completa de procesos
-     */
+    // ================================================================
+    // OBTENER TODOS LOS PROCESOS
+    // ================================================================
     obtenerTodosLosProcesos: async () => {
       set({ loading: true, error: null });
       try {
@@ -116,18 +104,16 @@ export const useAssignmentProcessStore = create<AssignmentProcessState>(
         throw error;
       }
     },
-    /**
-     * FINALIZAR PROCESO DE ASIGNACIÓN
-     * @param codigo - Código del proceso a finalizar
-     */
+
+    // ================================================================
+    // FINALIZAR PROCESO (DEVUELVE EL PROCESO FINALIZADO)
+    // ================================================================
     finalizarProceso: async (codigo: number) => {
       set({ loading: true, error: null });
       try {
-        // Llamar al servicio
         const procesoActualizado =
           await assignmentProcessService.finalizarProceso(codigo);
 
-        // Actualizar en la lista de procesos
         set((state) => ({
           allProcess: state.allProcess.map((p) =>
             p.pa_codigo === codigo ? procesoActualizado : p
@@ -135,81 +121,57 @@ export const useAssignmentProcessStore = create<AssignmentProcessState>(
           currentProcess: null,
           loading: false,
         }));
+
+        return procesoActualizado;
       } catch (error: any) {
-        set({
-          loading: false,
-          error: error.message,
-        });
-        throw error;
-      }
-    },
-
-    /**
-     * ELIMINAR PROCESO DE ASIGNACIÓN
-     * @param codigo - Código del proceso a eliminar
-     */
-
-    eliminarProceso: async (codigo: number) => {
-      set({ loading: true, error: null });
-      try {
-        await assignmentProcessService.eliminarProceso(codigo);
-        console.log("Proceso eliminado:", codigo);
-        set({
-          currentProcess: null,
-          loading: false,
-        });
-      } catch (error: any) {
-        set({
-          loading: false,
-          error: error.message,
-        });
-        throw error;
-      }
-    },
-    /**
-     * ELIMINAR PROCESO Y ASIGNACIONES RELACIONADAS
-     * @param codigo - Código del proceso a eliminar completamente
-     */
-    eliminarProcesoCompleto: async (codigo: number) => {
-      set({ loading: true, error: null });
-      try {
-        const proc = get().currentProcess;
-        if (!proc || proc.pa_codigo !== codigo) {
-          throw new Error("Proceso no encontrado o no es el actual.");
-        }
-
-        // Purgar asignaciones del periodo
-        await assignmentProcessService.purgarAsignaciones(
-          proc.pa_anio,
-          proc.pa_num_semestre
-        );
-
-        console.log(
-          "STORE DEBUG: Asignaciones purgadas. Eliminando proceso",
-          codigo
-        );
-        // Eliminar el proceso
-        await assignmentProcessService.eliminarProceso(codigo);
-
-        console.log("STORE DEBUG: Proceso eliminado");
-        // Actualizar estado
-        set({ currentProcess: null, loading: false });
-
-        console.log("Proceso y asignaciones eliminados completamente:", codigo);
-      } catch (error: any) {
-        console.error("STORE DEBUG: Error:", error);
         set({ loading: false, error: error.message });
         throw error;
       }
     },
 
-    /**
-     * EJECUTAR ASIGNACIÓN DE ESTUDIANTES A CURSOS
-     * Se conecta con: assignmentProcessService.ejecutarAsignacion()
-     * @returns Resultado del proceso de asignación
-     */
+    // ================================================================
+    // ELIMINAR PROCESO
+    // ================================================================
+    eliminarProceso: async (codigo) => {
+      set({ loading: true, error: null });
+      try {
+        await assignmentProcessService.eliminarProceso(codigo);
+        set({ currentProcess: null, loading: false });
+      } catch (error: any) {
+        set({ loading: false, error: error.message });
+        throw error;
+      }
+    },
 
-    ejecutarAsignacion: async (): Promise<any> => {
+    // ================================================================
+    // ELIMINAR PROCESO COMPLETO
+    // ================================================================
+    eliminarProcesoCompleto: async (codigo) => {
+      set({ loading: true, error: null });
+      try {
+        const proc = get().currentProcess;
+        if (!proc || proc.pa_codigo !== codigo) {
+          throw new Error("Proceso no encontrado.");
+        }
+
+        await assignmentProcessService.purgarAsignaciones(
+          proc.pa_anio,
+          proc.pa_num_semestre
+        );
+
+        await assignmentProcessService.eliminarProceso(codigo);
+
+        set({ currentProcess: null, loading: false });
+      } catch (error: any) {
+        set({ loading: false, error: error.message });
+        throw error;
+      }
+    },
+
+    // ================================================================
+    // EJECUTAR ASIGNACIÓN
+    // ================================================================
+    ejecutarAsignacion: async () => {
       set({ loading: true, error: null });
       try {
         const proc = get().currentProcess;
@@ -219,6 +181,7 @@ export const useAssignmentProcessStore = create<AssignmentProcessState>(
           proc.pa_anio,
           proc.pa_num_semestre
         );
+
         set({ loading: false });
         return result;
       } catch (error: any) {
@@ -227,12 +190,12 @@ export const useAssignmentProcessStore = create<AssignmentProcessState>(
       }
     },
 
-    /*
-     * Obtiene el último proceso finalizado.Filtra por estado
-     * finalizado y ordena por año y semestre para obtener el último
-     */
+    // ================================================================
+    // OBTENER ÚLTIMO PROCESO FINALIZADO
+    // ================================================================
     obtenerUltimoProcesoFinalizado: async () => {
       set({ loading: true, error: null });
+
       try {
         const proceso =
           await assignmentProcessService.obtenerUltimoProcesoFinalizado();
@@ -244,13 +207,15 @@ export const useAssignmentProcessStore = create<AssignmentProcessState>(
       }
     },
 
-    verificarCondicionesCreacion: async (anio: number, semestre: number) => {
+    // ================================================================
+    // VERIFICAR PARA CREAR PROCESO
+    // ================================================================
+    verificarCondicionesCreacion: async (anio, semestre) => {
       set({ loading: true, error: null });
 
       const razones: string[] = [];
 
       try {
-        // 1. Verificar si ya existe un proceso para ese periodo
         const todosProcesos =
           await assignmentProcessService.obtenerTodosLosProcesos();
 
@@ -263,6 +228,7 @@ export const useAssignmentProcessStore = create<AssignmentProcessState>(
             `Ya existe un proceso de asignación para el periodo ${anio}-${semestre}`
           );
         }
+
         const puedeCrear = razones.length === 0;
 
         set({ loading: false });
@@ -273,19 +239,41 @@ export const useAssignmentProcessStore = create<AssignmentProcessState>(
       }
     },
 
-    /**
-     * VERIFICAR SI YA EXISTEN OFERTAS ACTIVAS PARA UN PERÍODO
-     */
-    verificarOfertasActivas: async (anio: number, semestre: number) => {
+    // ================================================================
+    // VERIFICAR OFERTAS ACTIVAS
+    // ================================================================
+    verificarOfertasActivas: async (anio, semestre) => {
       set({ loading: true, error: null });
+
       try {
         const hayOfertas =
           await assignmentProcessService.verificarOfertasActivas(
             anio,
             semestre
           );
+
         set({ loading: false });
         return hayOfertas;
+      } catch (error: any) {
+        set({ loading: false, error: error.message });
+        throw error;
+      }
+    },
+
+    // ================================================================
+    // 🔥🔥 NOTIFICAR ESTUDIANTES DEL PERÍODO 🔥🔥
+    // ================================================================
+    notificarEstudiantesPeriodo: async (anio: number, semestre: number) => {
+      set({ loading: true, error: null });
+      try {
+        const resp =
+          await notificarEstudiantesPeriodo(
+            anio,
+            semestre
+          );
+
+        set({ loading: false });
+        return resp;
       } catch (error: any) {
         set({ loading: false, error: error.message });
         throw error;
@@ -303,11 +291,15 @@ export const useAssignmentProcessStore = create<AssignmentProcessState>(
   })
 );
 
+/* ================================================================
+   STORE PARA LOTES DE CÓDIGOS
+================================================================ */
 export const useCodeBatchStore = create<CodeBatchState>((set) => ({
   loading: false,
   error: null,
   data: null,
-  fetchCodeBatches: async (anio: number, semestre: number) => {
+
+  fetchCodeBatches: async (anio, semestre) => {
     set({ loading: true, error: null });
     try {
       const data = await assignmentProcessService.getCodeBatches(
@@ -321,7 +313,8 @@ export const useCodeBatchStore = create<CodeBatchState>((set) => ({
       throw error;
     }
   },
-  downloadCodeBatchesPDF: async (anio: number, semestre: number) => {
+
+  downloadCodeBatchesPDF: async (anio, semestre) => {
     set({ loading: true, error: null });
     try {
       const data = await assignmentProcessService.downloadCodeBatches(
@@ -335,5 +328,6 @@ export const useCodeBatchStore = create<CodeBatchState>((set) => ({
       throw error;
     }
   },
+
   clear: () => set({ data: null, error: null }),
 }));
