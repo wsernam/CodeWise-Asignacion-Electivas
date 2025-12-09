@@ -60,7 +60,7 @@ DEMO = {
     200000000013: ("MONICA",     "OROZCO",      "monica.orozco@unicauca.edu.co",       "PIET"),
     200000000014: ("NICOLAS",    "PAZ",         "nicolas.paz@unicauca.edu.co",         "PIET"),
     200000000015: ("OSCAR",      "RIVERA",      "oscar.rivera@unicauca.edu.co",        "PIET"),
-    200000000016: ("PAOLA",      "SERNA",       "paola.serna@unicauca.edu.co",         "PIS"),
+    200000000016: ("PAOLA",      "SERNA",       "wsernam@unicauca.edu.co",         "PIS"),
     200000000017: ("QUEEN",      "VALENCIA",    "queen.valencia@unicauca.edu.co",      "PIS"),
     200000000018: ("RAFAEL",     "YELA",        "rafael.yela@unicauca.edu.co",         "PIAI"),
     200000000019: ("SANDRA",     "ZAMBRANO",    "sandra.zambrano@unicauca.edu.co",     "PIET"),

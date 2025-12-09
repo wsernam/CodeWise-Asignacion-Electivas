@@ -9,29 +9,62 @@ from email.mime.image import MIMEImage
 
 def send_html_email_with_logo(data):
     """
-    Envía correo HTML en UTF-8, con logo incrustado y plantilla dinámica.
-    Compatible con tildes, ñ y cualquier caracter Unicode.
-    """
-    try:
-        # 1) Email destino
-        raw_email = data.get("correo") or data.get("est_correo")
-        destinatario = raw_email
+    Envía correos para:
+    - Selección de electivas (template_email_seleccion.html)
+    - Asignación de electivas (template_email_asignacion.html)
 
-        # 2) Contexto para la plantilla
+    Detecta automáticamente el tipo:
+    - Si los ítems tienen "estado" => ASIGNACIÓN
+    - Si tienen "sel_prioridad" => SELECCIÓN
+    """
+
+    try:
+        # ===============================
+        # 1) DESTINATARIO
+        # ===============================
+        destinatario = data.get("correo") or data.get("est_correo")
+        if not destinatario:
+            raise ValueError("No se encontró un campo de correo válido.")
+
+        # ===============================
+        # 2) ELECTIVAS Y DETECCIÓN DEL TIPO DE CORREO
+        # ===============================
+        electivas = data.get("electivas") or data.get("selecciones") or []
+
+        es_asignacion = False
+        if electivas and isinstance(electivas, list):
+            if "estado" in electivas[0]:   # detecta asignación
+                es_asignacion = True
+
+        # ===============================
+        # 3) SELECCIÓN DEL TEMPLATE + ASUNTO
+        # ===============================
+        if es_asignacion:
+            template = "template_email_asignacion.html"
+            asunto = f"Asignación de Electivas – Período {data['sel_anio']}-{data['sel_num_semestre']}"
+        else:
+            template = "template_email_seleccion.html"
+            asunto = f"Selección de Electivas – Período {data['sel_anio']}-{data['sel_num_semestre']}"
+
+        # ===============================
+        # 4) CONTEXTO PARA EL TEMPLATE
+        # ===============================
         context = {
             "est_codigo": data.get("est_codigo"),
             "sel_anio": data.get("sel_anio"),
             "sel_num_semestre": data.get("sel_num_semestre"),
-            "electivas": data.get("electivas") or data.get("selecciones") or [],
+            "electivas": electivas,
         }
 
-        asunto = f"Selección de Electivas - Período {context['sel_anio']}-{context['sel_num_semestre']}"
-
-        # 3) Render HTML
-        html_content = render_to_string("template_email.html", context)
+        # ===============================
+        # 5) HTML Y TEXTO ALTERNATIVO
+        # ===============================
+        html_content = render_to_string(template, context)
         text_content = "Este correo requiere un cliente compatible con HTML."
 
-        # 4) Crear mensaje base con texto plano
+        # ===============================
+        # 6) CREAR MENSAJE MULTIPARTE
+        # ===============================
         msg = EmailMultiAlternatives(
             subject=asunto,
             body=text_content,
@@ -39,17 +72,15 @@ def send_html_email_with_logo(data):
             to=[destinatario],
         )
 
-        # 5) Adjuntar HTML en UTF-8
         msg.attach_alternative(html_content, "text/html; charset=utf-8")
-
-        # 6) Forzar encabezados UTF-8
         msg.encoding = "utf-8"
-        msg.extra_headers = {
-            "Content-Type": "text/html; charset=utf-8"
-        }
+        msg.extra_headers = {"Content-Type": "text/html; charset=utf-8"}
 
-        # 7) Adjuntar logo embebido CID
+        # ===============================
+        # 7) LOGO CON CID
+        # ===============================
         logo_path = os.path.join(settings.BASE_DIR, "static", "escudo_unicauca.png")
+
         if os.path.exists(logo_path):
             with open(logo_path, "rb") as f:
                 img = MIMEImage(f.read())
@@ -57,9 +88,11 @@ def send_html_email_with_logo(data):
                 img.add_header("Content-Disposition", "inline", filename="escudo_unicauca.png")
                 msg.attach(img)
         else:
-            print(f"⚠️ No se encontró el archivo de logo en: {logo_path}")
+            print(f"⚠️ Logo no encontrado en {logo_path}")
 
-        # 8) Apertura SMTP
+        # ===============================
+        # 8) CONEXIÓN SMTP
+        # ===============================
         if getattr(settings, "EMAIL_USE_SSL", False):
             connection = smtplib.SMTP_SSL(settings.EMAIL_HOST, settings.EMAIL_PORT)
         else:
@@ -67,23 +100,16 @@ def send_html_email_with_logo(data):
             if getattr(settings, "EMAIL_USE_TLS", False):
                 connection.starttls()
 
-        # 8) Autenticación
         connection.login(settings.EMAIL_HOST_USER, settings.EMAIL_HOST_PASSWORD)
 
-        # 9) Construir el mensaje crudo en bytes (correctamente codificado)
-        email_message = msg.message()          # EmailMessage de la stdlib
-        raw_msg = email_message.as_bytes()     # ya respeta msg.encoding = "utf-8"
-
-        # 10) Enviar
-        connection.sendmail(
-            settings.EMAIL_HOST_USER,
-            [destinatario],
-            raw_msg,
-        )
+        # ===============================
+        # 9) ENVIAR EN BYTES (UTF-8 REAL)
+        # ===============================
+        raw_message = msg.message().as_bytes()
+        connection.sendmail(settings.EMAIL_HOST_USER, [destinatario], raw_message)
         connection.quit()
 
-        print(f"✅ Correo enviado correctamente a {destinatario}")
-
+        print(f"Correo enviado a {destinatario} (asignación={es_asignacion})")
 
     except Exception as e:
-        print(f"❌ Error al enviar correo: {e}")
+        print(f"Error al enviar correo: {e}")
