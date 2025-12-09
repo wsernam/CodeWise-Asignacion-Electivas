@@ -210,9 +210,16 @@ const CreateProgram: React.FC = () => {
                 showCount
                 onChange={() => handleFieldTouch("pro_codigo")}
                 onBlur={(e) => {
-                  const value = e.target.value;
-                  const cleaned = value.replace(/\s+$/, "");
+                  const input = e.target as HTMLInputElement;
+                  // Mayúsculas
+                  input.value = input.value.toUpperCase();
+                  // Quitar solo espacios del final
+                  const cleaned = input.value.replace(/\s+$/, "");
                   form.setFieldsValue({ pro_codigo: cleaned });
+                }}
+                onInput={(e: React.FormEvent<HTMLInputElement>) => {
+                  const input = e.target as HTMLInputElement;
+                  input.value = input.value.toUpperCase();
                 }}
               />
             </Form.Item>
