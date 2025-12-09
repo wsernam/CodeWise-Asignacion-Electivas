@@ -184,11 +184,7 @@ class SeleccionEstudianteElectivaViewSet(mixins.CreateModelMixin,
             .order_by("ele_codigo__ele_codigo")
         )
 
-        if not queryset.exists():
-            return Response(
-                {"detail": "No se encontraron registros para los filtros especificados."},
-                status=status.HTTP_404_NOT_FOUND
-            )
+        
 
         # Convertimos a lista de salida
         data = [
