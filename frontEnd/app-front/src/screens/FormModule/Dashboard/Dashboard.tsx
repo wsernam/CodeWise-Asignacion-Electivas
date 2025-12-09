@@ -123,7 +123,7 @@ useEffect(() => {
       const data = await getSelectionDashboardService(programaSeleccionadoCodigo, year, semester);
       const dataElectivas = data.electivas;
       if (programaSeleccionadoCodigo !== "Todos") {
-        setInscritos(data.totales.find(t => t.pro_codigo === programaSeleccionadoCodigo)?.total_inscritos || 0);
+        setInscritos(data.total || 0);
       }
       else {
         const total = data.total || 0;
