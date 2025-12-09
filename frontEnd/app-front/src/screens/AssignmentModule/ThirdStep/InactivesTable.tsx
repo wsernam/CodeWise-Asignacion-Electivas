@@ -46,7 +46,7 @@ const InactivesTable: React.FC<InactivesTableProps> = ({
   const validarPorcentaje = (valor: string): boolean => {
     if (!valor) return false;
     const num = Number(valor);
-    return !isNaN(num) && num >= 0 && num <= 100;
+    return !isNaN(num) && num >= 0 && num <= 5;
   };
 
   const validarNumeroPositivo = (valor: string): boolean => {
@@ -145,7 +145,7 @@ const InactivesTable: React.FC<InactivesTableProps> = ({
               <th>Cr. oblig.</th>
               <th>Aprobadas</th>
               <th>Periodos</th>
-              <th>% avance</th>
+              <th>promedio</th>
               <th>Estado</th>
             </tr>
           </thead>
