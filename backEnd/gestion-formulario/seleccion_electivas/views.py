@@ -6,7 +6,7 @@ from .models import SeleccionEstudianteElectiva
 from .serializers import CrearSeleccionElectivaDTO, SeleccionEstudianteElectivaSerializer, ConsultaElectivaEstudianteDTO
 from gestion_electivas.models import Electiva
 from django.db import transaction
-from events.seleccion_publisher import publish_seleccion_creada
+from events.seleccion_publisher import publish_seleccion_creada, publish_seleccion_creada_notificacion
 from rest_framework.permissions import AllowAny
 
 from events.seleccion_publisher import publish_seleccion_creada
@@ -46,6 +46,7 @@ class SeleccionEstudianteElectivaViewSet(mixins.CreateModelMixin,
         est_codigo = validated_data["est_codigo"]
         sel_anio = validated_data["sel_anio"]
         sel_num_semestre = validated_data["sel_num_semestre"]
+        est_correo = validated_data["est_correo"]
         electivas_data = validated_data["electivas"]
 
         with transaction.atomic():
@@ -77,12 +78,31 @@ class SeleccionEstudianteElectivaViewSet(mixins.CreateModelMixin,
                     # agrega más campos si tu modelo los tiene y el otro micro también
                 })
 
+            data_notificacion = {
+                "est_codigo": est_codigo,
+                "est_correo": est_correo,
+                "sel_anio": sel_anio,
+                "sel_num_semestre": sel_num_semestre,
+                "selecciones": [
+                    {
+                        "sel_codigo": sel.sel_codigo,
+                        "ele_codigo": sel.ele_codigo_id,
+                        "ele_nombre": sel.ele_codigo.ele_nombre,
+                        "sel_prioridad": sel.sel_prioridad,
+                    }
+                    for sel in created_instances
+                ],
+            }
+
             # 3) Publicar un evento 'seleccion.creada' por cada selección
             def publish_all():
                 for p in payloads:
                     publish_seleccion_creada(p)
 
+                publish_seleccion_creada_notificacion(data_notificacion)
+
             transaction.on_commit(publish_all)
+            
 
         return Response(
             {
