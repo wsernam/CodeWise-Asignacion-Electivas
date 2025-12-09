@@ -1,6 +1,6 @@
 import apiClient from "../Auth/apiClient";
-import { SELECTION_URL_PRIVATE, SELECTION_URL_PUBLIC, SELECTION_URL_DASHBOARD_PUBLIC } from "../config/config";
-import type { ISelectionStudentElective, ISelectionDashboard as ISelectionElectivaDashboard, ISelectionTotalesDashboard, ISelectionDashboard } from "../../models/Form/selection";
+import { SELECTION_URL_PRIVATE, SELECTION_URL_PUBLIC, SELECTION_URL_DASHBOARD_PUBLIC, ESTADO_FORMULARIO_URL_PUBLIC } from "../config/config";
+import type { ISelectionStudentElective, ISelectionDashboard, ISelectionElectivaDashboard,  ISelectionTotalesDashboard } from "../../models/Form/selection";
 
 // ========== HELPERS ==========
 const transformSelection = (data: any): ISelectionStudentElective => ({
@@ -57,10 +57,10 @@ export const getSelectionsByStudent = async (
   try {
     console.log(
       "[selectionService] Conectando a:",
-      `${SELECTION_URL_PRIVATE}/${code}/${year}/${semester}`
+      `${SELECTION_URL_PUBLIC}/${code}/${year}/${semester}`
     );
     const response = await apiClient.get(
-      `${SELECTION_URL_PRIVATE}/${code}/${year}/${semester}`
+      `${SELECTION_URL_PUBLIC}/${code}/${year}/${semester}`
     );
     console.log("[selectionService] Datos CRUDOS del backend:", response.data);
     const transformed = transformSelection(response.data);
@@ -125,3 +125,30 @@ export const getSelectionDashboardService = async (
   }
 };
 
+export const getFormularioEstadoService = async (): Promise<boolean> => {
+  try {
+    console.log("[selectionService] Consultando estado del formulario...");
+
+    // Usa apiClient, con el baseURL que ya tengas configurado.
+    // Ajusta la ruta "/estado-formulario/" a la que tengas en tu backend.
+    const response = await apiClient.get(`${ESTADO_FORMULARIO_URL_PUBLIC}estado-formulario/`);
+
+    console.log(
+      "[selectionService] Respuesta estado formulario:",
+      response.data
+    );
+
+    // Suponiendo que el backend responde: { success: true, estado: true/false }
+    return Boolean(response.data?.estado);
+  } catch (error: any) {
+    console.error(
+      "[selectionService] Error consultando estado del formulario:",
+      error
+    );
+    throw new Error(
+      error.response?.data?.detail ||
+        error?.message ||
+        "No se pudo verificar el estado del formulario"
+    );
+  }
+};

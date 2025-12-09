@@ -1,4 +1,3 @@
-
 from rest_framework import viewsets, status, mixins
 from django.db.models import Count
 from rest_framework.response import Response
@@ -8,14 +7,22 @@ from .serializers import CrearSeleccionElectivaDTO, SeleccionEstudianteElectivaS
 from gestion_electivas.models import Electiva
 from django.db import transaction
 from events.seleccion_publisher import publish_seleccion_creada
-from core.permissions import IsAdministrador
 from rest_framework.permissions import AllowAny
 
 from events.seleccion_publisher import publish_seleccion_creada
 
 class SeleccionEstudianteElectivaViewSet(mixins.CreateModelMixin,
+                                       mixins.ListModelMixin,  # ✅ AÑADIDO
                                        viewsets.GenericViewSet):
-    
+    permission_classes = [AllowAny]
+    queryset = SeleccionEstudianteElectiva.objects.all()  # ✅ AÑADIDO
+    serializer_class = SeleccionEstudianteElectivaSerializer  # ✅ AÑADIDO
+
+    def get_serializer_class(self):
+        """Usa diferentes serializadores según la acción"""
+        if self.action == 'create':
+            return CrearSeleccionElectivaDTO
+        return SeleccionEstudianteElectivaSerializer
 
     def create(self, request):
         """
@@ -25,7 +32,7 @@ class SeleccionEstudianteElectivaViewSet(mixins.CreateModelMixin,
             "est_codigo": 123,
             "sel_anio": 2025,
             "sel_num_semestre": 1,
-            "est_correo": ashleecampaz"
+            "est_correo": "ashleecampaz@...",
             "electivas": [
                 {"ele_codigo": 101, "sel_prioridad": 1},
                 {"ele_codigo": 102, "sel_prioridad": 2},
@@ -41,9 +48,8 @@ class SeleccionEstudianteElectivaViewSet(mixins.CreateModelMixin,
         sel_num_semestre = validated_data["sel_num_semestre"]
         electivas_data = validated_data["electivas"]
 
-        # Usamos una transacción para asegurar que todas las selecciones se creen o ninguna.
         with transaction.atomic():
-            # Creamos una lista de objetos para insertar en lote
+            # 1) Creamos las selecciones en este microservicio
             selecciones_a_crear = [
                 SeleccionEstudianteElectiva(
                     est_codigo_id=est_codigo,
@@ -55,34 +61,42 @@ class SeleccionEstudianteElectivaViewSet(mixins.CreateModelMixin,
                 for electiva in electivas_data
             ]
 
-            # Usamos bulk_create para una inserción eficiente en la base de datos
             created_instances = SeleccionEstudianteElectiva.objects.bulk_create(selecciones_a_crear)
-            electivas_prioridad_nombre = []
-            for ele in serializer.data.get("electivas", []):
-                electiva_prioridad =ele
-                electiva =  Electiva.objects.filter(ele_codigo = electiva_prioridad["ele_codigo"]).first()
-                electiva_prioridad["ele_nombre"] = electiva.ele_nombre
-                electivas_prioridad_nombre.append(electiva_prioridad)
-            print(electivas_prioridad_nombre,flush=True)
-            datos_correo = request.data
-            datos_correo["electivas"] = electivas_prioridad_nombre
-            print(datos_correo, flush=True)
-            # Publicamos un evento por cada selección creada
-            transaction.on_commit(lambda: publish_seleccion_creada(datos_correo))
-            
+
+            # 2) Construimos payloads para el otro micro (gestión_asignación)
+            #    Cada evento lleva UNA selección, con su sel_codigo.
+            payloads = []
+            for sel in created_instances:
+                payloads.append({
+                    "sel_codigo": sel.sel_codigo,
+                    "est_codigo": sel.est_codigo_id,
+                    "ele_codigo": sel.ele_codigo_id,
+                    "sel_anio": sel.sel_anio,
+                    "sel_num_semestre": sel.sel_num_semestre,
+                    "sel_prioridad": sel.sel_prioridad,
+                    # agrega más campos si tu modelo los tiene y el otro micro también
+                })
+
+            # 3) Publicar un evento 'seleccion.creada' por cada selección
+            def publish_all():
+                for p in payloads:
+                    publish_seleccion_creada(p)
+
+            transaction.on_commit(publish_all)
+
         return Response(
             {
                 "detail": f"Se han registrado {len(created_instances)} electivas para el estudiante {est_codigo}."
             },
             status=status.HTTP_201_CREATED,
         )
+
     
     @action(
         detail=False,
         methods=["get"],
         url_path=r"consulta/(?P<est_codigo>\d+)/(?P<sel_anio>\d+)/(?P<sel_num_semestre>\d+)"
     )
-
     def electivas_por_estudiante(self, request, est_codigo=None, sel_anio=None, sel_num_semestre=None):
         """
         Obtiene todas las electivas seleccionadas por un estudiante 
@@ -109,9 +123,9 @@ class SeleccionEstudianteElectivaViewSet(mixins.CreateModelMixin,
         return Response(data, status=status.HTTP_200_OK)
     
     @action(
-    detail=False,
-    methods=["get"],
-    url_path=r"consulta-dashboard/(?P<pro_codigo>[\w-]+)/(?P<sel_anio>\d+)/(?P<sel_num_semestre>\d+)"
+        detail=False,
+        methods=["get"],
+        url_path=r"consulta-dashboard/(?P<pro_codigo>[\w-]+)/(?P<sel_anio>\d+)/(?P<sel_num_semestre>\d+)"
     )
     def conteo_inscritos_por_electiva(self, request, pro_codigo=None, sel_anio=None, sel_num_semestre=None):
         """

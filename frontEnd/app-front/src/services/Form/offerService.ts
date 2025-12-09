@@ -1,6 +1,6 @@
 import apiClient from "../Auth/apiClient";
 import type { IOffer } from "../../models/Form/offer";
-import { OFFER_URL_PUBLIC, OFFER_URL_PRIVATE, API_BASE_URL_FORM_AUX } from "../config/config";
+import { OFFER_URL_PUBLIC, OFFER_URL_PRIVATE, API_BASE_UR_FORM_PUBLIC } from "../config/config";
 
 export const createBulkOffer = async (offerData: IOffer): Promise<any> => {
   console.log("[offerService] Creando ofertas en lote: ", offerData);
@@ -99,7 +99,7 @@ export const deleteOffer = async (ofe_codigo: number): Promise<any> => {
 export const getLastOffersPeriod = async (): Promise<{ ofe_anio: number; ofe_num_semestre: number }> => {
   try {
     const response = await apiClient.get(
-      `${API_BASE_URL_FORM_AUX}periodo-ultima-oferta/`
+      `${API_BASE_UR_FORM_PUBLIC}periodo-ultima-oferta/`
     );
 
     console.log(

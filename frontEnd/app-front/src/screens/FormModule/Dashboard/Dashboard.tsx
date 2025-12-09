@@ -144,9 +144,8 @@ useEffect(() => {
       setEnrollments({});
     }
   };
-
-  fetchEnrollments();
-}, [programaSeleccionado, year, semester]);
+    fetchEnrollments();
+}, [programaSeleccionadoCodigo, year, semester]);
 
 
   // Lista de programas disponibles para filtrar (basada en programas reales)

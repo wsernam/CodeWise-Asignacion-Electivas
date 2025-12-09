@@ -16,6 +16,9 @@ import SuccessModal from "../../components/shared/SuccessModal/SuccessModal";
 import { useStudentStore } from "../../store/Form/studentStore";
 import { useSelectionStore } from "../../store/Form/selectionStore";
 
+// Services (🔹 NUEVO)
+import { getFormularioEstadoService } from "../../services/Form/selectionService";
+
 // Models
 import type { ISelectionStudentElective } from "../../models/Form/selection";
 import type { IElective } from "../../models/Form/elective";
@@ -26,18 +29,9 @@ const ElectiveSelection: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Determinar año y semestre actual
-  const getCurrentSemester = () => {
-    const month = new Date().getMonth() + 1; // getMonth() is zero-based
-    return month <= 6 ? 1 : 2;
-  };
-
-  const semester = getCurrentSemester();
-  const year = new Date().getFullYear();
-
   // Obtener funciones y estados de los stores
   const { loading } = useStudentStore();
-  const { fetchActiveElectives, activeElectives, addSelection } =
+  const { fetchActiveElectives, activeElectives, addSelection, getLastOfferDate } =
     useSelectionStore() as any;
 
   // Datos del estudiante pasados desde la pantalla anterior
@@ -53,6 +47,10 @@ const ElectiveSelection: React.FC = () => {
     Array(5).fill("")
   );
 
+  // Manejo de fecha
+  const [year, setYear] = useState<number>(new Date().getFullYear());
+  const [semester, setSemester] = useState<number | 1 | 2>(1);
+
   const [showConfirm, setShowConfirm] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [warning, setWarning] = useState<{ open: boolean; message: string }>({
@@ -60,13 +58,62 @@ const ElectiveSelection: React.FC = () => {
     message: "",
   });
 
+  // 🔹 NUEVO: estado del formulario
+  const [formActive, setFormActive] = useState<boolean | null>(null);
+  const [checkingForm, setCheckingForm] = useState<boolean>(true);
+
   useEffect(() => {
-    if (studentData?.programa) {
-      fetchActiveElectives(studentData.programa, year, semester);
-    } else {
-      navigate("/personal-info");
-    }
-  }, [studentData, fetchActiveElectives, navigate]);
+    const init = async () => {
+      if (!studentData?.programa) {
+        navigate("/personal-info");
+        return;
+      }
+
+      try {
+
+        // 1. Obtener periodo de la ultima oferta
+        try {
+          const lastOffer = await getLastOfferDate();
+          setYear(lastOffer.ofe_anio);
+          setSemester(lastOffer.ofe_num_semestre);
+          console.log(`Última oferta obtenida: ${lastOffer.ofe_anio}-${lastOffer.ofe_num_semestre}`);
+        } catch (err) {
+          console.error(
+            "[ElectiveSelection] Error al obtener última oferta:",
+            err
+          );
+        }
+
+        // 2. Verificar estado del formulario
+        const estado = await getFormularioEstadoService();
+        setFormActive(estado);
+
+        if (!estado) {
+          setWarning({
+            open: true,
+            message:
+              "El formulario de inscripción de electivas no se encuentra activo en este momento. No puedes registrar tu selección.",
+          });
+          return; // no seguimos cargando electivas si está inactivo
+        }
+
+        // 3. Si está activo, cargamos electivas
+        console.log(`Obteniendo electivas del periodo: ${year}-${semester}`);
+        await fetchActiveElectives(studentData.programa, year, semester);
+      } catch (err) {
+        console.error("[ElectiveSelection] Error al verificar formulario:", err);
+        setWarning({
+          open: true,
+          message:
+            "No fue posible verificar el estado del formulario. Intenta más tarde.",
+        });
+      } finally {
+        setCheckingForm(false);
+      }
+    };
+
+    init();
+  }, [studentData, fetchActiveElectives, navigate, getLastOfferDate]);
 
   const handleElectiveChange = (index: number, value: string) => {
     const newElectives = [...selectedElectives];
@@ -80,6 +127,16 @@ const ElectiveSelection: React.FC = () => {
   };
 
   const handleSubmit = () => {
+    // 🔹 Validar que el formulario esté activo
+    if (formActive === false) {
+      setWarning({
+        open: true,
+        message:
+          "El formulario de inscripción está desactivado. No puedes registrar tu selección en este momento.",
+      });
+      return;
+    }
+
     const selectedCount = selectedElectives.filter((e) => e !== "").length;
     if (selectedCount === 0) {
       setWarning({
@@ -246,7 +303,7 @@ const ElectiveSelection: React.FC = () => {
                     onChange={(value) => handleElectiveChange(index, value)}
                     placeholder={`Selecciona electiva ${index + 1}`}
                     style={{ flex: 1 }}
-                    disabled={loading}
+                    disabled={loading || formActive === false || checkingForm}
                   >
                     <Option value="">Selecciona una electiva</Option>
                     {activeElectives.map((elective: IElective) => (
@@ -304,7 +361,12 @@ const ElectiveSelection: React.FC = () => {
               <Button
                 variant="primary"
                 onClick={handleSubmit}
-                disabled={hasDuplicateElectives()}
+                disabled={
+                  hasDuplicateElectives() ||
+                  loading ||
+                  formActive === false ||
+                  checkingForm
+                }
               >
                 {loading ? "Registrando..." : "Finalizar Registro"}
               </Button>
