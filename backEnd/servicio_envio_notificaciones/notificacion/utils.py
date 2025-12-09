@@ -9,38 +9,37 @@ from email.mime.image import MIMEImage
 
 def send_html_email_with_logo(data):
     """
-    Envía un correo HTML con logo embebido y CSS externo incrustado (inline).
-    
-    Espera un diccionario con:
-        {
-            "est_codigo": 1,
-            "sel_anio": 2026,
-            "sel_num_semestre": 1,
-            "est_correo": "ashleecampaz"
-            "electivas": 
-            [
-                { "ele_codigo": 2, "sel_prioridad": 1 , "ele_nombre": "Redes Avanzadas"},
-                { "ele_codigo": 3, "sel_prioridad": 2 , "ele_nombre": "Inteligencia Artificial"},
-                { "ele_codigo": 5, "sel_prioridad": 3 , "ele_nombre": "Sistemas Embebidos"}
-            ]
-        }
+    data viene con algo como:
+    {
+        "est_codigo": ...,
+        "sel_anio": ...,
+        "sel_num_semestre": ...,
+        "est_correo" o "correo": "...",
+        "selecciones" o "electivas": [ ... ]
+    }
     """
     try:
-        # Obtiene el destinatario desde el diccionario
-        destinatario = f"{data.get('est_correo')}@unicauca.edu.co"
-        asunto = f"Selección de Electivas - Período {data.get('sel_anio')}-{data.get('sel_num_semestre')}"
-        cuerpo = data
+        # 1) Destinatario (soporta 'correo' o 'est_correo')
+        raw_email = data.get("correo") or data.get("est_correo")
+        destinatario = raw_email
 
-        # --- Rutas de plantilla y CSS ---
+        # 2) Armar contexto para la plantilla
+        context = {
+            "est_codigo": data.get("est_codigo"),
+            "sel_anio": data.get("sel_anio"),
+            "sel_num_semestre": data.get("sel_num_semestre"),
+            # lo importante: mapear 'selecciones' -> 'electivas'
+            "electivas": data.get("electivas") or data.get("selecciones") or [],
+        }
+
+        asunto = f"Selección de Electivas - Período {context['sel_anio']}-{context['sel_num_semestre']}"
+
         logo_path = os.path.join(settings.BASE_DIR, "static", "escudo_unicauca.png")
 
-        # --- Renderiza HTML con contexto ---
-        html_content = render_to_string("template_email.html", cuerpo)
-
-        # --- Versión de texto alternativo (para clientes sin HTML) ---
+        # Render del HTML con el contexto correcto
+        html_content = render_to_string("template_email.html", context)
         text_content = "Este correo requiere un cliente compatible con HTML."
 
-        # --- Crea el correo ---
         msg = EmailMultiAlternatives(
             subject=asunto,
             body=text_content,
@@ -48,11 +47,9 @@ def send_html_email_with_logo(data):
             to=[destinatario],
             alternatives=[(html_content, "text/html; charset=utf-8")]
         )
-
         msg.encoding = 'utf-8'
 
-        # --- Adjunta logo usando Content-ID ---
-        logo_path = os.path.join(settings.BASE_DIR, "static", "escudo_unicauca.png")
+        # Adjuntar logo
         if os.path.exists(logo_path):
             with open(logo_path, "rb") as f:
                 img = MIMEImage(f.read())
@@ -62,7 +59,7 @@ def send_html_email_with_logo(data):
         else:
             print(f"⚠️ No se encontró el archivo de logo en: {logo_path}")
 
-        # --- Envío usando las variables de entorno configuradas en settings ---
+        # Enviar correo
         if getattr(settings, "EMAIL_USE_SSL", False):
             connection = smtplib.SMTP_SSL(settings.EMAIL_HOST, settings.EMAIL_PORT)
         else:
@@ -70,7 +67,6 @@ def send_html_email_with_logo(data):
             if getattr(settings, "EMAIL_USE_TLS", False):
                 connection.starttls()
 
-        # Autenticación
         connection.login(settings.EMAIL_HOST_USER, settings.EMAIL_HOST_PASSWORD)
         connection.sendmail(settings.EMAIL_HOST_USER, [destinatario], msg.message().as_string())
         connection.quit()
@@ -79,3 +75,4 @@ def send_html_email_with_logo(data):
 
     except Exception as e:
         print(f"❌ Error al enviar correo: {e}")
+

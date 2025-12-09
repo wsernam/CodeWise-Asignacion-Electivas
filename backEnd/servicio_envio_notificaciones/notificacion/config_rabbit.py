@@ -20,11 +20,22 @@ def callback(ch, method, properties, body):
     """Procesa el mensaje recibido desde RabbitMQ y lo pasa al módulo de envío de correo."""
     print("Mensaje recibido desde RabbitMQ")
 
+    
     try:
         data = json.loads(body)
         print(f"Se obtuvo un mensaje desde {data.get('source')} a las {data.get('timestamp')}")
-        json_seleccion = data.get("data", {})
-        # Envía el correo usando la función utilitaria
+
+        # Primer nivel: data del RabbitPublisher
+        inner = data.get("data", {})
+
+        # Si viene doble envuelto (source/timestamp/data otra vez), lo desanidamos
+        if isinstance(inner, dict) and "data" in inner:
+            json_seleccion = inner["data"]
+        else:
+            json_seleccion = inner
+
+        print("Payload para correo (desenvuelto):", json_seleccion)
+
         send_html_email_with_logo(json_seleccion)
 
     except json.JSONDecodeError:
