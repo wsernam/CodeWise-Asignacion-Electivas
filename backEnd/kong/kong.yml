@@ -130,6 +130,7 @@ services:
     read_timeout: 60000
 
     routes:
+      # Ruta de Login
       - name: auth-login-route
         protocols:
           - http
@@ -139,8 +140,33 @@ services:
           - OPTIONS
         paths:
           - /auth/login
-        strip_path: true      # Cambiado a 'false'
-        preserve_host: false    # Cambiado a 'true' para mejor consistencia
+        strip_path: true
+        preserve_host: false
+        plugins:
+          - name: request-transformer
+            enabled: true
+            config:
+              replace:
+                uri: /api/login/
+
+      # RUTA DE REFRESH TOKEN
+      - name: auth-refresh-route
+        protocols:
+          - http
+          - https
+        methods:
+          - POST
+          - OPTIONS
+        paths:
+          - /auth/login/api/token/refresh
+        strip_path: true
+        preserve_host: false
+        plugins:
+          - name: request-transformer
+            enabled: true
+            config:
+              replace:
+                uri: /api/token/refresh/
 
     plugins:
       - name: cors
