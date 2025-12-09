@@ -5,7 +5,7 @@ class GestorNiveladosEle(GestorNivelados):
 
     
     def _calcular_porcentaje_avance(self, cantidad_creditos_obligatorios:int) -> float:
-        return cantidad_creditos_obligatorios / CREDITOS_TOTALES_OBLIGATORIOS_ELE * 100
+        return min (cantidad_creditos_obligatorios / CREDITOS_TOTALES_OBLIGATORIOS_ELE * 100, 100.0)
 
     def _es_nivelado(self, perfil_academico:PerfilAcademico) -> bool:
         if perfil_academico.num_periodos_matriculados == 7:
