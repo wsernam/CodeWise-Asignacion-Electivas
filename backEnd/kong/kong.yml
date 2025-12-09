@@ -473,6 +473,31 @@ services:
             config:
               replace:
                 uri: /estudiantes/info/
+      
+
+
+      - name: gestion-formulario-estudiantes-public-periodo
+        protocols:
+          - http
+          - https
+        methods:
+          - GET
+          - OPTIONS
+        paths:
+          - ~/gestion-formulario/estudiantes/periodo/(?<anio>\d+)/(?<semestre>\d+)/?
+        strip_path: false
+        preserve_host: true
+        regex_priority: 12
+        plugins:
+          - name: request-transformer
+            enabled: true
+            config:
+              replace:
+                uri: /estudiantes/periodo/$(uri_captures['anio'])/$(uri_captures['semestre'])/
+
+
+
+
     
     plugins:
       - name: cors

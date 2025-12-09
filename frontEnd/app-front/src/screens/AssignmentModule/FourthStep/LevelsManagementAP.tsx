@@ -131,7 +131,7 @@ const LevelsManagementAP: React.FC<AssignmentProcessProps> = ({
       const debugEstudiantes = async () => {
         try {
           const response = await apiClient.get(
-            `/api/estudiantes/periodo/${activeProcess?.pa_anio}/${activeProcess?.pa_num_semestre}/`
+            `/gestion-formulario/estudiantes/periodo/${activeProcess?.pa_anio}/${activeProcess?.pa_num_semestre}/`
           );
           console.log("Estudiantes en periodo:", response.data.length);
 

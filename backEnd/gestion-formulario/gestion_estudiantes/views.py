@@ -38,6 +38,20 @@ class EstudianteViewSet(viewsets.ModelViewSet):
         # Implement your logic for the 'info' endpoint here
         return Response({"message": "info"})
 
+    @action(detail=False, methods=['get'], url_path='periodo/(?P<anio>\d+)/(?P<semestre>\d+)')
+    def por_periodo(self, request, anio=None, semestre=None):
+        """
+        Retorna los estudiantes que han seleccionado electivas en un período específico.
+        """
+        # La lógica de filtrado depende de cómo estén relacionados los estudiantes con las selecciones y los períodos.
+        # Este es un ejemplo asumiendo una relación a través de 'seleccionelectivas'.
+        queryset = Estudiante.objects.filter(
+            seleccionestudianteelectiva__sel_anio=anio,
+            seleccionestudianteelectiva__sel_num_semestre=semestre
+        ).distinct()
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
 # Helper local para armar el payload del evento
 def _serialize_estudiante(e: Estudiante) -> dict:
     """
