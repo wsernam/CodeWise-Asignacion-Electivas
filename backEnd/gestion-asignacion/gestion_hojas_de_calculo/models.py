@@ -28,8 +28,8 @@ class PerfilAcademico(models.Model):
     porcentaje_avance = models.DecimalField(max_digits=5, decimal_places=2, default=0)
     # >>> CAMBIO AQUÍ: Por defecto es False
     estado = models.BooleanField(default=False) 
-    perfil_anio = models.IntegerField(default=timezone.now().year)
-    perfil_semestre = models.IntegerField(default=1) # Asumimos 1 o 2
+    perfil_anio = models.IntegerField()
+    perfil_semestre = models.IntegerField()
 
     def __str__(self):
         return f"Perfil de {self.est_codigo.est_nombre} - {self.perfil_anio}/{self.perfil_semestre}"

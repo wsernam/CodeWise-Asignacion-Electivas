@@ -347,19 +347,33 @@ class PrevisualizarIncompletosAPIView(APIView):
         return Response({'filas_incompletas': filas_incompletas, 'advertencias': errores_procesamiento}, status=status.HTTP_200_OK)
 
 class ImportarProductosAPIView(APIView):
-    # DRF Parsers para manejar archivos y datos de formulario (FormData)
     parser_classes = (MultiPartParser, FormParser)
 
     def post(self, request, format=None):
         """
         Recibe un archivo Excel (.xlsx o .xls), valida su contenido y lo importa/actualiza PerfilAcademico.
         """
-        # CORRECCIÓN 1: Usar getlist para manejar múltiples archivos.
         excel_files = request.FILES.getlist('files')
 
         if not excel_files:
             return Response({'error': 'No se encontraron archivos en la solicitud.'}, 
                             status=status.HTTP_400_BAD_REQUEST)
+        
+        # ========== INICIO: OBTENER PERIODO ACTIVO ==========
+        try:
+            periodo_response = requests.get('http://gestion-asignacion:8000/api/asignacion/procesos/periodo-activo/')
+            if periodo_response.status_code == 204:
+                return Response({'error': 'No se encontró un proceso de asignación ACTIVO.'}, 
+                              status=status.HTTP_404_NOT_FOUND)
+            periodo_response.raise_for_status()
+            periodo_data = periodo_response.json()
+            anio_activo = periodo_data['pa_anio']
+            semestre_activo = periodo_data['pa_num_semestre']
+            logger.info(f"Periodo activo obtenido: {anio_activo}-{semestre_activo}")
+        except requests.RequestException as e:
+            return Response({'error': f'No se pudo comunicar con el servicio de asignación: {e}'}, 
+                          status=status.HTTP_503_SERVICE_UNAVAILABLE)
+        # ========== FIN: OBTENER PERIODO ACTIVO ==========
         
         # Creamos un Dataset agregado para combinar los datos de todos los archivos.
         dataset = Dataset()
@@ -367,9 +381,6 @@ class ImportarProductosAPIView(APIView):
 
         for excel_file in excel_files:
             try:
-                # --- LÓGICA DE DETECCIÓN DE FORMATO ROBUSTA ---
-                # No confiamos en la extensión del archivo. Intentamos leerlo como .xlsx
-                # y si falla, lo intentamos como .xls.
                 excel_file.seek(0)
                 file_content = excel_file.read()
                 current_dataset = Dataset()
@@ -378,56 +389,52 @@ class ImportarProductosAPIView(APIView):
                 error_xls = None
 
                 try:
-                    # 1. Intentar leer como .xlsx (el formato más común)
                     current_dataset.load(file_content, format='xlsx')
                     logger.info(f"Archivo '{excel_file.name}' leído exitosamente como .xlsx")
                 except Exception as e_xlsx:
                     error_xlsx = e_xlsx
                     try:
-                        # 2. Si falla, intentar leer como .xls (formato antiguo)
                         logger.warning(f"Fallo al leer '{excel_file.name}' como .xlsx, reintentando como .xls...")
                         current_dataset.load(file_content, format='xls')
                         logger.info(f"Archivo '{excel_file.name}' leído exitosamente como .xls")
                     except Exception as e_xls:
                         error_xls = e_xls
-                        # Si ambos fallan, lanzamos un error personalizado para el bloque exterior.
                         raise ValueError(f"No se pudo leer como .xlsx ({repr(error_xlsx)}) ni como .xls ({repr(error_xls)}). El archivo podría estar corrupto o en un formato no soportado.")
 
                 if first_file:
                     dataset.headers = current_dataset.headers
                     first_file = False
                 
-                # Añadimos las filas del archivo actual al dataset principal.
-                # CORRECCIÓN: En lugar de `append(row)`, que puede fallar por `InvalidDimensions`
-                # si los archivos tienen diferente número de columnas, construimos una nueva fila
-                # que se ajusta a los encabezados del dataset principal.
                 for row_dict in current_dataset.dict:
-                    # Creamos una tupla con los valores en el orden de los encabezados del dataset principal.
                     new_row = tuple(row_dict.get(header) for header in dataset.headers)
                     dataset.append(new_row)
 
             except Exception as e:
-                # CORRECCIÓN: Mejoramos el reporte de errores.
-                # 1. Logueamos el traceback completo en la consola para un diagnóstico preciso.
                 logger.error(f"Error crítico al leer el archivo '{excel_file.name}' para importación.", exc_info=True)
-                # 2. Usamos repr(e) para asegurar que la respuesta JSON siempre tenga un mensaje.
                 return Response({'error': f"Error al procesar el archivo '{excel_file.name}': {repr(e)}"}, 
                                 status=status.HTTP_400_BAD_REQUEST)
 
-        # 3. Prueba de importación (Dry Run: Solo valida, no guarda en DB)
-        resource = PerfilAcademicoResource() 
+        # 3. Prueba de importación (Dry Run)
+        resource = PerfilAcademicoResource()
+        
+        # ========== PASAR PERIODO AL RESOURCE ==========
+        # Creamos un diccionario con el contexto del periodo activo
+        kwargs = {
+            'anio_activo': anio_activo,
+            'semestre_activo': semestre_activo
+        }
+        
         try:
             result = resource.import_data(
                 dataset, 
                 dry_run=True,           
                 raise_errors=False,     
-                use_transactions=True   
+                use_transactions=True,
+                **kwargs  # Pasamos el periodo al resource
             ) 
         except Exception as e:
-            # Captura errores que ocurren en before_import_row, como Estudiante.DoesNotExist
             return Response({'error': f'Error de validación general: {e}', 'trace': traceback.format_exc()}, 
                             status=status.HTTP_400_BAD_REQUEST)
-
 
         if result.has_errors() or result.has_validation_errors():
             error_details = []
@@ -435,19 +442,13 @@ class ImportarProductosAPIView(APIView):
             for row in result.row_errors():
                 fila_excel = row[0] + 2
                 errores_de_fila = []
-                # CORRECCIÓN: row[1] es una lista de objetos de error, debemos iterarla.
-                for error in row[1]: # row[1] es una lista de errores para esa fila
-                    # Si el error es un diccionario (ValidationError), lo iteramos.
+                for error in row[1]:
                     if hasattr(error.error, 'items'):
-                        # Caso 1: Error de validación de un campo específico.
-                        # Extraemos el nombre del campo y el mensaje de error.
                         for field, messages in error.error.items():
                             errores_de_fila.append(f"Campo '{field}': {messages[0]}")
                     elif hasattr(error.error, 'message'):
-                        # Caso 2: Error con un atributo 'message' (como ValueError).
                         errores_de_fila.append(error.error.message)
                     else:
-                        # Caso 3: Otro tipo de excepción, lo convertimos a string.
                         errores_de_fila.append(str(error.error))
                 error_details.append({
                     'fila': fila_excel, 
@@ -462,13 +463,14 @@ class ImportarProductosAPIView(APIView):
                 'errores': error_details
             }, status=status.HTTP_400_BAD_REQUEST)
 
-        # 4. Importación final (Guardar en la BD MySQL)
+        # 4. Importación final (Guardar en la BD)
         try:
             result_final = resource.import_data(
                 dataset, 
                 dry_run=False,          
                 raise_errors=True,      
-                use_transactions=True
+                use_transactions=True,
+                **kwargs  # También pasamos el periodo en la importación final
             ) 
         except Exception as e:
             return Response({'error': f'Error al guardar en la base de datos: {e}', 'trace': traceback.format_exc()}, 
@@ -477,6 +479,7 @@ class ImportarProductosAPIView(APIView):
         # 5. Respuesta exitosa
         return Response({
             'message': '¡Perfiles académicos importados y mapeados exitosamente!',
+            'periodo': f'{anio_activo}-{semestre_activo}',  # Incluimos el periodo en la respuesta
             'resumen': {
                 'total_registros': len(dataset),
                 'creados': result_final.totals.get('new', 0),

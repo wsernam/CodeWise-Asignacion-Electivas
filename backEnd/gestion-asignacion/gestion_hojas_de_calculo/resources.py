@@ -61,115 +61,110 @@ class CustomForeignKeyWidget(ForeignKeyWidget):
             # Lanzamos un error claro que será capturado y mostrado al usuario.
             raise ValueError(f"No se encontró un '{self.model._meta.verbose_name}' con el código '{int_value}'.")
 
+# inventario/resources.py
+
+from import_export import resources, fields, widgets
+from .models import PerfilAcademico
+from referencias.models import Estudiante
+from decimal import Decimal
+from django.utils import timezone
+
+# inventario/resources.py
+
+from import_export import resources, fields, widgets
+from .models import PerfilAcademico
+from referencias.models import Estudiante
+from decimal import Decimal
+from django.utils import timezone
+
 class PerfilAcademicoResource(resources.ModelResource):
-
-    # CAMBIO CLAVE: Usamos nuestro widget personalizado para obtener mejores errores y omitir filas basura.
+    """
+    Resource para importar datos de Excel hacia el modelo PerfilAcademico.
+    """
+    
+    # Mapeo de columnas del Excel a campos del modelo
     est_codigo = fields.Field(
-        attribute='est_codigo',
         column_name='CODIGO',
-        widget=CustomForeignKeyWidget(Estudiante, field='est_codigo')
+        attribute='est_codigo',
+        widget=widgets.ForeignKeyWidget(Estudiante, field='est_codigo')
     )
-
-    # 1. Mapeo CREDITOS_APROBADOS -> creditos_aprob_total
-    creditos_aprob_total = fields.Field(
-        attribute='creditos_aprob_total',
-        column_name='CREDITOS_APROBADOS',
-        widget=CustomDecimalWidget()
-    )
-
-    # 2. Mapeo PROMEDIO_CARRERA -> promedio
+    
     promedio = fields.Field(
-        attribute='promedio',
         column_name='PROMEDIO_CARRERA',
-        widget=CustomDecimalWidget()
+        attribute='promedio'
     )
-
-    # 3. Mapeo APROBADAS -> num_electivas_cursadas
+    
     num_electivas_cursadas = fields.Field(
-        attribute='num_electivas_cursadas',
         column_name='APROBADAS',
-        widget=IntegerWidget()
+        attribute='num_electivas_cursadas'
     )
-
-    # 4. Mapeo PERIODOS_MATRICULADOS -> num_periodos_matriculados
+    
+    creditos_aprob_total = fields.Field(
+        column_name='CREDITOS_APROBADOS',
+        attribute='creditos_aprob_total'
+    )
+    
     num_periodos_matriculados = fields.Field(
-        attribute='num_periodos_matriculados',
         column_name='PERIODOS_MATRICULADOS',
-        widget=IntegerWidget()
+        attribute='num_periodos_matriculados'
     )
-    
-    # 5. Definición de campos fijos/calculados
-    nivelado = fields.Field(attribute='nivelado', default=False)
-    porcentaje_avance = fields.Field(attribute='porcentaje_avance', default=Decimal('0.0'))
-    perfil_anio = fields.Field(attribute='perfil_anio', default=date.today().year)
-    perfil_semestre = fields.Field(attribute='perfil_semestre', default=1)
-    
-    # OMITIMOS 'estado' del mapeo directo. Su valor por defecto es FALSE en el modelo.
 
+    class Meta:
+        model = PerfilAcademico
+        skip_unchanged = True
+        report_skipped = False
+        import_id_fields = ['est_codigo', 'perfil_anio', 'perfil_semestre']
+        fields = (
+            'est_codigo', 
+            'promedio', 
+            'num_electivas_cursadas', 
+            'creditos_aprob_total',
+            'num_periodos_matriculados',
+            'perfil_anio',
+            'perfil_semestre'
+        )
 
-    def get_or_init_instance(self, instance_loader, row):
+    def before_import_row(self, row, **kwargs):
         """
-        Sobrescribimos este método para controlar cómo se busca o crea la instancia.
-        Esto nos permite usar año y semestre fijos en la búsqueda.
+        Se ejecuta antes de importar cada fila.
+        Aquí obtenemos el periodo activo y lo asignamos a la fila.
         """
-        # CORRECCIÓN 2: La lógica de búsqueda de instancia debe ser más robusta.
-        # `get_instance` puede devolver un objeto Estudiante o None.
-        instance, new = super().get_or_init_instance(instance_loader, row)
+        # Obtener el periodo del contexto pasado desde la vista
+        anio_activo = kwargs.get('anio_activo')
+        semestre_activo = kwargs.get('semestre_activo')
+        
+        # Si no se proporcionaron, usar valores por defecto (no debería ocurrir)
+        if anio_activo is None or semestre_activo is None:
+            anio_activo = timezone.now().year
+            semestre_activo = 1
+        
+        # Asignar los valores del periodo a la fila
+        row['perfil_anio'] = anio_activo
+        row['perfil_semestre'] = semestre_activo
+        
+        return super().before_import_row(row, **kwargs)
 
-        # Si la instancia ya existe (es una actualización), `instance.est_codigo` es un objeto Estudiante.
-        # Si es nueva, `instance.est_codigo` es None, pero el widget ya validó el estudiante en `row`.
-        estudiante_obj = instance.est_codigo if not new else self.fields['est_codigo'].clean(row)
-
-        if estudiante_obj:
-            anio = self.fields['perfil_anio'].get_value(None)
-            semestre = self.fields['perfil_semestre'].get_value(None)
-
-            # Buscamos si ya existe un perfil para este estudiante en este periodo.
-            perfil_existente = PerfilAcademico.objects.filter(
-                est_codigo=estudiante_obj, perfil_anio=anio, perfil_semestre=semestre
-            ).first()
-
-            if perfil_existente:
-                return (perfil_existente, False) # Devolvemos el perfil existente para que sea actualizado.
-
-        return (instance, new) # Si no se encontró, continuamos con la creación de una nueva instancia.
-
-    # CORRECCIÓN: La firma se actualiza para usar 'new' en lugar de 'using_transactions'
-    # como segundo argumento posicional, que es lo que espera la librería.
-    def after_save_instance(self, instance, new, **kwargs):
+    def before_save_instance(self, instance, row, **kwargs):
         """
-        Se llama DEPUÉS de que la instancia (PerfilAcademico) ha sido guardada
-        o actualizada. 'new' es True si la instancia fue creada, False si fue actualizada.
+        Se ejecuta justo antes de guardar cada instancia.
+        Aquí calculamos campos derivados.
         """
-        # Verificamos si el estado es False (el valor por defecto del modelo)
-        if instance.estado is False:
-            instance.estado = True
-            # Usamos save(update_fields=...) para un guardado más eficiente
-            instance.save(update_fields=['estado'])
-
-    # CORRECCIÓN: La firma del método se actualiza para aceptar los argumentos
-    # posicionales 'row' y 'row_number' que pasa la librería.
-    def skip_row(self, instance, original, row, row_number=None, **kwargs):
-        """
-        Se ejecuta para cada fila. Si devuelve True, la fila se ignora por completo.
-        Ideal para saltar filas de encabezado extra, pies de página o filas vacías.
-        """
-        # Obtenemos el valor crudo de la columna 'CODIGO' de la fila actual.
-        # Ahora 'row' es un diccionario con los datos crudos de la fila.
-        codigo_valor = row.get('CODIGO')
-
-        # Si el valor está vacío, nulo o no es numérico, saltamos la fila.
-        try:
-            # Intentamos convertir a float, que es una forma rápida de validar si es un número.
-            float(codigo_valor)
-        except (ValueError, TypeError, InvalidOperation):
-            # Si la conversión falla, es una fila inválida (texto, vacía, etc.)
-            logger.warning(f"skip_row - Fila ignorada. Causa: El valor en la columna 'CODIGO' no es un número válido: '{codigo_valor}'")
-            return True
-
-        # CORRECCIÓN: La llamada a super() no debe incluir 'row_number', ya que el
-        # método padre no lo espera.
-        return super().skip_row(instance, original, row=row, **kwargs)
+        # Calcular porcentaje de avance (ejemplo: sobre 174 créditos totales)
+        creditos_totales_programa = 174
+        if instance.creditos_aprob_total and creditos_totales_programa > 0:
+            instance.porcentaje_avance = (
+                Decimal(instance.creditos_aprob_total) / Decimal(creditos_totales_programa)
+            ) * Decimal(100)
+        else:
+            instance.porcentaje_avance = Decimal(0)
+        
+        # Determinar si está nivelado (ejemplo: más de 4 períodos matriculados)
+        instance.nivelado = instance.num_periodos_matriculados > 4
+        
+        # Estado: True = Activo
+        instance.estado = True
+        
+        return super().before_save_instance(instance, row, **kwargs)
 
     class Meta:
         model = PerfilAcademico
