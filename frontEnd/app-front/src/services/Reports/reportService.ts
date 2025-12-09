@@ -5,45 +5,30 @@ import axios from "axios";
 async function fetchPdf(url: string): Promise<Blob> {
   try {
     const response = await apiClient.get(url, {
-      responseType: "blob",
+      responseType: "blob", // Importante: le dice a Axios que espere un Blob
     });
 
     return response.data as Blob;
   } catch (error: any) {
-    console.error("[reporteService] Error obteniendo PDF:", error);
+    console.error("[selectionReportService] Error obteniendo PDF:", error);
 
-    if (axios.isAxiosError(error) && error.response) {
-      const { data } = error.response;
-      let msg = "No fue posible generar el reporte.";
+    // Manejo de errores de Axios
+    if (error.response) {
+      const contentType = error.response.headers["content-type"] || "";
 
-      // data viene como Blob por responseType:'blob'
-      if (data instanceof Blob) {
-        const text = await data.text();
-
-        try {
-          const json = JSON.parse(text);
-          if (json && typeof json === "object" && "detail" in json) {
-            msg = json.detail as string;
-          } else {
-            msg = text;
-          }
-        } catch {
-          msg = text;
-        }
-      } else if (typeof data === "string") {
-        // por si llega como string
-        try {
-          const json = JSON.parse(data);
-          msg = (json as any).detail || data;
-        } catch {
-          msg = data;
-        }
-      } else if (typeof data === "object" && data !== null) {
-        msg = (data as any).detail || msg;
+      // Si el backend devolvió JSON con el error (en lugar de PDF)
+      if (contentType.includes("application/json")) {
+        const errorData = error.response.data;
+        const msg = errorData.detail || JSON.stringify(errorData);
+        throw new Error(
+          `${error.response.status} ${error.response.statusText} – ${msg}`
+        );
       }
+
+      throw new Error(`${error.response.status} ${error.response.statusText}`);
     }
 
-    throw new Error("Error inesperado. Intenta nuevamente.");
+    throw error;
   }
 }
 
