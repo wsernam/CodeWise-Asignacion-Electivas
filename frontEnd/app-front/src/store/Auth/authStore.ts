@@ -1,5 +1,9 @@
 import { create } from "zustand";
-import { login, logout, getAccessToken } from "../../services/Auth/authService";
+import {
+  login,
+  logout,
+  verifyAndRefreshToken,
+} from "../../services/Auth/authService";
 import { jwtDecode } from "jwt-decode";
 
 type Role = "administrador" | "asignador" | "ambos" | null;
@@ -11,10 +15,11 @@ interface AuthState {
   userId: string | null;
   loading: boolean;
   error: string | null;
+  isInitialized: boolean; // ← NUEVO: para saber si ya se verificó
 
   loginAdmin: (username: string, password: string) => Promise<void>;
   logout: () => void;
-  initializeAuth: () => void;
+  initializeAuth: () => Promise<void>; // ← Ahora es async
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -25,41 +30,63 @@ export const useAuthStore = create<AuthState>((set) => ({
   userId: null,
   loading: false,
   error: null,
+  isInitialized: false, // ← NUEVO
 
   /**
-   * Inicializa la autenticación desde localStorage
+   * Inicializa la autenticación verificando y refrescando el token si es necesario
    */
-  initializeAuth: () => {
-    const token = getAccessToken();
-    if (token) {
-      try {
-        const decodedToken: any = jwtDecode(token);
-        const backendRole = decodedToken.role;
+  initializeAuth: async () => {
+    set({ loading: true });
 
-        // Normalizar a minúscula
-        let mappedRole: Role = null;
-        if (backendRole) {
-          const normalizedRole = backendRole.toLowerCase();
+    try {
+      const tokenData = await verifyAndRefreshToken();
 
-          if (normalizedRole === "administrador") {
-            mappedRole = "administrador";
-          } else if (normalizedRole === "asignador") {
-            mappedRole = "asignador";
-          } else if (normalizedRole === "ambos") {
-            mappedRole = "ambos";
-          }
-        }
-
+      if (!tokenData) {
+        // No hay sesión válida
         set({
-          token,
-          role: mappedRole,
-          username: decodedToken.username || null, // ← Usa username del token
+          token: null,
+          role: null,
+          username: null,
+          userId: null,
+          loading: false,
+          isInitialized: true,
         });
-      } catch (error) {
-        console.error("[AuthStore] Error decodificando token:", error);
-        logout();
-        set({ token: null, role: null, username: null });
+        return;
       }
+
+      // Normalizar rol
+      const backendRole = tokenData.role;
+      let mappedRole: Role = null;
+
+      if (backendRole) {
+        const normalizedRole = backendRole.toLowerCase();
+        if (normalizedRole === "administrador") {
+          mappedRole = "administrador";
+        } else if (normalizedRole === "asignador") {
+          mappedRole = "asignador";
+        } else if (normalizedRole === "ambos") {
+          mappedRole = "ambos";
+        }
+      }
+
+      set({
+        token: tokenData.access,
+        role: mappedRole,
+        username: tokenData.username || null,
+        userId: tokenData.userId || null,
+        loading: false,
+        isInitialized: true,
+      });
+    } catch (error) {
+      console.error("[AuthStore] Error inicializando auth:", error);
+      set({
+        token: null,
+        role: null,
+        username: null,
+        userId: null,
+        loading: false,
+        isInitialized: true,
+      });
     }
   },
 
@@ -89,10 +116,11 @@ export const useAuthStore = create<AuthState>((set) => ({
       set({
         token: data.access,
         role: mappedRole,
-        username: username, // ← Guarda el username que usó para login
+        username: username,
         userId: decodedToken.user_id || null,
         loading: false,
         error: null,
+        isInitialized: true, // ← NUEVO
       });
     } catch (err: any) {
       console.error("[AuthStore] Error en login:", err);
@@ -117,6 +145,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       userId: null,
       loading: false,
       error: null,
+      isInitialized: true, // ← Mantener en true
     });
   },
 }));
