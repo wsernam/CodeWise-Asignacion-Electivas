@@ -143,7 +143,8 @@ class GenerardorContenidoReporteGeneral:
     def generar_tabla_graficos_pastel(self, datos):
         encabezados = ["Código", "Programa", "Cant"]
         data = [encabezados]
-
+        if datos.count() == 0:
+            return None
         for registro in datos:
 
             data.append([

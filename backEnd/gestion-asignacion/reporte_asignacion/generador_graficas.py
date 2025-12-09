@@ -17,13 +17,29 @@ def generar_grafico_pastel(titulo,conteo_programas, ancho, alto):
         {"nombre_programa": "Contaduría", "total_estudiantes": 5}
     ]
     """
+
+    print("Datos pie:", conteo_programas, flush=True)
+
+    # Verificar datos válidos
+    
     # Extraer datos
     labels = [item["nombre_programa"] for item in conteo_programas]
     data = [item["total_estudiantes"] for item in conteo_programas]
 
     total = sum(data)
-    if total == 0:
-        total = 1  # evitar división por cero
+    if not data or sum(data) <= 0:
+        drawing = Drawing(ancho, alto)
+         # Título del gráfico
+        drawing.add(
+            String(
+                250, 270,  # posición (x, y)
+                titulo,
+                fontSize=14,
+                textAnchor="middle"
+            )
+        )
+        drawing.add(String(150, 150, "No estudiantes sin electivas asignadas", fontSize=14))
+        return drawing
 
     # Crear gráfico base
     pie = Pie()
