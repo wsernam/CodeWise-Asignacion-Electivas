@@ -82,13 +82,11 @@ export const createStudent = async (student: IStudent): Promise<IStudent> => {
     return created;
   } catch (error: any) {
     console.error("[studentService] Error creando estudiante:", error);
-    throw new Error(
-      error.response?.data?.detail ||
-        error?.message ||
-        "No se pudo crear el estudiante"
-    );
+    // 🔥 IMPORTANTE: re-lanzar el MISMO error de Axios
+    throw error;
   }
 };
+
 
 /**
  * Actualizar un estudiante por código

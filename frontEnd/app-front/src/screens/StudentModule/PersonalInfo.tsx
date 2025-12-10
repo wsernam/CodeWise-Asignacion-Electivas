@@ -113,7 +113,7 @@ const PersonalInfo: React.FC = () => {
     setShowConfirm(true);
   };
 
-  // ✅ CORRECTO: handleConfirmSubmit es una función separada
+  // 
   const handleConfirmSubmit = async () => {
     setShowConfirm(false);
 
@@ -142,7 +142,26 @@ const PersonalInfo: React.FC = () => {
       }
     } catch (error: any) {
       console.log("[student Screen] Error al agregar estudiante:", error);
+
+      const data = error?.response?.data;
+      console.log("[student Screen] Data backend:", data);
+
+      const backendMsg =
+        // est_correo como array: ["Ya existe un/a estudiante con este/a est correo."]
+        (Array.isArray(data?.est_correo) && data.est_correo[0]) ||
+        // est_correo como string
+        (typeof data?.est_correo === "string" && data.est_correo) ||
+        undefined;
+
+      setWarning({
+        open: true,
+        message:
+          backendMsg ??
+          "Error desconocido al registrar estudiante.",
+      });
     }
+
+
   };
   return (
     <div className="form-page-container">
