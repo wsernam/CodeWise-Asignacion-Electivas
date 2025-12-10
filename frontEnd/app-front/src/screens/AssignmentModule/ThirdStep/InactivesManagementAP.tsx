@@ -131,7 +131,7 @@ const InactivesManagementAP: React.FC<AssignmentProcessProps> = ({
         programa: programaCodigo,
         programaNombre: programaNombre,
         creditos: estudiante.CREDITOS_APROBADOS?.toString() || "",
-        aprobadas: estudiante.APROBADAS?.toString() || "",
+        aprobadas: (estudiante.APROBADAS ?? estudiante.NUM_ELECTIVAS_CURSADAS)?.toString() || "",
         periodos: estudiante.PERIODOS_MATRICULADOS?.toString() || "",
         porcentaje: estudiante.PROMEDIO_CARRERA?.toString() || "",
       };
@@ -290,7 +290,7 @@ const InactivesManagementAP: React.FC<AssignmentProcessProps> = ({
             datos: {
               CREDITOS_APROBADOS: parseInt(row.creditosObligatorios) || 0,
               PROMEDIO_CARRERA: parseFloat(row.porcentajeAvance) || 0,
-              APROBADAS: 0,
+              APROBADAS: parseInt(row.aprobadas) || 0,
               PERIODOS_MATRICULADOS: parseInt(row.periodosMatriculados) || 0,
             },
           };
