@@ -24,7 +24,12 @@ const Offer: React.FC = () => {
   // ========== STORES ==========
   const { electives, fetchElectives } = useElectiveStore();
   const { programs, fetchPrograms } = useProgramStore();
-  const { createBulkOffer, getOffersByProgram, deleteOffer } = useOfferStore();
+  const {
+    createBulkOffer,
+    getOffersByProgram,
+    deleteOffer,
+    getLastOffersPeriod,
+  } = useOfferStore();
   const { formStatus } = useFormStatusStore();
   const { obtenerTodosLosProcesos } = useAssignmentProcessStore();
 
@@ -38,9 +43,12 @@ const Offer: React.FC = () => {
     [key: string]: boolean;
   }>({});
   const [program, setProgram] = useState<string>("");
-
   const [, setProcesos] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [lastOfferPeriod, setLastOfferPeriod] = useState<{
+    ofe_anio: number;
+    ofe_num_semestre: number;
+  } | null>(null);
 
   // Estados para ofertas existentes y cambios
   const [existingOffers, setExistingOffers] = useState<any[]>([]);
@@ -64,6 +72,22 @@ const Offer: React.FC = () => {
     fetchElectives();
     fetchPrograms();
   }, [fetchElectives, fetchPrograms]);
+
+  // Efecto para cargar el período de la última oferta
+  useEffect(() => {
+    const cargarUltimoPeriodo = async () => {
+      try {
+        const periodo = await getLastOffersPeriod();
+        setLastOfferPeriod(periodo);
+        console.log("[Offer] Último período cargado:", periodo);
+      } catch (error) {
+        console.error("[Offer] Error cargando último período:", error);
+        // Si no hay ofertas en el sistema, establecer como null
+        setLastOfferPeriod(null);
+      }
+    };
+    cargarUltimoPeriodo();
+  }, [getLastOffersPeriod]);
 
   // Efecto para cargar ofertas cuando cambie programa, año o semestre
   useEffect(() => {
@@ -129,6 +153,44 @@ const Offer: React.FC = () => {
   }, [programs]);
 
   // ========== FUNCIONES DE VALIDACIÓN ==========
+
+  // Verificar si es la oferta actual
+  const isCurrentOffer = (): boolean => {
+    // Si no hay última oferta, cualquier período puede ser editado
+    if (lastOfferPeriod === null) return true;
+
+    // Solo es actual si es exactamente el mismo período
+    return (
+      year === lastOfferPeriod.ofe_anio &&
+      semester === lastOfferPeriod.ofe_num_semestre
+    );
+  };
+
+  // Verificar si es un período futurp
+  const isFuturePeriod = (): boolean => {
+    // Si no hay última oferta, cualquier período es futuro
+    if (lastOfferPeriod === null) return true;
+
+    // Un período es futuro si:
+    // 1. El año es mayor, O
+    // 2. El año es igual pero el semestre es mayor
+    return (
+      year > lastOfferPeriod.ofe_anio ||
+      (year === lastOfferPeriod.ofe_anio &&
+        semester > lastOfferPeriod.ofe_num_semestre)
+    );
+  };
+
+  // Verificar si es un período pasado
+  const isPastPeriod = (): boolean => {
+    if (lastOfferPeriod === null) return false;
+
+    return (
+      year < lastOfferPeriod.ofe_anio ||
+      (year === lastOfferPeriod.ofe_anio &&
+        semester < lastOfferPeriod.ofe_num_semestre)
+    );
+  };
 
   // Verificar si existe proceso finalizado o activo para el período seleccionado
   const verificarPeriodoBloqueado = async (): Promise<{
@@ -344,17 +406,30 @@ const Offer: React.FC = () => {
       return;
     }
 
-    // 2. Verificar si el período está bloqueado
+    // 2. Verificar si es período PASADO (no permitido)
+    if (isPastPeriod()) {
+      setWarning({
+        open: true,
+        message: `No puede modificar ofertas de períodos pasados (${year}-${semester}).\n\nSolo se permite:\n1. Editar la oferta actual (${
+          lastOfferPeriod!.ofe_anio
+        }-${
+          lastOfferPeriod!.ofe_num_semestre
+        })\n2. Crear una nueva oferta para un período futuro`,
+      });
+      return;
+    }
+
+    // 3. Verificar si el período está bloqueado por procesos de asignación
     const { bloqueado, mensaje } = await verificarPeriodoBloqueado();
     if (bloqueado) {
       setWarning({ open: true, message: mensaje });
       return;
     }
 
-    // 3. Calcular cambios
+    // 4. Calcular cambios
     const { agregar, quitar } = calcularCambios();
 
-    // 4. Si hay oferta existente pero no hay selecciones
+    // 5. Si hay oferta existente pero no hay selecciones
     const electivasOfertadas = obtenerElectivasOfertadas();
     const electivasSeleccionadas = Object.values(selectedElectives).flat();
 
@@ -374,7 +449,7 @@ const Offer: React.FC = () => {
       return;
     }
 
-    // 5. Preparar mensaje de confirmación normal
+    // 6. Preparar mensaje de confirmación normal
     let mensajeConfirmacion = `¿Confirmar cambios para el período ${year}-${semester}?\n`;
 
     if (agregar.length > 0) {
@@ -486,6 +561,16 @@ const Offer: React.FC = () => {
           mensajeExito += `\nEliminadas: ${quitar.length} electiva(s)`;
         }
 
+        // Actualizar el período de última oferta después de guardar
+        try {
+          const nuevoPeriodo = await getLastOffersPeriod();
+          setLastOfferPeriod(nuevoPeriodo);
+          console.log("[Offer] Último período actualizado:", nuevoPeriodo);
+        } catch (error) {
+          console.error("[Offer] Error actualizando último período:", error);
+          // No error al usuario, continuar
+        }
+
         // Mostrar éxito
         setMensajeConfirmacion(mensajeExito);
         setShowSuccess(true);
@@ -544,9 +629,13 @@ const Offer: React.FC = () => {
                     </p>
                     <ul style={{ marginLeft: "15px", marginBottom: "10px" }}>
                       <li>
-                        Solo se puede crear oferta si <strong>no</strong> hay un
+                        Se puede crear oferta si <strong>no</strong> hay un
                         proceso de asignación en curso o finalizado para este
                         período.
+                      </li>
+                      <li>
+                        Solo se puede editar la{" "}
+                        <strong>última oferta registrada</strong> en el sistema.
                       </li>
                       <li>
                         La oferta se crea para un programa específico
@@ -567,16 +656,6 @@ const Offer: React.FC = () => {
                         <strong>Importante:</strong> Si una oferta existente se
                         queda sin ninguna electiva seleccionada, se eliminará
                         dicha oferta.
-                      </li>
-                    </ul>
-
-                    <p>
-                      <strong>Para estudiantes:</strong>
-                    </p>
-                    <ul style={{ marginLeft: "15px" }}>
-                      <li>
-                        El formulario mostrará la oferta más temprana que no
-                        tenga un proceso de asignación finalizado.
                       </li>
                     </ul>
                   </div>
@@ -626,6 +705,30 @@ const Offer: React.FC = () => {
                   ))}
                 </Select>
               </div>
+
+              {/* Mensaje del estado de la oferta seleccionada */}
+              {lastOfferPeriod !== null && (
+                <div
+                  style={{
+                    marginLeft: "auto",
+                    display: "flex",
+                    alignItems: "center",
+                    fontStyle: "italic",
+                    fontSize: "0.9rem",
+                    color: isCurrentOffer()
+                      ? "#348e0eff"
+                      : isFuturePeriod()
+                      ? "#12416cff"
+                      : "#d44006ff",
+                  }}
+                >
+                  {isCurrentOffer()
+                    ? `Editando oferta actual (${lastOfferPeriod.ofe_anio}-${lastOfferPeriod.ofe_num_semestre})`
+                    : isFuturePeriod()
+                    ? `Creando oferta futura (Actual: ${lastOfferPeriod.ofe_anio}-${lastOfferPeriod.ofe_num_semestre})`
+                    : `Período pasado - No editable`}
+                </div>
+              )}
             </div>
 
             {/* SECCIONES POR FACULTAD */}
