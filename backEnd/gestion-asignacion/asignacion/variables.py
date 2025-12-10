@@ -1,7 +1,7 @@
 from __future__ import annotations
 from dataclasses import dataclass, field
 import os
-from typing import Dict, Iterable, Optional 
+from typing import Dict, Iterable, Optional, List, Tuple
 
 # =========================
 # Configuración (overridable por ENV)
@@ -32,7 +32,6 @@ ELECTIVAS_DEBE_VER: dict[str, int] = {
 
 # Cupos por electiva en memoria (no persiste en DB).
 # Separamos "firmes" (matrícula asegurada) y "lista de espera".
-CUPOS_FIRMES_POR_ELECTIVA = int(os.getenv("CUPOS_FIRMES", "4"))
 CUPOS_ESPERA_POR_ELECTIVA = int(os.getenv("CUPOS_ESPERA", "4"))
 
 
@@ -49,7 +48,7 @@ class ElectivaCupo:
     - asignar_firme() / asignar_espera(): intenta reservar un cupo, retorna True/False.
     """
     ele_codigo_id: str
-    firmes_max: int = CUPOS_FIRMES_POR_ELECTIVA
+    firmes_max: int
     espera_max: int = CUPOS_ESPERA_POR_ELECTIVA
     firmes_asignadas: int = 0
     espera_asignadas: int = 0
@@ -99,20 +98,19 @@ class ElectivaCupoPool:
 
     @classmethod
     def from_oferta_ids(
-        cls,
-        electiva_ids: Iterable[str],
-        firmes_default: int = CUPOS_FIRMES_POR_ELECTIVA,
-        espera_default: int = CUPOS_ESPERA_POR_ELECTIVA,
+        cls, 
+        oferta_info: Iterable[Tuple[str, int]], 
+        espera_default: int = CUPOS_ESPERA_POR_ELECTIVA
     ) -> "ElectivaCupoPool":
         """
-        Construye un pool a partir de un iterable de IDs de electiva.
+        Construye un pool a partir de un iterable de tuplas (ele_codigo_id, cupos_firmes).
         Permite inyectar defaults de capacidad (útil para tests o escenarios especiales).
         """
         pool = cls()
-        for ele_id in electiva_ids:
+        for ele_id, cupos_firmes in oferta_info:
             pool.items[str(ele_id)] = ElectivaCupo(
                 ele_codigo_id=str(ele_id),
-                firmes_max=firmes_default,
+                firmes_max=cupos_firmes,
                 espera_max=espera_default,
             )
         return pool

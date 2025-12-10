@@ -29,6 +29,7 @@ class Electiva(models.Model):
     ele_codigo = models.CharField(max_length=225, primary_key=True)
     ele_nombre = models.CharField(max_length=150, unique=True)
     pro_codigo = models.ForeignKey("Programa", on_delete=models.PROTECT, related_name="electivas")
+    ele_cupos = models.PositiveIntegerField(default=4) # NUEVO: Cupos firmes por electiva
     ele_estado = models.BooleanField(default=True)  # True=activo, False=inactivo
 
     def __str__(self):

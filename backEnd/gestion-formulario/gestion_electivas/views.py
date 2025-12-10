@@ -89,6 +89,7 @@ def _serialize_electiva(e: Electiva) -> dict:
     return {
         "ele_codigo": getattr(e, "ele_codigo", None),
         "ele_nombre": e.ele_nombre,
+        "ele_cupos": e.ele_cupos,
         "ele_estado": e.ele_estado,
         "pro_codigo": getattr(e.pro_codigo, "pro_codigo", None)
     }   
