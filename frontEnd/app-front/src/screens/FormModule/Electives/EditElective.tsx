@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Form, Input, Select } from "antd";
+import { Form, Input, Select, InputNumber } from "antd";
 import Card from "../../../components/ui/Card/Card";
 import Button from "../../../components/ui/Button/Button";
 import { useNavigate, useParams } from "react-router";
@@ -18,6 +18,7 @@ const EditElective: React.FC = () => {
   const [touchedFields, setTouchedFields] = useState({
     ele_nombre: false,
     pro_codigo: false,
+    ele_cupos: false,
   });
   const [isFormValid, setIsFormValid] = useState(false);
   const [electiveFound, setElectiveFound] = useState(false);
@@ -33,6 +34,7 @@ const EditElective: React.FC = () => {
   const [initialValues, setInitialValues] = useState<{
     ele_nombre: string;
     pro_codigo: string | number;
+    ele_cupos: number;
   } | null>(null);
   const [hasChanges, setHasChanges] = useState(false);
   const electives = useElectiveStore((s) => s.electives);
@@ -56,17 +58,20 @@ const EditElective: React.FC = () => {
           ele_codigo: elective.ele_codigo,
           ele_nombre: elective.ele_nombre,
           pro_codigo: elective.pro_codigo,
+          ele_cupos: Number(elective.ele_cupos), // Convertir a número explícitamente
         });
 
         setInitialValues({
           ele_nombre: elective.ele_nombre,
           pro_codigo: elective.pro_codigo,
+          ele_cupos: Number(elective.ele_cupos), // Convertir a número explícitamente
         });
 
         // Marcar campos como tocados desde el inicio (para feedback)
         setTouchedFields({
           ele_nombre: true,
           pro_codigo: true,
+          ele_cupos: true,
         });
 
         setElectiveFound(true);
@@ -130,6 +135,19 @@ const EditElective: React.FC = () => {
       : Promise.resolve();
   };
 
+  const validateEleCupos = (_: any, value: number) => {
+    if (value === null || value === undefined) {
+      return Promise.reject("Por favor ingresa el número de cupos");
+    }
+    if (value < 1) {
+      return Promise.reject("El número de cupos debe ser al menos 1");
+    }
+    if (!Number.isInteger(value)) {
+      return Promise.reject("El número de cupos debe ser un número entero");
+    }
+    return Promise.resolve();
+  };
+
   const handleFieldTouch = (fieldName: keyof typeof touchedFields) => {
     setTouchedFields((prev) => ({ ...prev, [fieldName]: true }));
   };
@@ -157,14 +175,17 @@ const EditElective: React.FC = () => {
 
     const currentNombre = (formValues as any)?.ele_nombre ?? "";
     const currentPrograma = (formValues as any)?.pro_codigo ?? "";
+    const currentCupos = (formValues as any)?.ele_cupos;
 
     const changedNombre =
       normalizeForChange(currentNombre) !==
       normalizeForChange(initialValues.ele_nombre);
 
     const changedPrograma = String(currentPrograma) !== String(initialValues.pro_codigo);
+    const changedCupos = Number(currentCupos) !== Number(initialValues.ele_cupos);
 
-    setHasChanges(changedNombre || changedPrograma);
+
+    setHasChanges(changedNombre || changedPrograma || changedCupos);
   }, [formValues, initialValues]);
 
   const onFinish = async (values: IElective) => {
@@ -175,6 +196,7 @@ const EditElective: React.FC = () => {
         ele_codigo: ele_codigo,
         // Limpieza final: quita espacios al inicio/fin y colapsa internos
         ele_nombre: values.ele_nombre.trim().replace(/\s+/g, " "),
+        ele_cupos: values.ele_cupos,
         ele_estado: true,
       };
       await updateElective(ele_codigo, cleanedValues);
@@ -289,6 +311,20 @@ const EditElective: React.FC = () => {
               />
             </Form.Item>
 
+          <Form.Item
+              name="ele_cupos"
+              label={`Número de Cupos Máximo${initialValues?.ele_cupos ? ` (Actual: ${initialValues.ele_cupos})` : ''}`}
+              rules={[{ validator: validateEleCupos }]}
+              hasFeedback={touchedFields.ele_cupos}
+            >
+              <InputNumber
+                placeholder="Ej: 25"
+                size="large"
+                style={{ width: "100%" }}
+                min={1}
+                onChange={() => handleFieldTouch("ele_cupos")}
+              />
+            </Form.Item>
             {/* Botones */}
             <Form.Item style={{ marginTop: "2rem" }}>
               <div

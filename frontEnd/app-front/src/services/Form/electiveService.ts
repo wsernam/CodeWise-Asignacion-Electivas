@@ -7,6 +7,7 @@ import { ELECTIVES_URL_PUBLIC, ELECTIVES_URL_PRIVATE } from "../config/config";
 const transformElective = (item: any): IElective => ({
   ele_codigo: item.ele_codigo,
   ele_nombre: item.ele_nombre,
+  ele_cupos: item.ele_cupos,
   ele_estado: item.ele_estado,
   pro_codigo: item.pro_codigo,
 });

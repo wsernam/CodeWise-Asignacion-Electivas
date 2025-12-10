@@ -105,6 +105,7 @@ const Electives: React.FC = () => {
                   <th>Código</th>
                   <th>Nombre</th>
                   <th>Programa</th>
+                  <th>Cupos</th>
                   <th>Opciones</th>
                 </tr>
               </thead>
@@ -119,6 +120,7 @@ const Electives: React.FC = () => {
                           (p) => String(p.pro_codigo) === String(e.pro_codigo)
                         )?.pro_nombre || ""}
                       </td>
+                      <td>{e.ele_cupos}</td>
                       <td className="options">
                         <button
                           onClick={() =>
@@ -171,7 +173,7 @@ const Electives: React.FC = () => {
                 ) : (
                   <tr>
                     <td
-                      colSpan={4}
+                      colSpan={5}
                       style={{ textAlign: "center", padding: 20 }}
                     >
                       {electives.filter((e) => e.ele_estado).length === 0
