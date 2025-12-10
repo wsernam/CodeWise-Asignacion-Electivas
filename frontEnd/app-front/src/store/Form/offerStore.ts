@@ -1,10 +1,11 @@
 import { create } from "zustand";
-import type { IOffer } from "../../models/Form/offer";
+import type { IOffer, IOfferForm } from "../../models/Form/offer";
 import {
   createBulkOffer,
   getOffersByProgram,
   deleteOffer,
   getLastOffersPeriod,
+  getElectivesAmountByProgram,
 } from "../../services/Form/offerService";
 
 interface OfferState {
@@ -57,6 +58,28 @@ export const useOfferStore = create<OfferState>((set) => ({
       set({
         loading: false,
         error: error.message || "Error al obtener las ofertas",
+      });
+      throw error;
+    }
+  },
+
+  getElectivesAmountByProgram: async (
+    programCode: string,
+    year: number,
+    semester: number
+  ): Promise<IOfferForm> => {
+    set({ loading: true, error: null });
+    try {
+      const result = await getElectivesAmountByProgram(programCode, year, semester);
+      console.log(
+      "[offerStore] cantidad de electivas para el formulario exitosamente: ",
+      result
+    );
+      return result;
+    } catch (error: any) {
+      set({
+        loading: false,
+        error: error.message || "Error al obtener la cantidad de electivas",
       });
       throw error;
     }

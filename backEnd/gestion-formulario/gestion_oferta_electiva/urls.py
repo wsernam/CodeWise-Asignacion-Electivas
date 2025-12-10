@@ -1,5 +1,6 @@
 from django.urls import path, include
 from .views import (
+    GetElectivesAmountByProgram,
     OfertaElectivaCreateView,
     OfertaElectivaBulkCreateView,
     OfertaElectivaUpdateDeleteView,
@@ -31,4 +32,6 @@ urlpatterns = [
     # Endpoint para 'obtener el último periodo académico disponible en las ofertas'
     # Acceder con GET a /periodo-ultima-oferta/
     path('periodo-ultima-oferta/', UltimoPeriodoOfertaView.as_view(), name='obtener_ultimo_periodo_oferta'),
+
+    path('cant-ofertas-form/<int:anio>/<int:semestre>/<str:programa_codigo>/', GetElectivesAmountByProgram.as_view(), name='obtener_cantidad_electivas_programa'),
 ]

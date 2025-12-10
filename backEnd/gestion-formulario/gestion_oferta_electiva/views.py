@@ -1,5 +1,6 @@
-from rest_framework import generics, status
-from .models import Oferta_electiva 
+
+from rest_framework import generics, status, viewsets, mixins
+from .models import Oferta_electiva, Oferta_formulario 
 from .serializers import OfertaElectivaSerializer
 from rest_framework.response import Response
 from .serializers import OfertaElectivaBulkCreateSerializer
@@ -9,6 +10,7 @@ from events.oferta_publisher import publish_oferta_creada, publish_oferta_actual
 from django.db import transaction # IMPORT
 from core.permissions import IsAdministrador
 from rest_framework.views import APIView
+from rest_framework.decorators import action
 
 # Endpoint para crear y listar (todos los años/semestres)
 # Utilizaremos este para 'Crear oferta_electiva'
@@ -34,8 +36,11 @@ class OfertaElectivaBulkCreateView(generics.CreateAPIView):
     permission_classes = [IsAdministrador]
 
     def create(self, request, *args, **kwargs):
+        print("OfertaElectivaBulkCreateView - create called with data:", request.data, flush=True)
         serializer = self.get_serializer(data=request.data)
+        print("Get serializer", flush=True)
         serializer.is_valid(raise_exception=True)
+        print("Serializer is valid. Validated data:", flush=True)
         result = serializer.save()  # {'creadas': [...], 'existentes': [...]}
 
         creadas = result.get("creadas", [])
@@ -165,3 +170,37 @@ def _serialize_oferta(o: Oferta_electiva) -> dict:
         "ele_codigo": getattr(getattr(o, "ele_codigo", None), "ele_codigo", None),
         "pro_codigo": getattr(getattr(o, "pro_codigo", None), "pro_codigo", None),
     }
+
+class GetElectivesAmountByProgram(APIView):
+
+
+    def get(self, request,  *args, **kwargs):
+        
+        anio = self.kwargs.get('anio')
+        semestre = self.kwargs.get('semestre')
+        programa_codigo = self.kwargs.get('programa_codigo')
+
+        oferta_formulario = (
+            Oferta_formulario.objects.filter(ofefor_anio=anio,
+            ofefor_num_semestre=semestre,
+            pro_codigo__pro_codigo=programa_codigo
+            ).first()
+        )
+        
+
+        if not oferta_formulario:
+            return Response(
+                {"detail": "No existen ofertas registradas."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        # Construir respuesta
+        data = {
+            "ofe_anio": oferta_formulario.ofefor_anio,
+            "ofe_num_semestre": oferta_formulario.ofefor_num_semestre,
+            "pro_codigo": oferta_formulario.pro_codigo.pro_codigo,
+            "ofe_cant_electivas": oferta_formulario.ofefor_cantidad_electivas
+        }
+
+        return Response(data, status=status.HTTP_200_OK)
+    

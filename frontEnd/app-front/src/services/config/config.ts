@@ -7,6 +7,7 @@ export const API_BASE_UR_FORM_PUBLIC = "http://localhost:8000/gestion-formulario
 //PRIVADOS
 export const API_BASE_URL_FORM_PRIVATE = "http://localhost:8000/gestion-formulario/admin/";
 
+export const API_BASE_URL_AUX = "http://localhost:8002/"
 // Endpoints para el servicio de formularios (puerto 8001)
 //PUBLICOS
 export const PROGRAMS_URL_PUBLIC = `${API_BASE_UR_FORM_PUBLIC}programas`;

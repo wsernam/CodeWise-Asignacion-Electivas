@@ -17,6 +17,7 @@ import type { IOffer } from "../../../models/Form/offer";
 import { useOfferStore } from "../../../store/Form/offerStore";
 import { useFormStatusStore } from "../../../store/Form/formStatusStore";
 import { useAssignmentProcessStore } from "../../../store/Assignment/assignmentProcessStore";
+import { getElectivesAmountByProgram } from "../../../services/Form/offerService";
 
 const { Option } = Select;
 
@@ -36,6 +37,7 @@ const Offer: React.FC = () => {
   // ========== ESTADO LOCAL ==========
   const [year, setYear] = useState<number>(new Date().getFullYear());
   const [semester, setSemester] = useState<1 | 2>(1);
+  const [cantElectivas, setCantElectivas] = useState<number>(0);
   const [selectedElectives, setSelectedElectives] = useState<{
     [programa: string]: string[];
   }>({});
@@ -89,10 +91,11 @@ const Offer: React.FC = () => {
     cargarUltimoPeriodo();
   }, [getLastOffersPeriod]);
 
-  // Efecto para cargar ofertas cuando cambie programa, año o semestre
+  // Efecto para cargar ofertas y cant electivas cuando cambie programa, año o semestre
   useEffect(() => {
     if (program) {
       cargarOfertasExistentes();
+      cargarCantElectivas();
     } else {
       setExistingOffers([]);
     }
@@ -265,6 +268,21 @@ const Offer: React.FC = () => {
     }
   };
 
+
+  // ================ FUNCION PARA OBTENER LA CANTIDAD DE ELECTIVAS DEL FORM =======
+  const cargarCantElectivas = async () => {
+    if (!program) return;
+
+    try {
+      const cantElectivasForm = await getElectivesAmountByProgram(program, year, semester);
+      setCantElectivas(cantElectivasForm.ofe_cant_electivas);
+    } catch (error) {
+      console.error("[Offer] Error cargando la cantidad de electivas:", error);
+      // Si no hay ofertas o hay error, limpiar el estado
+      setCantElectivas(0);
+    } finally {
+    }
+  };
   // ========== FUNCIÓN PARA OBTENER ELECTIVAS YA OFERTADAS ==========
 
   const obtenerElectivasOfertadas = () => {
@@ -448,8 +466,14 @@ const Offer: React.FC = () => {
       setShowConfirm(true);
       return;
     }
-
-    // 6. Preparar mensaje de confirmación normal
+    if (cantElectivas > electivasSeleccionadas.length) {
+        setWarning({
+          open: true,
+          message: "La cantidad de electivas a seleccionar en el formulario no puede exceder a la cantidad de electivas ofertadas.",
+        });
+        return;
+      }
+    // 5. Preparar mensaje de confirmación normal
     let mensajeConfirmacion = `¿Confirmar cambios para el período ${year}-${semester}?\n`;
 
     if (agregar.length > 0) {
@@ -494,9 +518,18 @@ const Offer: React.FC = () => {
         return;
       }
 
+      if (cantElectivas <= 0 ) {
+        setWarning({
+          open: true,
+          message: "La cantidad de electivas a seleccionar en el formulario no puede ser 0 o inferior.",
+        });
+        return;
+      }
+
+      
       const { agregar, quitar } = cambiosPendientes;
       const errores: string[] = [];
-
+ 
       // 1. ELIMINAR ofertas que ya no están seleccionadas
       if (quitar.length > 0) {
         console.log(`[Offer] Eliminando ${quitar.length} ofertas:`, quitar);
@@ -527,6 +560,7 @@ const Offer: React.FC = () => {
           ofe_anio: year,
           ofe_num_semestre: semester,
           ofertas: oferta,
+          ofe_cant_electivas: cantElectivas,
         };
 
         console.log("[Offer] Creando nuevas ofertas:", bulkData);
@@ -579,6 +613,7 @@ const Offer: React.FC = () => {
       // 4. Recargar ofertas
       if (program) {
         await cargarOfertasExistentes();
+        await cargarCantElectivas();
       }
     } catch (error) {
       console.error("[Offer] Error al guardar oferta:", error);
@@ -691,7 +726,7 @@ const Offer: React.FC = () => {
               </div>
 
               <div className="offer-config-program">
-                <span className="offer-config-progra">Programa:</span>
+                <span className="offer-config-label">Programa:</span>
                 <Select
                   value={program}
                   onChange={(value: string) => setProgram(value)}
@@ -729,6 +764,23 @@ const Offer: React.FC = () => {
                     : `Período pasado - No editable`}
                 </div>
               )}
+              <div className="offer-config-item">
+                <span className="offer-config-label">Cantidad de electivas:</span>
+                
+                <input
+                  type="number"
+                  value={cantElectivas}
+                  onChange={(e) =>
+                    setCantElectivas(
+                      parseInt(e.target.value, 10)
+                    )
+                  }
+                  className ="offer-electiva-item"
+                  style={{ width: 100 }}
+                  placeholder="0"
+                  min="0"
+                />
+              </div>
             </div>
 
             {/* SECCIONES POR FACULTAD */}

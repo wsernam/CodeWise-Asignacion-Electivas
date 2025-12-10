@@ -1,7 +1,10 @@
 from rest_framework import serializers
-from .models import Oferta_electiva
+from .models import Oferta_electiva, Oferta_formulario
 from django.db import IntegrityError
 from gestion_electivas.models import Electiva, Programa
+
+
+
 
 class OfertaElectivaSerializer(serializers.ModelSerializer):
     # Campos de solo lectura para mostrar el nombre en lugar de IDs
@@ -34,6 +37,7 @@ class OfertaElectivaBulkCreateSerializer(serializers.Serializer):
     """
     ofe_anio = serializers.IntegerField(min_value=2000)
     ofe_num_semestre = serializers.ChoiceField(choices=[(1, "I"), (2, "II")])
+    ofe_cant_electivas =  serializers.IntegerField(min_value=1)
     ofertas = serializers.ListField(
         child=OfertaItemSerializer(),
         write_only=True,
@@ -54,19 +58,20 @@ class OfertaElectivaBulkCreateSerializer(serializers.Serializer):
             vistos.add(identificador)
         return ofertas
 
+
     def create(self, validated_data):
         anio = validated_data.get('ofe_anio')
         semestre = validated_data.get('ofe_num_semestre')
         ofertas_data = validated_data.get('ofertas')
-
+        cantidad_electivas = validated_data.get("ofe_cant_electivas")
         ofertas_a_crear = []
         ofertas_existentes = []
-
+        ofe_pro_codigo : int
         # 1. Separar las ofertas que ya existen de las que se van a crear
         for item in ofertas_data:
             ele_codigo = item['ele_codigo']
             pro_codigo = item['pro_codigo']
-
+            ofe_pro_codigo = pro_codigo
             if Oferta_electiva.objects.filter(
                 ofe_anio=anio,
                 ofe_num_semestre=semestre,
@@ -90,6 +95,21 @@ class OfertaElectivaBulkCreateSerializer(serializers.Serializer):
                     )
                 )
 
+        # consultar si exite
+        ofe_formulario = Oferta_formulario.objects.filter(
+                ofefor_anio=anio,
+                ofefor_num_semestre=semestre,
+                pro_codigo=ofe_pro_codigo
+            ).first()
+        if ofe_formulario:
+            ofe_formulario.ofefor_cantidad_electivas = cantidad_electivas
+            ofe_formulario.save()
+        else:    
+            ofe_formulario = Oferta_formulario(ofefor_anio=anio,
+                                            ofefor_num_semestre = semestre,
+                                            pro_codigo = ofe_pro_codigo,
+                                            ofefor_cantidad_electivas = cantidad_electivas)
+            Oferta_formulario.objects.create(ofe_formulario)
         # 2. Crear las nuevas ofertas en lote (si hay alguna)
         if ofertas_a_crear:
             # Usamos bulk_create sin ignore_conflicts para asegurar la integridad.
