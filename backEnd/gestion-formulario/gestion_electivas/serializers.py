@@ -18,6 +18,17 @@ class ElectivaSerializer(serializers.ModelSerializer):
             )
         ]
     )
+    ele_cupos = serializers.IntegerField(
+        required=True,
+        allow_null=False,
+        min_value=1,
+        error_messages={
+            "required": "El campo 'Número de cupos máximo' es obligatorio.",
+            "invalid": "El campo 'Número de cupos máximo' debe ser un número entero.",
+            "min_value": "El número de cupos debe ser al menos 1."
+        }
+    )
+
     class Meta:
         model = Electiva
         fields = '__all__'   # incluye todos los campos del modelo

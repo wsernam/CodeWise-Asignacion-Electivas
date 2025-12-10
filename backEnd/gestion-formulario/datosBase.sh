@@ -23,13 +23,13 @@ PIAI, _ = Programa.objects.get_or_create(pro_codigo="PIAI", defaults={"pro_nombr
 PIET, _ = Programa.objects.get_or_create(pro_codigo="PIET", defaults={"pro_nombre":"Ingeniería Electrónica", "fac_codigo":fac})
 # 2) Electivas (incluye compartidas)
 E = {}
-E["ELEC001"], _ = Electiva.objects.get_or_create(ele_codigo="ELEC001", defaults={"ele_nombre":"Arquitectura de SW",       "pro_codigo":PIS})
-E["ELEC002"], _ = Electiva.objects.get_or_create(ele_codigo="ELEC002", defaults={"ele_nombre":"Microservicios",           "pro_codigo":PIS})
-E["ELEC003"], _ = Electiva.objects.get_or_create(ele_codigo="ELEC003", defaults={"ele_nombre":"Inteligencia de Datos",    "pro_codigo":PIS})
-E["ELEC101"], _ = Electiva.objects.get_or_create(ele_codigo="ELEC101", defaults={"ele_nombre":"Aplicaciones IoT",        "pro_codigo":PIAI})
-E["ELEC201"], _ = Electiva.objects.get_or_create(ele_codigo="ELEC201", defaults={"ele_nombre":"Comunicaciones y Datos",  "pro_codigo":PIET})
-E["COM001"],  _ = Electiva.objects.get_or_create(ele_codigo="COM001",  defaults={"ele_nombre":"Aprendizaje Colaborativo", "pro_codigo":PIS})
-E["COM002"],  _ = Electiva.objects.get_or_create(ele_codigo="COM002",  defaults={"ele_nombre":"Apps Móviles",             "pro_codigo":PIS})
+E["ELEC001"], _ = Electiva.objects.get_or_create(ele_codigo="ELEC001", defaults={"ele_nombre":"Arquitectura de SW",       "pro_codigo":PIS, "ele_cupos": 20})
+E["ELEC002"], _ = Electiva.objects.get_or_create(ele_codigo="ELEC002", defaults={"ele_nombre":"Microservicios",           "pro_codigo":PIS, "ele_cupos": 20})
+E["ELEC003"], _ = Electiva.objects.get_or_create(ele_codigo="ELEC003", defaults={"ele_nombre":"Inteligencia de Datos",    "pro_codigo":PIS, "ele_cupos": 20})
+E["ELEC101"], _ = Electiva.objects.get_or_create(ele_codigo="ELEC101", defaults={"ele_nombre":"Aplicaciones IoT",        "pro_codigo":PIAI, "ele_cupos": 20})
+E["ELEC201"], _ = Electiva.objects.get_or_create(ele_codigo="ELEC201", defaults={"ele_nombre":"Comunicaciones y Datos",  "pro_codigo":PIET, "ele_cupos": 20})
+E["COM001"],  _ = Electiva.objects.get_or_create(ele_codigo="COM001",  defaults={"ele_nombre":"Aprendizaje Colaborativo", "pro_codigo":PIS, "ele_cupos": 20})
+E["COM002"],  _ = Electiva.objects.get_or_create(ele_codigo="COM002",  defaults={"ele_nombre":"Apps Móviles",             "pro_codigo":PIS, "ele_cupos": 20})
 # 3) Oferta del periodo (global: basta con que esté ofertada por algún programa)
 def ofertar(ele, prog):
     Oferta_electiva.objects.get_or_create(

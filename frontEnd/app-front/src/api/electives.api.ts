@@ -1,49 +1,43 @@
 import axiosInstance from "./axiosInstance";
+import type { IElective } from "../models/Form/elective";
 
+/**
+ * Obtiene la lista de electivas.
+ * @param status - 'all' para todas, 'active' para solo activas.
+ * @returns Una promesa que resuelve a un array de electivas.
+ */
+export const getElectives = async (status: "all" | "active" = "all"): Promise<IElective[]> => {
+  const response = await axiosInstance.get<IElective[]>(`/gestion-formulario/electivas?status=${status}`);
+  return response.data;
+};
 
-export interface IElective {
-    id: string;
-    name: string;
-    description: string;
-    credits: number;
-}
+/**
+ * Crea una nueva electiva.
+ * @param electiveData - Los datos de la electiva a crear.
+ * @returns Una promesa que resuelve a la electiva creada.
+ */
+export const createElective = async (electiveData: Omit<IElective, 'ele_estado'> & { ele_estado?: boolean }): Promise<IElective> => {
+  const response = await axiosInstance.post<IElective>("/gestion-formulario/admin/electivas", electiveData);
+  return response.data;
+};
 
-export const getElectives =  async (): Promise<IElective[]> => {
-    // const response = await axiosInstance.get<IElective[]>('/electives');
-    const response = await getMockElectives();
-    return response.status === 200 ? response.data : [];
-}
+/**
+ * Actualiza una electiva existente.
+ * @param ele_codigo - El código de la electiva a actualizar.
+ * @param electiveData - Los nuevos datos para la electiva.
+ * @returns Una promesa que resuelve a la electiva actualizada.
+ */
+export const updateElective = async (ele_codigo: string, electiveData: Partial<IElective>): Promise<IElective> => {
+  const response = await axiosInstance.put<IElective>(`/gestion-formulario/admin/electivas/${ele_codigo}/`, electiveData);
+  return response.data;
+};
 
-
-const mockElectives: IElective[] = [
-    {
-        id: "1",
-        name: "Introduction to Programming",
-        description: "Learn the basics of programming using Python.",
-        credits: 3,
-    },
-    {
-        id: "2",
-        name: "Data Structures and Algorithms",
-        description: "Explore fundamental data structures and algorithms.",
-        credits: 4,
-    },
-    {
-        id: "3",
-        name: "Web Development",
-        description: "Build modern web applications using HTML, CSS, and JavaScript.",
-        credits: 3,
-    }
-];
-
-
-export const getMockElectives = async (): Promise<{ status: number; data: IElective[] }> => {
-    return new Promise((resolve) => {
-        setTimeout(() => {
-            resolve({
-                status: 200,
-                data: mockElectives
-            });
-        }, 1000);
-    });
-}
+/**
+ * Cambia el estado (activo/inactivo) de una electiva.
+ * @param ele_codigo - El código de la electiva a modificar.
+ * @returns Una promesa que resuelve a la electiva con su nuevo estado.
+ */
+export const toggleElectiveStatus = async (ele_codigo: string): Promise<IElective> => {
+  const response = await axiosInstance.patch<IElective>(`/gestion-formulario/admin/electivas/${ele_codigo}/toggle_estado/`);
+  return response.data;
+};

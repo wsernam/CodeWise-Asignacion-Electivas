@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Form, Input, Select } from "antd";
+import { Form, Input, Select, InputNumber } from "antd";
 import { useNavigate } from "react-router";
 import WarningModal from "../../../components/shared/WarningModal/WarningModal";
 import ConfirmModal from "../../../components/shared/ConfirmModal/ConfirmModal";
@@ -21,6 +21,7 @@ const AddElective: React.FC = () => {
     ele_codigo: false,
     ele_nombre: false,
     pro_codigo: false,
+    ele_cupos: false,
   });
   const [isFormValid, setIsFormValid] = useState(false);
   const [warning, setWarning] = useState<{ open: boolean; message: string }>({
@@ -98,6 +99,19 @@ const AddElective: React.FC = () => {
     return Promise.resolve();
   };
 
+  const validateEleCupos = (_: any, value: number) => {
+    if (value === null || value === undefined) {
+      return Promise.reject("Por favor ingresa el número de cupos");
+    }
+    if (value < 1) {
+      return Promise.reject("El número de cupos debe ser al menos 1");
+    }
+    if (!Number.isInteger(value)) {
+      return Promise.reject("El número de cupos debe ser un número entero");
+    }
+    return Promise.resolve();
+  };
+
 
   const handleFieldTouch = (field: keyof typeof touchedFields) =>
     setTouchedFields((prev) => ({ ...prev, [field]: true }));
@@ -114,7 +128,8 @@ const AddElective: React.FC = () => {
     if (
       touchedFields.ele_codigo ||
       touchedFields.ele_nombre ||
-      touchedFields.pro_codigo
+      touchedFields.pro_codigo ||
+      touchedFields.ele_cupos
     ) {
       checkValidity();
     }
@@ -127,6 +142,7 @@ const AddElective: React.FC = () => {
         ele_codigo: values.ele_codigo.toUpperCase(),
         ele_nombre: values.ele_nombre.trim().replace(/\s+/g, " "),
         pro_codigo: values.pro_codigo,
+        ele_cupos: values.ele_cupos,
         ele_estado: true,
       };
 
@@ -184,6 +200,7 @@ const AddElective: React.FC = () => {
       ele_codigo: false,
       ele_nombre: false,
       pro_codigo: false,
+      ele_cupos: false,
     });
     navigate("/electives");
   };
@@ -289,6 +306,21 @@ const AddElective: React.FC = () => {
               </Select>
             </Form.Item>
 
+            <Form.Item
+              name="ele_cupos"
+              label="Número de Cupos Máximo"
+              rules={[{ validator: validateEleCupos }]}
+              hasFeedback={touchedFields.ele_cupos}
+              validateStatus={touchedFields.ele_cupos ? undefined : ""}
+            >
+              <InputNumber
+                placeholder="Ej: 25"
+                size="large"
+                style={{ width: "100%" }}
+                min={1}
+                onBlur={() => handleFieldTouch("ele_cupos")}
+              />
+            </Form.Item>
             {/* Botones */}
             <Form.Item>
               <div

@@ -1,6 +1,6 @@
 from __future__ import annotations
 from dataclasses import dataclass
-from typing import Iterable, List, Optional
+from typing import Iterable, List, Optional, Tuple
 from django.db import IntegrityError
 from asignacion.models import Asignacion
 from gestion_hojas_de_calculo.models import PerfilAcademico
@@ -103,12 +103,12 @@ def _preferencias_estudiante(est_id: int, anio: int, sem: int) -> List[int]:
         .values_list("ele_codigo_id", flat=True)
     )
 
-def _oferta_ids_global(anio: int, sem: int) -> List[int]:
+def _get_oferta_info(anio: int, sem: int) -> List[Tuple[str, int]]:
     return list(
         Oferta.objects
         .filter(ofe_anio=anio, ofe_num_semestre=sem)
-        .values_list("ele_codigo_id", flat=True)
-        .distinct()
+        .select_related("ele_codigo")
+        .values_list("ele_codigo_id", "ele_codigo__ele_cupos").distinct()
     )
 
 # =========================
@@ -123,8 +123,8 @@ class AsignadorService:
         self._debug_rows: list[tuple[int,int,str]] = []
 
         # Pool de cupos a partir de la oferta del período (global)
-        oferta_ids = _oferta_ids_global(anio, semestre)
-        self.pool = ElectivaCupoPool.from_oferta_ids(oferta_ids)
+        oferta_info = _get_oferta_info(anio, semestre)
+        self.pool = ElectivaCupoPool.from_oferta_ids(oferta_info)
 
     # ---- helpers de creación ----
 
