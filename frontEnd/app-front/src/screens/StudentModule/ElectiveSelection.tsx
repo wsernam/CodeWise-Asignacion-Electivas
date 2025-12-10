@@ -22,6 +22,7 @@ import { getFormularioEstadoService } from "../../services/Form/selectionService
 // Models
 import type { ISelectionStudentElective } from "../../models/Form/selection";
 import type { IElective } from "../../models/Form/elective";
+import { getElectivesAmountByProgram } from "../../services/Form/offerService";
 
 const { Option } = Select;
 
@@ -30,6 +31,7 @@ const ElectiveSelection: React.FC = () => {
   const location = useLocation();
 
   // Obtener funciones y estados de los stores
+  const [cantElectives, setCantElectives] = useState<number>(0);
   const { loading } = useStudentStore();
   const { fetchActiveElectives, activeElectives, addSelection, getLastOfferDate } =
     useSelectionStore() as any;
@@ -44,7 +46,7 @@ const ElectiveSelection: React.FC = () => {
   };
 
   const [selectedElectives, setSelectedElectives] = useState<string[]>(
-    Array(5).fill("")
+    Array(cantElectives).fill("")
   );
 
   // Manejo de fecha
@@ -76,6 +78,12 @@ const ElectiveSelection: React.FC = () => {
 
         try {
           const lastOffer = await getLastOfferDate();
+          const cantElectivas = await getElectivesAmountByProgram(
+            studentData.programa,
+            lastOffer.ofe_anio,
+            lastOffer.ofe_num_semestre
+          );
+          setCantElectives(cantElectivas.ofe_cant_electivas);
           anio = lastOffer.ofe_anio;
           semestre = lastOffer.ofe_num_semestre;
 
@@ -293,7 +301,7 @@ const ElectiveSelection: React.FC = () => {
                 gap: "var(--space-md)",
               }}
             >
-              {[0, 1, 2, 3, 4].map((index) => (
+              {Array.from({ length: cantElectives }, (_, index) => (
                 <div
                   key={index}
                   style={{
@@ -339,7 +347,7 @@ const ElectiveSelection: React.FC = () => {
                 }}
               >
                 <strong>Electivas seleccionadas:</strong>{" "}
-                {selectedElectives.filter((e) => e !== "").length} de 5
+                {selectedElectives.filter((e) => e !== "").length} de {cantElectives}
               </p>
               {hasDuplicateElectives() && (
                 <p style={{ color: "var(--primary-red)", fontSize: "0.9rem" }}>
