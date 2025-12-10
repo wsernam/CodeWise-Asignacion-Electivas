@@ -1,6 +1,6 @@
 import apiClient from "../Auth/apiClient";
-import type { IOffer } from "../../models/Form/offer";
-import { OFFER_URL_PUBLIC, OFFER_URL_PRIVATE, API_BASE_UR_FORM_PUBLIC } from "../config/config";
+import type { IOffer, IOfferForm } from "../../models/Form/offer";
+import { OFFER_URL_PUBLIC, OFFER_URL_PRIVATE, API_BASE_UR_FORM_PUBLIC, API_BASE_URL_AUX } from "../config/config";
 
 export const createBulkOffer = async (offerData: IOffer): Promise<any> => {
   console.log("[offerService] Creando ofertas en lote: ", offerData);
@@ -59,6 +59,38 @@ export const getOffersByProgram = async (
       error.response?.data?.detail ||
         error?.message ||
         "No se pudieron obtener las ofertas"
+    );
+  }
+};
+
+
+export const getElectivesAmountByProgram = async (
+  programCode: string,
+  year: number,
+  semester: number
+): Promise<IOfferForm> => {
+  try {
+    const response = await apiClient.get(
+      `${API_BASE_URL_AUX}cant-ofertas-form/${year}/${semester}/${programCode}/`
+    );
+
+    console.log(
+      "[offerService] cantidad de electivas para el formulario exitosamente: ",
+      response.data
+    );
+
+    const cant_electivas_form = response.data;
+
+    return cant_electivas_form;
+  } catch (error: any) {
+    console.log(
+      "[offerService] Error obteniendo cantidad de electivas:",
+      error.response?.data
+    );
+    throw new Error(
+      error.response?.data?.detail ||
+        error?.message ||
+        "No se pudo obtener la cantidad de electivas"
     );
   }
 };

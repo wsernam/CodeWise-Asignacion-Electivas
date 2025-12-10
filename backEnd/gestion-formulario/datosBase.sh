@@ -106,6 +106,29 @@ with transaction.atomic():
             if cs: cre_sel += 1
 print(f"Estudiantes creados: {cre_est}")
 print(f"Selecciones creadas: {cre_sel} (periodo {ANIO}-{SEM})")
+# 5) Crear ofertas de formulario (cantidad de electivas por programa)
+from gestion_oferta_electiva.models import Oferta_formulario
+OF, created1 = Oferta_formulario.objects.get_or_create(
+    ofefor_anio=ANIO,
+    ofefor_num_semestre=SEM,
+    pro_codigo=PIS,
+    defaults={"ofefor_cantidad_electivas": 5}
+)
+
+OF, created2 = Oferta_formulario.objects.get_or_create(
+    ofefor_anio=ANIO,
+    ofefor_num_semestre=SEM,
+    pro_codigo=PIET,
+    defaults={"ofefor_cantidad_electivas": 3}
+)
+
+OF, created3 = Oferta_formulario.objects.get_or_create(
+    ofefor_anio=ANIO,
+    ofefor_num_semestre=SEM,
+    pro_codigo=PIAI,
+    defaults={"ofefor_cantidad_electivas": 3}
+)
+
 PYCODE
 echo "==> OK (FORMULARIO)."
 # Arranca el servidor

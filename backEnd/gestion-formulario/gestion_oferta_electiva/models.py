@@ -52,3 +52,37 @@ class Oferta_electiva(models.Model):
         # Representación en texto del objeto (muy útil en el admin y en prints)
         # Ejemplo: "Electiva X - Programa Y (2025-1)"
         return f"{self.ele_codigo.ele_nombre} - {self.pro_codigo.pro_nombre} ({self.ofe_anio}-{self.ofe_num_semestre})"
+
+
+class Oferta_formulario(models.Model):
+
+    ofefor_codigo = models.AutoField(primary_key=True)
+    ofefor_anio = models.PositiveIntegerField()
+    ofefor_num_semestre = models.PositiveSmallIntegerField(
+        choices=[(1, "I"), (2, "II")]
+    )
+    pro_codigo = models.ForeignKey(
+        Programa,
+        on_delete=models.CASCADE,
+        related_name="ofertaformulario"
+    )
+
+    ofefor_cantidad_electivas = models.PositiveIntegerField()
+
+    class Meta:
+        # Restricciones y configuraciones adicionales de la tabla
+        constraints = [
+            # UniqueConstraint: asegura que NO se repita la misma combinación
+            # de (año + semestre + electiva + programa)
+            models.UniqueConstraint(
+                fields=["ofefor_anio", "ofefor_num_semestre","pro_codigo"],
+                name="unique_oferta_formulario"
+            )
+        ]
+        # Orden por defecto al hacer consultas: primero años más recientes,
+        # y dentro de cada año, semestre más reciente
+        ordering = ["-ofefor_anio", "-ofefor_num_semestre"]
+
+    def __str__(self):
+
+        return f"{self.pro_codigo.pro_nombre} - ({self.ofefor_anio}-{self.ofefor_num_semestre}) Cantidad electivas: {self.ofefor_cantidad_electivas}"
