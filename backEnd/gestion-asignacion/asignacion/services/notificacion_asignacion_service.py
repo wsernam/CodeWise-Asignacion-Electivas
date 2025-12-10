@@ -10,12 +10,21 @@ from collections import defaultdict
 from asignacion.models import Asignacion  # ajusta el import
 from events.asignacion_publisher import publish_asignacion_notificacion
 
+from collections import defaultdict
+from asignacion.models import Asignacion
+from events.asignacion_publisher import publish_asignacion_notificacion
 
-def enviar_notificaciones_asignacion_periodo(anio: int, semestre: int, pro_codigo: str | None = None) -> int:
+
+def enviar_notificaciones_asignacion_periodo(
+    anio: int,
+    semestre: int,
+    pro_codigo: str | None = None,
+) -> int:
     qs = Asignacion.objects.select_related("est_codigo", "ele_codigo").filter(
         anio=anio,
         asi_num_semestre=semestre,
     )
+
     if pro_codigo:
         qs = qs.filter(est_codigo__pro_codigo__pro_codigo=pro_codigo)
 
@@ -25,15 +34,19 @@ def enviar_notificaciones_asignacion_periodo(anio: int, semestre: int, pro_codig
         est = asi.est_codigo
         ele = asi.ele_codigo
 
+        # 👇 AQUÍ LA CLAVE: usamos en_lista_espera
+        estado = "ESPERA" if getattr(asi, "en_lista_espera", False) else "FIRME"
+
         agrupado[est.pk].append(
             {
                 "ele_codigo": getattr(ele, "ele_codigo", None),
                 "ele_nombre": getattr(ele, "ele_nombre", None),
-                "estado": getattr(asi, "asi_estado", "FIRME"),  # ajusta al nombre real
+                "estado": estado,
             }
         )
 
     enviados = 0
+
     for est_id, electivas in agrupado.items():
         est = qs.filter(est_codigo_id=est_id).first().est_codigo
         correo = getattr(est, "est_correo", None) or getattr(est, "email", None)
