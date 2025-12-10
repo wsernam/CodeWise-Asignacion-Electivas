@@ -83,6 +83,7 @@ def _process_electiva(data: dict):
     defaults = {
         "ele_nombre": data.get("ele_nombre", ""),
         "ele_estado": data.get("ele_estado", True),
+        "ele_cupos": data.get("ele_cupos", 4), # <-- AÑADIDO: procesar el campo de cupos
     }
 
     # Resolver el Programa a partir de pro_codigo (string)
