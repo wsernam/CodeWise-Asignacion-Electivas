@@ -87,7 +87,7 @@ services:
     volumes:
       - volumen_db_asignacion:/var/lib/mysql
     ports:
-      - "3308:3306"
+      - "3309:3306"
     healthcheck:
       test:
         [

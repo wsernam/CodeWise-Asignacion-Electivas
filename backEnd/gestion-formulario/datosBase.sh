@@ -421,32 +421,32 @@ def ofertar(ele, prog):
 # === Oferta PIAI ===
 ofertar(E["ELEC401"], PIAI)  # Aplicaciones industriales IoT
 ofertar(E["ELEC402"], PIAI)  # Bioingeniería: Rehabilitación
-ofertar(E["ELEC403"], PIAI)  # Energías Renovables
-ofertar(E["ELEC404"], PIAI)  # Programación Avanzada de PLC's
-ofertar(E["ELEC405"], PIAI)  # Visión de Máquina
+ofertar(E["ELEC405"], PIAI)  # Energías Renovables
+#ofertar(E["ELEC407"], PIAI)  # Programación Avanzada de PLC's
+#ofertar(E["ELEC410"], PIAI)  # Visión de Máquina
 
 # === Oferta PIET ===
-ofertar(E["ELEC501"], PIET)  # Desarrollo de Aplicaciones Móviles
-ofertar(E["ELEC502"], PIET)  # Desarrollo de Aplicaciones Web
-ofertar(E["ELEC503"], PIET)  # Recent Topics In Networking
-ofertar(E["ELEC504"], PIET)  # Redes de Nueva Generación
-ofertar(E["ELEC505"], PIET)  # Redes Ópticas Avanzadas
-ofertar(E["ELEC506"], PIET)  # Seguridad en Redes de Información
-ofertar(E["ELEC507"], PIET)  # Sistemas Inalámbricos en la Comunicación de Datos
-ofertar(E["ELEC508"], PIET)  # Web Social
+ofertar(E["ELEC502"], PIET)  # Desarrollo de Aplicaciones Móviles
+ofertar(E["ELEC504"], PIET)  # Desarrollo de Aplicaciones Web
+ofertar(E["ELEC505"], PIET)  # Recent Topics In Networking
+ofertar(E["ELEC506"], PIET)  # Redes de Nueva Generación
+ofertar(E["ELEC507"], PIET)  # Redes Ópticas Avanzadas
+ofertar(E["ELEC508"], PIET)  # Seguridad en Redes de Información
+#ofertar(E["ELEC510"], PIET)  # Sistemas Inalámbricos en la Comunicación de Datos
+#ofertar(E["ELEC514"], PIET)  # Web Social
 
 # === Oferta PIS ===
-ofertar(E["ELEC601"], PIS)  # Aprendizaje Colaborativo Asistido por Computador
-ofertar(E["ELEC602"], PIS)  # Arquitectura de Microservicios
-ofertar(E["ELEC603"], PIS)  # Arquitecturas SW para Aplicaciones Empresariales (ASAE)
-ofertar(E["ELEC604"], PIS)  # Conceptos Avanzados de Bases de Datos
-ofertar(E["ELEC605"], PIS)  # Desarrollo de Aplicaciones para la Web Semántica de IoT (SWoT)
-ofertar(E["ELEC606"], PIS)  # Fundamentos de Computación Evolutiva
-ofertar(E["ELEC607"], PIS)  # Ingeniería de Procesos de Software
-ofertar(E["ELEC608"], PIS)  # Inteligencia de Datos
-ofertar(E["ELEC609"], PIS)  # Introducción a la Minería de Datos
-ofertar(E["ELEC610"], PIS)  # Sistemas de Recuperación de Imágenes Basadas en Contenido (SCBIR)
-ofertar(E["ELEC611"], PIS)  # Taller de Metodologías Ágiles
+ofertar(E["ELEC602"], PIS)  # Aprendizaje Colaborativo Asistido por Computador
+ofertar(E["ELEC604"], PIS)  # Arquitectura de Microservicios
+ofertar(E["ELEC605"], PIS)  # Arquitecturas SW para Aplicaciones Empresariales (ASAE)
+ofertar(E["ELEC607"], PIS)  # Conceptos Avanzados de Bases de Datos
+ofertar(E["ELEC608"], PIS)  # Desarrollo de Aplicaciones para la Web Semántica de IoT (SWoT)
+ofertar(E["ELEC611"], PIS)  # Fundamentos de Computación Evolutiva
+ofertar(E["ELEC614"], PIS)  # Ingeniería de Procesos de Software
+ofertar(E["ELEC616"], PIS)  # Inteligencia de Datos
+ofertar(E["ELEC619"], PIS)  # Introducción a la Minería de Datos
+#ofertar(E["ELEC621"], PIS)  # Sistemas de Recuperación de Imágenes Basadas en Contenido (SCBIR)
+#ofertar(E["ELEC622"], PIS)  # Taller de Metodologías Ágiles
 
 # 4) 20 estudiantes
 DEMO = {

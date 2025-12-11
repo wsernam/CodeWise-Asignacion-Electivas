@@ -35,6 +35,12 @@ const ReportsAssignment: React.FC = () => {
     obtenerTodosLosProcesos();
   }, [obtenerTodosLosProcesos]);
 
+  const isNumeric = (value: string) => /^\d+$/.test(value);
+  const currentYear = new Date().getFullYear();
+  const minYear = 2000;
+  const maxYear = currentYear + 1;
+  const isYearValid = (year: number) => year >= minYear && year <= maxYear;
+
   // Calcular años disponibles de procesos
   const availableYears = useMemo(() => {
     const years = new Set<number>();
@@ -51,8 +57,10 @@ const ReportsAssignment: React.FC = () => {
   // Validación centralizada - MUY IMPORTANTE
   const isGenerateDisabled =
     isGenerating ||
-    (selectedReportType === "por-estudiante" && !estId.trim()) ||
-    (selectedReportType === "por-electiva" && !eleCodigo.trim());
+    !isYearValid(selectedYear) ||
+    !isNumeric(String(selectedYear)) ||
+    (selectedReportType === "por-estudiante" && (!estId.trim() || !isNumeric(estId))) ||
+    (selectedReportType === "por-electiva" && (!eleCodigo.trim() || !isNumeric(eleCodigo)));
 
   // Limpiar blob anterior
   useEffect(() => {
@@ -65,6 +73,32 @@ const ReportsAssignment: React.FC = () => {
     setIsGenerating(true);
     try {
       let blob: Blob;
+
+      // Validaciones
+      if (!isNumeric(String(selectedYear)) || !isYearValid(selectedYear)) {
+        setShowWarningModal({
+          open: true,
+          message: `El año debe ser un número entre ${minYear} y ${maxYear}.`,
+        });
+        setIsGenerating(false);
+        return;
+      }
+      if (selectedReportType === "por-estudiante" && (!isNumeric(estId) || !estId.trim())) {
+        setShowWarningModal({
+          open: true,
+          message: "El código de estudiante debe contener solo números.",
+        });
+        setIsGenerating(false);
+        return;
+      }
+      if (selectedReportType === "por-electiva" && (!isNumeric(eleCodigo) || !eleCodigo.trim())) {
+        setShowWarningModal({
+          open: true,
+          message: "El código de electiva debe contener solo números.",
+        });
+        setIsGenerating(false);
+        return;
+      }
 
       if (isPreview && previewProcessId) {
         // Verificar si el proceso aún existe en la lista
@@ -119,7 +153,7 @@ const ReportsAssignment: React.FC = () => {
       );
       setGeneratedReport(url);
     } catch (e: any) {
-      const message = e.message.includes("404")
+      const message = e.message && e.message.includes("404")
         ? "No se encontró información para los filtros seleccionados"
         : e.message || "Ocurrió un error al generar el reporte";
 
