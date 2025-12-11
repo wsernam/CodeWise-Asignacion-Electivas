@@ -51,6 +51,7 @@ const Offer: React.FC = () => {
     ofe_anio: number;
     ofe_num_semestre: number;
   } | null>(null);
+  const [cantElectivasAnterior, setCantElectivasAnterior] = useState<number>(0);
 
   // Estados para ofertas existentes y cambios
   const [existingOffers, setExistingOffers] = useState<any[]>([]);
@@ -284,10 +285,12 @@ const Offer: React.FC = () => {
         semester
       );
       setCantElectivas(cantElectivasForm.ofe_cant_electivas);
+      setCantElectivasAnterior(cantElectivasForm.ofe_cant_electivas);
     } catch (error) {
       console.error("[Offer] Error cargando la cantidad de electivas:", error);
       // Si no hay ofertas o hay error, limpiar el estado
       setCantElectivas(0);
+      setCantElectivasAnterior(0);
     } finally {
     }
   };
@@ -432,30 +435,6 @@ const Offer: React.FC = () => {
       return;
     }
 
-    // Para verificar la integridad del número de electivas permitidas
-    // Obtener las electivas seleccionadas del programa actual
-    const programaSeleccionado = programs.find(
-      (p) => p.pro_codigo.toString() === program
-    );
-
-    const nombreProgramaSeleccionado = programaSeleccionado?.pro_nombre || "";
-
-    const electivasSeleccionadasParaPrograma =
-      selectedElectives[nombreProgramaSeleccionado] || [];
-
-    const cantidadSeleccionadas = electivasSeleccionadasParaPrograma.length;
-
-    // Verificar que no sea menor (?)
-    //if (cantidadSeleccionadas < cantElectivas) {
-    //  setWarning({
-    //    open: true,
-    //    message: `La cantidad de electivas seleccionadas (${cantidadSeleccionadas}) es menor a la cantidad configurada (${cantElectivas}).\n\nPor favor, selecciona ${
-    //      cantElectivas - cantidadSeleccionadas
-    //    } electiva(s) más o reduce la cantidad en el campo "Cantidad de electivas".`,
-    //  });
-    //  return;
-    //}
-
     // 2. Verificar si es período PASADO (no permitido)
     if (isPastPeriod()) {
       setWarning({
@@ -498,15 +477,6 @@ const Offer: React.FC = () => {
       setShowConfirm(true);
       return;
     }
-    if (cantElectivas < electivasSeleccionadas.length) {
-      setWarning({
-        open: true,
-        message: `La cantidad de electivas seleccionadas (${cantidadSeleccionadas}) excede la cantidad configurada (${cantElectivas}).\n\nPor favor, quita ${
-          cantidadSeleccionadas - cantElectivas
-        } electiva(s) o aumenta la cantidad en el campo "Cantidad de electivas".`,
-      });
-      return;
-    }
     // 5. Preparar mensaje de confirmación normal
     let mensajeConfirmacion = `¿Confirmar cambios para el período ${year}-${semester}?\n`;
 
@@ -526,15 +496,17 @@ const Offer: React.FC = () => {
         mensajeConfirmacion += ` ${nombre}\n`;
       });
     }
-
-    if (agregar.length === 0 && quitar.length === 0) {
+    const huboCambioEnCantidad = cantElectivas !== cantElectivasAnterior;
+    if (agregar.length === 0 && quitar.length === 0 && !huboCambioEnCantidad) {
       setWarning({
         open: true,
         message: `No realizó ningún cambio para el período ${year}-${semester}.`,
       });
       return;
     }
-
+    if (huboCambioEnCantidad && agregar.length === 0 && quitar.length === 0) {
+      mensajeConfirmacion += `\nSe cambiará la cantidad de electivas por estudiante: de ${cantElectivasAnterior} a ${cantElectivas}`;
+    }
     // Guardar los cambios calculados para usarlos en handleConfirmSave
     setCambiosPendientes({ agregar, quitar });
     setMensajeConfirmacion(mensajeConfirmacion);
@@ -582,6 +554,59 @@ const Offer: React.FC = () => {
         }
       }
 
+      // Para la cantidad
+      const huboCambioEnCantidad = cantElectivas !== cantElectivasAnterior;
+      const cantidadCambioSoloEnCantidad =
+        huboCambioEnCantidad &&
+        agregar.length === 0 &&
+        quitar.length === 0 && // No hubo cambios en electivas
+        existingOffers.length > 0 && // Hay ofertas existentes
+        cantElectivas > 0; // La cantidad es válida
+
+      if (cantidadCambioSoloEnCantidad) {
+        console.log(
+          "[Offer] Solo cambió la cantidad de electivas, actualizando..."
+        );
+
+        const electivaExistente = existingOffers[0]?.ele_codigo;
+
+        if (electivaExistente) {
+          const bulkData: IOffer = {
+            ofe_anio: year,
+            ofe_num_semestre: semester,
+            ofertas: [
+              {
+                ele_codigo: electivaExistente,
+                pro_codigo: program,
+              },
+            ],
+            ofe_cant_electivas: cantElectivas,
+          };
+
+          console.log(
+            "[Offer] Actualizando solo cantidad de electivas:",
+            bulkData
+          );
+
+          try {
+            await createBulkOffer(bulkData);
+            console.log(
+              "[Offer] Cantidad de electivas actualizada exitosamente"
+            );
+          } catch (error) {
+            console.error("[Offer] Error actualizando cantidad:", error);
+            errores.push("No se pudo actualizar la cantidad de electivas");
+          }
+        } else {
+          console.warn(
+            "[Offer] No hay electivas existentes para actualizar la cantidad"
+          );
+          errores.push(
+            "No hay electivas existentes para actualizar la cantidad"
+          );
+        }
+      }
+
       // 2. CREAR nuevas ofertas
       if (agregar.length > 0) {
         // Construir la oferta SOLO con las nuevas electivas
@@ -598,7 +623,12 @@ const Offer: React.FC = () => {
         };
 
         console.log("[Offer] Creando nuevas ofertas:", bulkData);
-        await createBulkOffer(bulkData);
+        try {
+          await createBulkOffer(bulkData);
+        } catch (error) {
+          console.error("[Offer] Error creando ofertas:", error);
+          errores.push("No se pudieron crear las nuevas ofertas");
+        }
       }
 
       // 3. Manejar resultados
@@ -618,6 +648,11 @@ const Offer: React.FC = () => {
 
         // Mensaje de éxito
         let mensajeExito = `Oferta ${year}-${semester} actualizada para el programa ${nombrePrograma}.`;
+
+        // Agregar información sobre cambios en la cantidad
+        if (huboCambioEnCantidad) {
+          mensajeExito += `\nCantidad de electivas por estudiante: de ${cantElectivasAnterior} a ${cantElectivas}`;
+        }
 
         if (agregar.length === 0 && quitar.length === existingOffers.length) {
           mensajeExito = `Oferta ${year}-${semester} eliminada para el programa ${nombrePrograma} (no se seleccionó ninguna electiva).`;
