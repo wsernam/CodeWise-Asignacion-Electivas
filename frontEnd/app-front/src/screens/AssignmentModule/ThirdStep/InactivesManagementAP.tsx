@@ -14,6 +14,7 @@ import { useExcelProcessingStore } from "../../../store/Assignment";
 import InactivesTable, { type InactiveRow } from "./InactivesTable";
 import * as XLSX from "xlsx";
 import { useProgramStore } from "../../../store/Form/programStore";
+import { useStudentStore } from "../../../store/Form/studentStore";
 
 type AssignmentProcessProps = {
   onNext: () => void;
@@ -66,7 +67,9 @@ const InactivesManagementAP: React.FC<AssignmentProcessProps> = ({
   const [inactiveRows, setInactiveRows] = useState<InactiveRow[]>([]);
   const [excelData, setExcelData] = useState<any[]>([]);
   const [isLoadingData, setIsLoadingData] = useState(false);
+
   const { programs } = useProgramStore();
+  const { getStudentById } = useStudentStore();
 
   const {
     incompleteRows,
@@ -99,7 +102,7 @@ const InactivesManagementAP: React.FC<AssignmentProcessProps> = ({
   };
 
   // 2. Buscar programa por nombre
-  const buscarProgramaCodigo = (nombrePrograma: string): string => {
+  /* const buscarProgramaCodigo = (nombrePrograma: string): string => {
     if (!nombrePrograma || !programs.length) return "";
 
     const programaEncontrado = programs.find(
@@ -111,33 +114,44 @@ const InactivesManagementAP: React.FC<AssignmentProcessProps> = ({
     );
 
     return programaEncontrado?.pro_codigo?.toString() || "";
-  };
+  }; */
 
-  // 3. Buscar estudiante en Excel
-  const buscarEnExcel = (codigo: string) => {
-    const estudiante = excelData.find((row: any) => {
-      const rowCodigo = row.CODIGO?.toString();
-      const searchCodigo = codigo?.toString();
-      return rowCodigo === searchCodigo;
-    });
+  // 3. Buscar estudiante en Base de Datos
+  const buscarEstudiante = async (codigo: string) => {
+    try {
+      // Buscar estudiante por código
+      const estudiante = await getStudentById(Number(codigo));
 
-    if (estudiante) {
-      const programaNombre = estudiante.PROGRAMA || "";
-      const programaCodigo = buscarProgramaCodigo(programaNombre);
+      // Si no se encuentra, retornar null
+      if (!estudiante) {
+        console.log(`[DEBUG] Estudiante no encontrado: ${codigo}`);
+        return null;
+      }
+
+      // Busca datos relevantes del Excel
+      const datosExcel = excelData.find((row: any) => {
+        return row.CODIGO?.toString() === codigo?.toString();
+      });
+
+      // Buscar programa desde el estudiante
+      const programaCodigo = estudiante.pro_codigo || "";
+      const programa = programs.find( p => p.pro_codigo === programaCodigo);
+      const programaNombre = programa?.pro_nombre || "";
 
       return {
-        nombre: estudiante.NOMBRES || estudiante.NOMBRE || "",
-        apellido: estudiante.APELLIDOS || estudiante.APELLIDO || "",
+        nombre: estudiante.est_nombre,
+        apellido: estudiante.est_apellido,
         programa: programaCodigo,
         programaNombre: programaNombre,
-        creditos: estudiante.CREDITOS_APROBADOS?.toString() || "",
-        aprobadas: (estudiante.APROBADAS ?? estudiante.NUM_ELECTIVAS_CURSADAS)?.toString() || "",
-        periodos: estudiante.PERIODOS_MATRICULADOS?.toString() || "",
-        porcentaje: estudiante.PROMEDIO_CARRERA?.toString() || "",
+        creditos: datosExcel.CREDITOS_APROBADOS?.toString() || "",
+        aprobadas: (datosExcel.APROBADAS ?? datosExcel.NUM_ELECTIVAS_CURSADAS)?.toString() || "",
+        periodos: datosExcel.PERIODOS_MATRICULADOS?.toString() || "",
+        porcentaje: datosExcel.PROMEDIO_CARRERA?.toString() || "",
       };
+    } catch (error) {
+      console.error("Error buscando estudiante:", error);
+      return null;
     }
-
-    return null;
   };
 
   // 4. Cargar inactivos ¿
@@ -160,7 +174,7 @@ const InactivesManagementAP: React.FC<AssignmentProcessProps> = ({
         const convertedRows: InactiveRow[] = [];
 
         for (const row of result.filas_incompletas) {
-          const datos = buscarEnExcel(row.codigo.toString());
+          const datos = await buscarEstudiante(row.codigo.toString());
 
           convertedRows.push({
             id: convertedRows.length + 1,
@@ -265,12 +279,11 @@ const InactivesManagementAP: React.FC<AssignmentProcessProps> = ({
       const incompletas = inactiveRows.length - filasCompletas.length;
       setConfirmMessage(
         `${incompletas} estudiante(s) tienen datos incompletos y NO se incluirán en la asignación. ` +
-          `Solo se procesarán ${filasCompletas.length} estudiante(s) completos. ¿Desea continuar?`
+        `Solo se procesarán ${filasCompletas.length} estudiante(s) completos. ¿Desea continuar?`
       );
       setShowConfirm(true);
       return;
     }
-
     // 3. Si todos están completos o no hay inactivos, continuar directamente
     await procesarYContinuar();
   };
