@@ -80,7 +80,7 @@ const Electives: React.FC = () => {
     <div className="auth-page">
       <div className="auth-page-content">
         <Card padding="xl" className="electives-card">
-          <h2>Sistema de Asignación de Electivas</h2>
+          <h2>Gestión de Electivas</h2>
 
           <div className="actions-bar">
             <input

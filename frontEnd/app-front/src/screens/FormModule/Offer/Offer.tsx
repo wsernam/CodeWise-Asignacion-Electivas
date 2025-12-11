@@ -760,7 +760,7 @@ const Offer: React.FC = () => {
               </div>
               <div className="offer-config-item">
                 <span className="offer-config-label">
-                  Cantidad de electivas:
+                  Límite de electivas por estudiante:
                 </span>
 
                 <input

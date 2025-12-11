@@ -31,7 +31,7 @@ const ListProgram: React.FC = () => {
     <div className="auth-page">
       <div className="auth-page-content">
         <Card padding="xl" className="programs-card">
-          <h2>Sistema de Gestión de Programas</h2>
+          <h2>Gestión de Programas</h2>
 
           <div className="actions-bar">
             <input
