@@ -59,8 +59,9 @@ const ReportsAssignment: React.FC = () => {
     isGenerating ||
     !isYearValid(selectedYear) ||
     !isNumeric(String(selectedYear)) ||
-    (selectedReportType === "por-estudiante" && (!estId.trim() || !isNumeric(estId))) ||
-    (selectedReportType === "por-electiva" && (!eleCodigo.trim() || !isNumeric(eleCodigo)));
+    (selectedReportType === "por-estudiante" &&
+      (!estId.trim() || !isNumeric(estId))) ||
+    (selectedReportType === "por-electiva" && !eleCodigo.trim());
 
   // Limpiar blob anterior
   useEffect(() => {
@@ -83,18 +84,13 @@ const ReportsAssignment: React.FC = () => {
         setIsGenerating(false);
         return;
       }
-      if (selectedReportType === "por-estudiante" && (!isNumeric(estId) || !estId.trim())) {
+      if (
+        selectedReportType === "por-estudiante" &&
+        (!isNumeric(estId) || !estId.trim())
+      ) {
         setShowWarningModal({
           open: true,
           message: "El código de estudiante debe contener solo números.",
-        });
-        setIsGenerating(false);
-        return;
-      }
-      if (selectedReportType === "por-electiva" && (!isNumeric(eleCodigo) || !eleCodigo.trim())) {
-        setShowWarningModal({
-          open: true,
-          message: "El código de electiva debe contener solo números.",
         });
         setIsGenerating(false);
         return;
@@ -153,9 +149,10 @@ const ReportsAssignment: React.FC = () => {
       );
       setGeneratedReport(url);
     } catch (e: any) {
-      const message = e.message && e.message.includes("404")
-        ? "No se encontró información para los filtros seleccionados"
-        : e.message || "Ocurrió un error al generar el reporte";
+      const message =
+        e.message && e.message.includes("404")
+          ? "No se encontró información para los filtros seleccionados"
+          : e.message || "Ocurrió un error al generar el reporte";
 
       setShowWarningModal({
         open: true,
