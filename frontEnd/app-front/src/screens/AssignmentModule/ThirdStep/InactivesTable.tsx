@@ -9,7 +9,7 @@ export type InactiveRow = {
   apellido: string;
   programa: string;
   creditosObligatorios: string;
-  aprobadas: string; // ← NUEVO
+  aprobadas: string;
   periodosMatriculados: string;
   porcentajeAvance: string;
 };
@@ -79,7 +79,7 @@ const InactivesTable: React.FC<InactivesTableProps> = ({
       }));
     } else if (
       field === "creditosObligatorios" ||
-      field === "aprobadas" || // ← NUEVO
+      field === "aprobadas" ||
       field === "periodosMatriculados"
     ) {
       const esValido = validarNumeroPositivo(value);
@@ -136,19 +136,19 @@ const InactivesTable: React.FC<InactivesTableProps> = ({
   return (
     <div className="inactives-table-container">
       <table className="inactives-table">
-          <thead>
-            <tr>
-              <th>Código</th>
-              <th>Nombre</th>
-              <th>Apellido</th>
-              <th>Programa</th>
-              <th>Cr. oblig.</th>
-              <th>Aprobadas</th>
-              <th>Periodos</th>
-              <th>promedio</th>
-              <th>Estado</th>
-            </tr>
-          </thead>
+        <thead>
+          <tr>
+            <th>Código</th>
+            <th>Nombre</th>
+            <th>Apellido</th>
+            <th>Programa</th>
+            <th>Cr. oblig.</th>
+            <th>Aprobadas</th>
+            <th>Periodos</th>
+            <th>Promedio</th>
+            <th>Estado</th>
+          </tr>
+        </thead>
         <tbody>
           {rows.map((row) => (
             <tr key={row.id}>
@@ -197,7 +197,7 @@ const InactivesTable: React.FC<InactivesTableProps> = ({
                 {programsLoaded ? (
                   <select
                     value={row.programa}
-                    onBlur={(e) =>
+                    onChange={(e) =>
                       handleInputChange(row.id, "programa", e.target.value)
                     }
                     className="inactives-input"
