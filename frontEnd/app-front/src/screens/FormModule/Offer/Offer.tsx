@@ -104,6 +104,10 @@ const Offer: React.FC = () => {
   // Efecto para sincronizar ofertas existentes al seleccionar programa
   useEffect(() => {
     if (program && existingOffers.length > 0) {
+      // Limpiar
+      setSelectedElectives({});
+      // Crear un mapa temporal para agrupar ofertas por programa
+      const ofertasPorPrograma: { [programa: string]: string[] } = {};
       // Agregar automáticamente las electivas ya ofertadas al estado selectedElectives
       existingOffers.forEach((oferta) => {
         const electiva = electives.find(
@@ -114,25 +118,26 @@ const Offer: React.FC = () => {
           const programaElectiva = programs.find(
             (p) => p.pro_codigo.toString() === electiva.pro_codigo.toString()
           );
-
           if (programaElectiva) {
-            setSelectedElectives((prev) => {
-              const electivasDelPrograma =
-                prev[programaElectiva.pro_nombre] || [];
-              if (!electivasDelPrograma.includes(oferta.ele_codigo)) {
-                return {
-                  ...prev,
-                  [programaElectiva.pro_nombre]: [
-                    ...electivasDelPrograma,
-                    oferta.ele_codigo,
-                  ],
-                };
-              }
-              return prev;
-            });
+            const nombrePrograma = programaElectiva.pro_nombre;
+            // Inicializar array si no existe
+            if (!ofertasPorPrograma[nombrePrograma]) {
+              ofertasPorPrograma[nombrePrograma] = [];
+            }
+            // Agregar electiva si no está ya en la lista
+            if (
+              !ofertasPorPrograma[nombrePrograma].includes(oferta.ele_codigo)
+            ) {
+              ofertasPorPrograma[nombrePrograma].push(oferta.ele_codigo);
+            }
           }
         }
       });
+      // Actualizar el estado con todas las ofertas agrupadas por programa
+      setSelectedElectives(ofertasPorPrograma);
+    } else if (program && existingOffers.length === 0) {
+      // Si no hay ofertas para este programa, limpiar selecciones
+      setSelectedElectives({});
     }
   }, [existingOffers, program, programs, electives]);
 
@@ -268,13 +273,16 @@ const Offer: React.FC = () => {
     }
   };
 
-
   // ================ FUNCION PARA OBTENER LA CANTIDAD DE ELECTIVAS DEL FORM =======
   const cargarCantElectivas = async () => {
     if (!program) return;
 
     try {
-      const cantElectivasForm = await getElectivesAmountByProgram(program, year, semester);
+      const cantElectivasForm = await getElectivesAmountByProgram(
+        program,
+        year,
+        semester
+      );
       setCantElectivas(cantElectivasForm.ofe_cant_electivas);
     } catch (error) {
       console.error("[Offer] Error cargando la cantidad de electivas:", error);
@@ -424,6 +432,30 @@ const Offer: React.FC = () => {
       return;
     }
 
+    // Para verificar la integridad del número de electivas permitidas
+    // Obtener las electivas seleccionadas del programa actual
+    const programaSeleccionado = programs.find(
+      (p) => p.pro_codigo.toString() === program
+    );
+
+    const nombreProgramaSeleccionado = programaSeleccionado?.pro_nombre || "";
+
+    const electivasSeleccionadasParaPrograma =
+      selectedElectives[nombreProgramaSeleccionado] || [];
+
+    const cantidadSeleccionadas = electivasSeleccionadasParaPrograma.length;
+
+    // Verificar que no sea menor (?)
+    //if (cantidadSeleccionadas < cantElectivas) {
+    //  setWarning({
+    //    open: true,
+    //    message: `La cantidad de electivas seleccionadas (${cantidadSeleccionadas}) es menor a la cantidad configurada (${cantElectivas}).\n\nPor favor, selecciona ${
+    //      cantElectivas - cantidadSeleccionadas
+    //    } electiva(s) más o reduce la cantidad en el campo "Cantidad de electivas".`,
+    //  });
+    //  return;
+    //}
+
     // 2. Verificar si es período PASADO (no permitido)
     if (isPastPeriod()) {
       setWarning({
@@ -466,13 +498,15 @@ const Offer: React.FC = () => {
       setShowConfirm(true);
       return;
     }
-    if (cantElectivas > electivasSeleccionadas.length) {
-        setWarning({
-          open: true,
-          message: "La cantidad de electivas a seleccionar en el formulario no puede exceder a la cantidad de electivas ofertadas.",
-        });
-        return;
-      }
+    if (cantElectivas < electivasSeleccionadas.length) {
+      setWarning({
+        open: true,
+        message: `La cantidad de electivas seleccionadas (${cantidadSeleccionadas}) excede la cantidad configurada (${cantElectivas}).\n\nPor favor, quita ${
+          cantidadSeleccionadas - cantElectivas
+        } electiva(s) o aumenta la cantidad en el campo "Cantidad de electivas".`,
+      });
+      return;
+    }
     // 5. Preparar mensaje de confirmación normal
     let mensajeConfirmacion = `¿Confirmar cambios para el período ${year}-${semester}?\n`;
 
@@ -518,18 +552,18 @@ const Offer: React.FC = () => {
         return;
       }
 
-      if (cantElectivas <= 0 ) {
+      if (cantElectivas <= 0) {
         setWarning({
           open: true,
-          message: "La cantidad de electivas a seleccionar en el formulario no puede ser 0 o inferior.",
+          message:
+            "La cantidad de electivas a seleccionar en el formulario no puede ser 0 o inferior.",
         });
         return;
       }
 
-      
       const { agregar, quitar } = cambiosPendientes;
       const errores: string[] = [];
- 
+
       // 1. ELIMINAR ofertas que ya no están seleccionadas
       if (quitar.length > 0) {
         console.log(`[Offer] Eliminando ${quitar.length} ofertas:`, quitar);
@@ -724,7 +758,23 @@ const Offer: React.FC = () => {
                   <Option value={2}>2</Option>
                 </Select>
               </div>
+              <div className="offer-config-item">
+                <span className="offer-config-label">
+                  Cantidad de electivas:
+                </span>
 
+                <input
+                  type="number"
+                  value={cantElectivas}
+                  onChange={(e) =>
+                    setCantElectivas(parseInt(e.target.value, 10))
+                  }
+                  className="offer-electiva-item"
+                  style={{ width: 100 }}
+                  placeholder="0"
+                  min="0"
+                />
+              </div>
               <div className="offer-config-program">
                 <span className="offer-config-label">Programa:</span>
                 <Select
@@ -764,23 +814,6 @@ const Offer: React.FC = () => {
                     : `Período pasado - No editable`}
                 </div>
               )}
-              <div className="offer-config-item">
-                <span className="offer-config-label">Cantidad de electivas:</span>
-                
-                <input
-                  type="number"
-                  value={cantElectivas}
-                  onChange={(e) =>
-                    setCantElectivas(
-                      parseInt(e.target.value, 10)
-                    )
-                  }
-                  className ="offer-electiva-item"
-                  style={{ width: 100 }}
-                  placeholder="0"
-                  min="0"
-                />
-              </div>
             </div>
 
             {/* SECCIONES POR FACULTAD */}

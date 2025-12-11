@@ -131,7 +131,10 @@ const InactivesManagementAP: React.FC<AssignmentProcessProps> = ({
         programa: programaCodigo,
         programaNombre: programaNombre,
         creditos: estudiante.CREDITOS_APROBADOS?.toString() || "",
-        aprobadas: (estudiante.APROBADAS ?? estudiante.NUM_ELECTIVAS_CURSADAS)?.toString() || "",
+        aprobadas:
+          (
+            estudiante.APROBADAS ?? estudiante.NUM_ELECTIVAS_CURSADAS
+          )?.toString() || "",
         periodos: estudiante.PERIODOS_MATRICULADOS?.toString() || "",
         porcentaje: estudiante.PROMEDIO_CARRERA?.toString() || "",
       };
@@ -270,7 +273,6 @@ const InactivesManagementAP: React.FC<AssignmentProcessProps> = ({
       setShowConfirm(true);
       return;
     }
-
     // 3. Si todos están completos o no hay inactivos, continuar directamente
     await procesarYContinuar();
   };
