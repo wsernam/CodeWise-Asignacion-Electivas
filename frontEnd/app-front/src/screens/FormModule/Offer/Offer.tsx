@@ -55,6 +55,7 @@ const Offer: React.FC = () => {
   // Estados para ofertas existentes y cambios
   const [existingOffers, setExistingOffers] = useState<any[]>([]);
   const [loadingOffers, setLoadingOffers] = useState(false);
+  const [cantElectivasChanged, setcantElectivasChanged] = useState<number>(-1);
   const [cambiosPendientes, setCambiosPendientes] = useState<{
     agregar: string[];
     quitar: number[];
@@ -549,7 +550,7 @@ const Offer: React.FC = () => {
       }
 
       // 2. CREAR nuevas ofertas
-      if (agregar.length > 0) {
+      if (agregar.length > 0 || cantElectivasChanged != -1) {
         // Construir la oferta SOLO con las nuevas electivas
         const oferta = agregar.map((ele_codigo) => ({
           ele_codigo,
@@ -770,10 +771,12 @@ const Offer: React.FC = () => {
                 <input
                   type="number"
                   value={cantElectivas}
-                  onChange={(e) =>
+                  onChange={(e) =>{
                     setCantElectivas(
                       parseInt(e.target.value, 10)
                     )
+                    setcantElectivasChanged(parseInt(e.target.value, 10))
+                    }
                   }
                   className ="offer-electiva-item"
                   style={{ width: 100 }}
