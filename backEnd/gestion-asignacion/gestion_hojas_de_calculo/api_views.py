@@ -38,14 +38,11 @@ class ValidarExcelAPIView(APIView):
                 'content': f.read(),
                 'content_type': f.content_type
             })
-        # Guardamos los archivos en caché por 15 minutos
         cache.set(cache_key, files_to_cache, timeout=3600) 
         # --- FIN: Guardado en Caché ---
 
         # 1. Obtener el periodo activo desde el otro microservicio
         try:
-            # CORRECCIÓN: En un entorno Docker, los servicios se comunican usando el nombre del servicio
-            # y el puerto INTERNO, no localhost y el puerto externo.
             periodo_response = requests.get('http://gestion-asignacion:8000/api/asignacion/procesos/periodo-activo/')
             if periodo_response.status_code == 204:
                 return Response({'error': 'No se encontró un proceso de asignación ACTIVO.'}, status=status.HTTP_404_NOT_FOUND)
@@ -64,8 +61,20 @@ class ValidarExcelAPIView(APIView):
 
         # 3. Extraer códigos de estudiante de los Excels USANDO EL RESOURCE
         codigos_excel = set()
-        resource = PerfilAcademicoResource() # Instanciamos el resource
+        resource = PerfilAcademicoResource()
         errores_procesamiento = []
+
+        # FUNCIÓN AUXILIAR: Detectar si una fila está completamente vacía
+        def es_fila_vacia(row_dict):
+            """
+            Retorna True si todos los valores de la fila están vacíos.
+            """
+            if not row_dict:
+                return True
+            return all(
+                val is None or str(val).strip() == '' 
+                for val in row_dict.values()
+            )
 
         for excel_file in excel_files:
             try:
@@ -81,28 +90,80 @@ class ValidarExcelAPIView(APIView):
                 excel_file.seek(0)
                 file_content = excel_file.read()
 
-                # Cargamos los datos en un dataset
                 dataset = Dataset()
-                # CORRECCIÓN: Se unifica la carga. Tablib usará la librería correcta (xlrd o openpyxl)
-                # basándose en el formato que le pasemos.
                 dataset.load(file_content, format=file_format)
                 
-                # Iteramos sobre `dataset.dict`. Esto devuelve cada fila como un
-                # diccionario (ej: {'CODIGO': 123, ...}), que es lo que el método `clean` espera.
                 for i, row in enumerate(dataset.dict):
+                    # SOLUCIÓN PROBLEMA 1: Saltar filas completamente vacías
+                    if es_fila_vacia(row):
+                        continue
+                    
                     try:
-                        # El widget del resource ya limpió y convirtió el código a un objeto Estudiante
                         estudiante_instance = resource.fields['est_codigo'].clean(row)
                         if estudiante_instance:
                             codigos_excel.add(estudiante_instance.est_codigo)
                     except ValueError as e:
-                        # Capturamos errores de validación del widget (ej: estudiante no encontrado, celda con texto)
-                        msg = f"Fila {i+2} del archivo '{excel_file.name}' ignorada: {e}"
+                        # SOLUCIÓN PROBLEMA 2: Mensaje más específico
+                        error_msg = str(e)
+                        codigo_estudiante = row.get('CODIGO', 'desconocido')
+                        
+                        # Limpiar el código si viene en formato float
+                        if codigo_estudiante != 'desconocido':
+                            try:
+                                str_code = str(codigo_estudiante)
+                                if str_code.endswith('.0'):
+                                    codigo_estudiante = str_code[:-2]
+                                else:
+                                    codigo_estudiante = str(int(float(str_code)))
+                            except (ValueError, TypeError):
+                                pass
+                        
+                        if 'no existe' in error_msg.lower() or 'not found' in error_msg.lower():
+                            msg = f"Fila {i+2} del archivo '{excel_file.name}': El estudiante con código {codigo_estudiante} no está registrado en la base de datos."
+                        else:
+                            msg = f"Fila {i+2} del archivo '{excel_file.name}': Error de validación - {e}"
                         logger.warning(msg)
                         errores_procesamiento.append(msg)
+                    except Exception as e:
+                        # Capturar específicamente el error de Django "DoesNotExist"
+                        error_msg = str(e)
+                        codigo_estudiante = row.get('CODIGO', 'desconocido')
+                        
+                        # Limpiar el código si viene en formato float (ej: 123456.0 -> 123456)
+                        if codigo_estudiante != 'desconocido':
+                            try:
+                                str_code = str(codigo_estudiante)
+                                if str_code.endswith('.0'):
+                                    codigo_estudiante = str_code[:-2]
+                                else:
+                                    codigo_estudiante = str(int(float(str_code)))
+                            except (ValueError, TypeError):
+                                pass
+                        
+                        if 'does not exist' in error_msg.lower() or 'matching query' in error_msg.lower():
+                            msg = f"Fila {i+2} del archivo '{excel_file.name}': El estudiante con código {codigo_estudiante} no está registrado en la base de datos."
+                        else:
+                            msg = f"Fila {i+2} del archivo '{excel_file.name}': Error inesperado - {e}"
+                        logger.warning(msg)
+                        errores_procesamiento.append(msg)
+                        
             except Exception as e:
-                msg = f"Error crítico al procesar el archivo '{excel_file.name}': {e}. Asegúrate de tener instalada la librería 'xlrd' para archivos .xls."
-                logger.error(msg, exc_info=True)
+                # SOLUCIÓN PROBLEMA 2: Mensaje más claro y amigable para el usuario
+                msg = f"No se pudo procesar el archivo '{excel_file.name}'"
+                
+                # Detectar errores específicos comunes con mensajes amigables
+                if 'xlrd' in str(e).lower():
+                    msg += ". El archivo parece estar en formato XLS antiguo. Por favor, ábrelo en Excel y guárdalo como XLSX (Excel moderno)."
+                elif 'openpyxl' in str(e).lower():
+                    msg += ". Hubo un problema al leer el archivo XLSX. Verifica que no esté corrupto o protegido con contraseña."
+                elif 'corrupt' in str(e).lower() or 'formato' in str(e).lower():
+                    msg += ". El archivo parece estar dañado o en un formato no compatible. Intenta guardarlo nuevamente desde Excel."
+                elif 'password' in str(e).lower() or 'encrypted' in str(e).lower():
+                    msg += ". El archivo está protegido con contraseña. Por favor, remueve la protección antes de subirlo."
+                else:
+                    msg += f". Error: {str(e)[:100]}"
+                    
+                logger.error(f"Error procesando '{excel_file.name}': {e}", exc_info=True)
                 errores_procesamiento.append(msg)
 
         # 4. Comparar y generar respuesta
@@ -111,7 +172,7 @@ class ValidarExcelAPIView(APIView):
         coinciden = not faltantes and not sobrantes
 
         return Response({
-            'cache_key': cache_key, # Devolvemos la clave para los siguientes pasos
+            'cache_key': cache_key,
             'faltantes': faltantes,
             'sobrantes': sobrantes,
             'num_faltantes': len(faltantes),
@@ -120,8 +181,8 @@ class ValidarExcelAPIView(APIView):
             'periodo_evaluado': f'{anio_activo}-{semestre_activo}',
             'advertencias': errores_procesamiento
         }, status=status.HTTP_200_OK)
-
-
+        
+        
 class CompletarYProcesarAPIView(APIView):
     def post(self, request, format=None):
         cache_key = request.data.get('cache_key')
@@ -262,6 +323,9 @@ class CompletarYProcesarAPIView(APIView):
             return Response(error_data, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
 
+
+
+
 class PrevisualizarIncompletosAPIView(APIView):
     parser_classes = (MultiPartParser, FormParser)
 
@@ -282,6 +346,31 @@ class PrevisualizarIncompletosAPIView(APIView):
             'PERIODOS_MATRICULADOS'
         ]
 
+        # FUNCIÓN AUXILIAR MEJORADA: Detectar si una fila está completamente vacía
+        def es_fila_vacia(row_dict):
+            """
+            Retorna True si todos los valores VÁLIDOS de la fila están vacíos.
+            Ignora las claves None y solo evalúa las columnas con nombres válidos.
+            """
+            if not row_dict:
+                return True
+            
+            # Filtrar solo las claves que son strings (columnas válidas)
+            valores_validos = [
+                val for key, val in row_dict.items() 
+                if key is not None and isinstance(key, str)
+            ]
+            
+            # Si no hay valores válidos, la fila está vacía
+            if not valores_validos:
+                return True
+            
+            # Verificar si todos los valores válidos están vacíos
+            return all(
+                val is None or str(val).strip() == '' 
+                for val in valores_validos
+            )
+
         for excel_file in excel_files:
             try:
                 filename = excel_file.name.lower()
@@ -293,30 +382,40 @@ class PrevisualizarIncompletosAPIView(APIView):
                     errores_procesamiento.append(f"Archivo '{excel_file.name}' ignorado: formato no soportado.")
                     continue
 
-                # CORRECCIÓN: Se elimina la carga duplicada.
-                # Nos aseguramos de que el puntero del archivo esté al inicio antes de leerlo.
-                # Esto previene errores si el stream ya fue leído por algún middleware.
                 excel_file.seek(0)
                 
                 dataset = Dataset()
                 dataset.load(excel_file.read(), format=file_format)
 
-                # --- INICIO: DIAGNÓSTICO MEJORADO ---
-                logger.info(f"Previsualizar - Archivo '{excel_file.name}' cargado. Contiene {len(dataset)} filas.")
+                total_filas = len(dataset)
+                logger.info(f"=== Previsualizar - Archivo '{excel_file.name}' cargado. Total filas: {total_filas} ===")
+
+                filas_procesadas = 0
+                filas_vacias_saltadas = 0
+                filas_sin_codigo = 0
+                filas_completas = 0
+                filas_incompletas_encontradas = 0
 
                 for i, row in enumerate(dataset.dict):
-                    logger.info(f"Previsualizar - Fila {i+2} de '{excel_file.name}': {row}")
-                    # --- FIN: DIAGNÓSTICO ---
+                    filas_procesadas += 1
+                    
+                    # Log cada 100 filas para monitorear progreso
+                    if filas_procesadas % 100 == 0:
+                        logger.info(f"Progreso: {filas_procesadas}/{total_filas} filas procesadas...")
+                    
+                    # SOLUCIÓN: Saltar filas completamente vacías PRIMERO
+                    if es_fila_vacia(row):
+                        filas_vacias_saltadas += 1
+                        continue
 
                     codigo_valor = row.get('CODIGO')
 
-                    # CORRECCIÓN: El valor del código viene como string. En lugar de usar `isinstance`,
-                    # intentamos convertirlo a número. Si la conversión es exitosa, procedemos.
-                    # Esto maneja tanto strings ('123') como números (123.0).
+                    # Validar que el código sea un número válido
                     try:
-                        float(codigo_valor) # Usamos float para validar, ya que acepta '123' y 123.0
+                        float(codigo_valor)
                     except (ValueError, TypeError):
-                        continue # Si no es un número válido, ignoramos la fila y continuamos.
+                        filas_sin_codigo += 1
+                        continue
                     else:
                         def is_cell_empty(value):
                             """
@@ -334,17 +433,35 @@ class PrevisualizarIncompletosAPIView(APIView):
                             if str_value.endswith('.0'):
                                 str_value = str_value[:-2]
                             
+                            filas_incompletas_encontradas += 1
                             filas_incompletas.append({
                                 'codigo': int(str_value),
-                                'fila': i + 2, # i es 0-indexed, la data empieza en la fila 2
+                                'fila': i + 2,
                                 'archivo': excel_file.name
                             })
+                        else:
+                            filas_completas += 1
+                
+                # Resumen del archivo procesado
+                logger.info(f"=== Resumen de '{excel_file.name}' ===")
+                logger.info(f"  Total filas: {total_filas}")
+                logger.info(f"  Filas vacías saltadas: {filas_vacias_saltadas}")
+                logger.info(f"  Filas sin código válido: {filas_sin_codigo}")
+                logger.info(f"  Filas completas: {filas_completas}")
+                logger.info(f"  Filas incompletas: {filas_incompletas_encontradas}")
+                            
             except Exception as e:
                 msg = f"Error crítico al procesar el archivo '{excel_file.name}': {e}"
                 logger.error(msg, exc_info=True)
                 errores_procesamiento.append(msg)
 
+        logger.info(f"=== PROCESO COMPLETO ===")
+        logger.info(f"Total de filas incompletas encontradas en todos los archivos: {len(filas_incompletas)}")
+        
         return Response({'filas_incompletas': filas_incompletas, 'advertencias': errores_procesamiento}, status=status.HTTP_200_OK)
+
+
+
 
 class ImportarProductosAPIView(APIView):
     parser_classes = (MultiPartParser, FormParser)
@@ -375,9 +492,47 @@ class ImportarProductosAPIView(APIView):
                           status=status.HTTP_503_SERVICE_UNAVAILABLE)
         # ========== FIN: OBTENER PERIODO ACTIVO ==========
         
+        # FUNCIÓN AUXILIAR: Detectar si una fila está completamente vacía
+        def es_fila_vacia(row_dict):
+            """
+            Retorna True si todos los valores VÁLIDOS de la fila están vacíos.
+            """
+            if not row_dict:
+                return True
+            
+            # Filtrar solo las claves que son strings (columnas válidas)
+            valores_validos = [
+                val for key, val in row_dict.items() 
+                if key is not None and isinstance(key, str)
+            ]
+            
+            if not valores_validos:
+                return True
+            
+            return all(
+                val is None or str(val).strip() == '' 
+                for val in valores_validos
+            )
+        
+        # FUNCIÓN AUXILIAR: Validar que una fila tiene un código válido
+        def tiene_codigo_valido(row_dict):
+            """
+            Retorna True si la fila tiene un código de estudiante válido.
+            """
+            codigo = row_dict.get('CODIGO')
+            if codigo is None:
+                return False
+            try:
+                float(codigo)
+                return True
+            except (ValueError, TypeError):
+                return False
+        
         # Creamos un Dataset agregado para combinar los datos de todos los archivos.
         dataset = Dataset()
         first_file = True
+        filas_filtradas = 0
+        filas_totales = 0
 
         for excel_file in excel_files:
             try:
@@ -405,7 +560,21 @@ class ImportarProductosAPIView(APIView):
                     dataset.headers = current_dataset.headers
                     first_file = False
                 
+                # FILTRAR FILAS VACÍAS Y SIN CÓDIGO ANTES DE AGREGAR AL DATASET
                 for row_dict in current_dataset.dict:
+                    filas_totales += 1
+                    
+                    # Saltar filas vacías
+                    if es_fila_vacia(row_dict):
+                        filas_filtradas += 1
+                        continue
+                    
+                    # Saltar filas sin código válido
+                    if not tiene_codigo_valido(row_dict):
+                        filas_filtradas += 1
+                        continue
+                    
+                    # Solo agregar filas válidas
                     new_row = tuple(row_dict.get(header) for header in dataset.headers)
                     dataset.append(new_row)
 
@@ -414,11 +583,12 @@ class ImportarProductosAPIView(APIView):
                 return Response({'error': f"Error al procesar el archivo '{excel_file.name}': {repr(e)}"}, 
                                 status=status.HTTP_400_BAD_REQUEST)
 
+        logger.info(f"Dataset preparado: {len(dataset)} filas válidas de {filas_totales} totales ({filas_filtradas} filtradas)")
+
         # 3. Prueba de importación (Dry Run)
         resource = PerfilAcademicoResource()
         
         # ========== PASAR PERIODO AL RESOURCE ==========
-        # Creamos un diccionario con el contexto del periodo activo
         kwargs = {
             'anio_activo': anio_activo,
             'semestre_activo': semestre_activo
@@ -430,7 +600,7 @@ class ImportarProductosAPIView(APIView):
                 dry_run=True,           
                 raise_errors=False,     
                 use_transactions=True,
-                **kwargs  # Pasamos el periodo al resource
+                **kwargs
             ) 
         except Exception as e:
             return Response({'error': f'Error de validación general: {e}', 'trace': traceback.format_exc()}, 
@@ -438,8 +608,13 @@ class ImportarProductosAPIView(APIView):
 
         if result.has_errors() or result.has_validation_errors():
             error_details = []
+            MAX_ERRORES = 50
             
+            error_count = 0
             for row in result.row_errors():
+                if error_count >= MAX_ERRORES:
+                    break
+                    
                 fila_excel = row[0] + 2
                 errores_de_fila = []
                 for error in row[1]:
@@ -454,14 +629,30 @@ class ImportarProductosAPIView(APIView):
                     'fila': fila_excel, 
                     'errores': errores_de_fila
                 })
+                error_count += 1
             
             for error in result.base_errors:
-                 error_details.append({'fila': 'General', 'errores': [str(error.error)]})
+                if error_count >= MAX_ERRORES:
+                    break
+                error_details.append({'fila': 'General', 'errores': [str(error.error)]})
+                error_count += 1
 
-            return Response({
+            total_errores = len(list(result.row_errors())) + len(result.base_errors)
+            errores_omitidos = max(0, total_errores - MAX_ERRORES)
+            
+            response_data = {
                 'message': 'Importación fallida. Se encontraron errores de datos/mapeo.',
+                'total_errores': total_errores,
+                'errores_mostrados': len(error_details),
                 'errores': error_details
-            }, status=status.HTTP_400_BAD_REQUEST)
+            }
+            
+            if errores_omitidos > 0:
+                response_data['advertencia'] = f'Se omitieron {errores_omitidos} errores adicionales. Solo se muestran los primeros {MAX_ERRORES} errores.'
+            
+            logger.warning(f"Importación fallida con {total_errores} errores. Mostrando primeros {len(error_details)}.")
+            
+            return Response(response_data, status=status.HTTP_400_BAD_REQUEST)
 
         # 4. Importación final (Guardar en la BD)
         try:
@@ -470,7 +661,7 @@ class ImportarProductosAPIView(APIView):
                 dry_run=False,          
                 raise_errors=True,      
                 use_transactions=True,
-                **kwargs  # También pasamos el periodo en la importación final
+                **kwargs
             ) 
         except Exception as e:
             return Response({'error': f'Error al guardar en la base de datos: {e}', 'trace': traceback.format_exc()}, 
@@ -479,9 +670,10 @@ class ImportarProductosAPIView(APIView):
         # 5. Respuesta exitosa
         return Response({
             'message': '¡Perfiles académicos importados y mapeados exitosamente!',
-            'periodo': f'{anio_activo}-{semestre_activo}',  # Incluimos el periodo en la respuesta
+            'periodo': f'{anio_activo}-{semestre_activo}',
             'resumen': {
                 'total_registros': len(dataset),
+                'filas_filtradas': filas_filtradas,
                 'creados': result_final.totals.get('new', 0),
                 'actualizados': result_final.totals.get('update', 0)
             }
