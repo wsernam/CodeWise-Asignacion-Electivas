@@ -75,7 +75,7 @@ export const getElectivesAmountByProgram = async (
     );
 
     console.log(
-      "[offerService] cantidad de electivas para el formulario exitosamente: ",
+      "[offerService] cantidad de electivas para el formulario obtenida exitosamente: ",
       response.data
     );
 
@@ -91,6 +91,38 @@ export const getElectivesAmountByProgram = async (
       error.response?.data?.detail ||
         error?.message ||
         "No se pudo obtener la cantidad de electivas"
+    );
+  }
+};
+
+export const updateElectivesAmountByProgram = async ( ofertaForm: IOfferForm,
+): Promise<IOfferForm> => {
+  try {
+    const { pro_codigo: programCode, ofe_anio: year, ofe_num_semestre: semester } = ofertaForm;
+    const patchData = {
+      ofe_cant_electivas: ofertaForm.ofe_cant_electivas,
+    };
+    const response = await apiClient.patch(
+      `${API_BASE_URL_AUX}actualizar-ofertas-form/${year}/${semester}/${programCode}/`,patchData
+    );
+
+    console.log(
+      "[offerService] cantidad de electivas para el formulario actualizada exitosamente: ",
+      response.data
+    );
+
+    const cant_electivas_form = response.data;
+
+    return cant_electivas_form;
+  } catch (error: any) {
+    console.log(
+      "[offerService] Error actualizando cantidad de electivas:",
+      error.response?.data
+    );
+    throw new Error(
+      error.response?.data?.detail ||
+        error?.message ||
+        "No se pudo actualizar la cantidad de electivas"
     );
   }
 };

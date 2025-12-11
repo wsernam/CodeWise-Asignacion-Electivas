@@ -1,7 +1,7 @@
 
 from rest_framework import generics, status, viewsets, mixins
 from .models import Oferta_electiva, Oferta_formulario 
-from .serializers import OfertaElectivaSerializer
+from .serializers import OfertaElectivaSerializer, OfertaformularioSerializer
 from rest_framework.response import Response
 from .serializers import OfertaElectivaBulkCreateSerializer
 from gestion_electivas.models import Electiva
@@ -203,4 +203,37 @@ class GetElectivesAmountByProgram(APIView):
         }
 
         return Response(data, status=status.HTTP_200_OK)
-    
+
+
+class UpdateElectivesAmountByProgram(viewsets.ViewSet):
+    queryset = Oferta_electiva.objects.all()
+
+
+    @action(detail=False,
+             methods=['patch'],
+             url_path=r'actualizar-ofertas-form/(?P<anio>\d{4})/(?P<semestre>\d+)/(?P<pro_codigo>[\w-]+)')
+    def update_oferta_form(self, request,anio, semestre, pro_codigo):
+
+        oferta_formulario = (
+            Oferta_formulario.objects.filter(ofefor_anio=anio,
+            ofefor_num_semestre=semestre,
+            pro_codigo__pro_codigo=pro_codigo
+            ).first()
+        )
+        if not oferta_formulario:
+            return Response(
+                {"detail": "No existen ofertas registradas."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        nueva_cantidad = request.data.get("ofe_cant_electivas")
+        oferta_formulario.ofefor_cantidad_electivas = nueva_cantidad
+        oferta_formulario.save()
+
+        data = {
+            "ofe_anio": oferta_formulario.ofefor_anio,
+            "ofe_num_semestre": oferta_formulario.ofefor_num_semestre,
+            "pro_codigo": oferta_formulario.pro_codigo.pro_codigo,
+            "ofe_cant_electivas": oferta_formulario.ofefor_cantidad_electivas}
+        return Response(data, status=status.HTTP_200_OK)
+

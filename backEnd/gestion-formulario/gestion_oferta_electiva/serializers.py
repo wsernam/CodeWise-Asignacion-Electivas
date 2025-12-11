@@ -4,7 +4,10 @@ from django.db import IntegrityError
 from gestion_electivas.models import Electiva, Programa
 
 
-
+class OfertaformularioSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Oferta_formulario
+        fields = ['ofefor_anio', 'ofefor_num_semestre', 'pro_codigo', 'ofefor_cantidad_electivas']
 
 class OfertaElectivaSerializer(serializers.ModelSerializer):
     # Campos de solo lectura para mostrar el nombre en lugar de IDs

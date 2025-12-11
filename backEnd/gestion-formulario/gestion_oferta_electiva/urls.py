@@ -6,8 +6,11 @@ from .views import (
     OfertaElectivaUpdateDeleteView,
     OfertaElectivaListByAnioSemestreView,
     OfertaElectivaListByAnioSemestreProgramaView,
-    UltimoPeriodoOfertaView
+    UltimoPeriodoOfertaView,
+    UpdateElectivesAmountByProgram
 )
+actualizar_view = UpdateElectivesAmountByProgram.as_view({
+    'patch': 'update_oferta_form'})
 
 urlpatterns = [
     # Endpoint para 'Crear oferta_electiva'
@@ -34,4 +37,8 @@ urlpatterns = [
     path('periodo-ultima-oferta/', UltimoPeriodoOfertaView.as_view(), name='obtener_ultimo_periodo_oferta'),
 
     path('cant-ofertas-form/<int:anio>/<int:semestre>/<str:programa_codigo>/', GetElectivesAmountByProgram.as_view(), name='obtener_cantidad_electivas_programa'),
+
+    path('actualizar-ofertas-form/<int:anio>/<int:semestre>/<str:pro_codigo>/', actualizar_view, name='actualizar_cantidad_electivas_programa'),
+    
+    
 ]

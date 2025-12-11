@@ -6,6 +6,7 @@ import {
   deleteOffer,
   getLastOffersPeriod,
   getElectivesAmountByProgram,
+  updateElectivesAmountByProgram,
 } from "../../services/Form/offerService";
 
 interface OfferState {
@@ -80,6 +81,26 @@ export const useOfferStore = create<OfferState>((set) => ({
       set({
         loading: false,
         error: error.message || "Error al obtener la cantidad de electivas",
+      });
+      throw error;
+    }
+  },
+
+  updateElectivesAmountByProgram: async (
+    ofertaForm: IOfferForm
+  ): Promise<IOfferForm> => {
+    set({ loading: true, error: null });
+    try {
+      const result = await updateElectivesAmountByProgram(ofertaForm);
+      console.log(
+      "[offerStore] cantidad de electivas para el formulario actualizada exitosamente: ",
+      result
+    );
+      return result;
+    } catch (error: any) {
+      set({
+        loading: false,
+        error: error.message || "Error al actualizar la cantidad de electivas",
       });
       throw error;
     }
