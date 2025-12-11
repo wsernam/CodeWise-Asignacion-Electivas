@@ -679,7 +679,11 @@ const UploadFilesAP: React.FC<AssignmentProcessProps> = ({
               ))}
               <div
                 style={{
-                  textAlign: "center",
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  gap: "12px",
+                  flexWrap: "wrap",
                   marginTop: "20px",
                   paddingTop: "20px",
                   borderTop: "1px solid #e0e0e0",
