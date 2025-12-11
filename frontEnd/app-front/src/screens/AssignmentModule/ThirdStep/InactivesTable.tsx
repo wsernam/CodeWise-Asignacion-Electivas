@@ -196,7 +196,7 @@ const InactivesTable: React.FC<InactivesTableProps> = ({
               <td>
                 {programsLoaded ? (
                   <select
-                    defaultValue={row.programa}
+                    value={row.programa}
                     onBlur={(e) =>
                       handleInputChange(row.id, "programa", e.target.value)
                     }
