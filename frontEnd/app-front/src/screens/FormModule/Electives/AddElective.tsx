@@ -11,6 +11,8 @@ import { useProgramStore } from "../../../store/Form/programStore";
 import type { IElective } from "../../../models/Form/elective";
 
 const { Option } = Select;
+const CUPOS_MIN = 1;
+const CUPOS_MAX = 60; 
 
 const AddElective: React.FC = () => {
   const [form] = Form.useForm();
@@ -103,14 +105,26 @@ const AddElective: React.FC = () => {
     if (value === null || value === undefined) {
       return Promise.reject("Por favor ingresa el número de cupos");
     }
-    if (value < 1) {
-      return Promise.reject("El número de cupos debe ser al menos 1");
-    }
+
     if (!Number.isInteger(value)) {
       return Promise.reject("El número de cupos debe ser un número entero");
     }
+
+    if (value < CUPOS_MIN) {
+      return Promise.reject(
+        `El número de cupos debe ser al menos ${CUPOS_MIN}`
+      );
+    }
+
+    if (value > CUPOS_MAX) {
+      return Promise.reject(
+        `El número de cupos no puede ser mayor a ${CUPOS_MAX}`
+      );
+    }
+
     return Promise.resolve();
   };
+
 
 
   const handleFieldTouch = (field: keyof typeof touchedFields) =>
@@ -314,10 +328,11 @@ const AddElective: React.FC = () => {
               validateStatus={touchedFields.ele_cupos ? undefined : ""}
             >
               <InputNumber
-                placeholder="Ej: 25"
+                placeholder={`Ej: 25 (entre ${CUPOS_MIN} y ${CUPOS_MAX})`}
                 size="large"
                 style={{ width: "100%" }}
-                min={1}
+                min={CUPOS_MIN}
+                max={CUPOS_MAX}
                 onBlur={() => handleFieldTouch("ele_cupos")}
               />
             </Form.Item>
