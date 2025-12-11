@@ -67,7 +67,7 @@ const InactivesManagementAP: React.FC<AssignmentProcessProps> = ({
   const [inactiveRows, setInactiveRows] = useState<InactiveRow[]>([]);
   const [excelData, setExcelData] = useState<any[]>([]);
   const [isLoadingData, setIsLoadingData] = useState(false);
-
+  
   const { programs } = useProgramStore();
   const { getStudentById } = useStudentStore();
 
@@ -101,52 +101,37 @@ const InactivesManagementAP: React.FC<AssignmentProcessProps> = ({
     }
   };
 
-  // 2. Buscar programa por nombre
-  /* const buscarProgramaCodigo = (nombrePrograma: string): string => {
-    if (!nombrePrograma || !programs.length) return "";
-
-    const programaEncontrado = programs.find(
-      (program) =>
-        program.pro_nombre
-          .toLowerCase()
-          .includes(nombrePrograma.toLowerCase()) ||
-        nombrePrograma.toLowerCase().includes(program.pro_nombre.toLowerCase())
-    );
-
-    return programaEncontrado?.pro_codigo?.toString() || "";
-  }; */
-
-  // 3. Buscar estudiante en Base de Datos
+  // 2. Buscar estudiante en Base de Datos y combinar con datos del Excel
   const buscarEstudiante = async (codigo: string) => {
     try {
-      // Buscar estudiante por código
+      // Buscar estudiante por código en la BD
       const estudiante = await getStudentById(Number(codigo));
 
       // Si no se encuentra, retornar null
       if (!estudiante) {
-        console.log(`[DEBUG] Estudiante no encontrado: ${codigo}`);
+        console.log(`[DEBUG] Estudiante no encontrado en BD: ${codigo}`);
         return null;
       }
 
-      // Busca datos relevantes del Excel
+      // Buscar datos adicionales del Excel
       const datosExcel = excelData.find((row: any) => {
         return row.CODIGO?.toString() === codigo?.toString();
       });
 
       // Buscar programa desde el estudiante
       const programaCodigo = estudiante.pro_codigo || "";
-      const programa = programs.find( p => p.pro_codigo === programaCodigo);
+      const programa = programs.find(p => p.pro_codigo === programaCodigo);
       const programaNombre = programa?.pro_nombre || "";
 
       return {
-        nombre: estudiante.est_nombre,
-        apellido: estudiante.est_apellido,
-        programa: programaCodigo,
+        nombre: estudiante.est_nombre || "",
+        apellido: estudiante.est_apellido || "",
+        programa: programaCodigo?.toString() || "",
         programaNombre: programaNombre,
-        creditos: datosExcel.CREDITOS_APROBADOS?.toString() || "",
-        aprobadas: (datosExcel.APROBADAS ?? datosExcel.NUM_ELECTIVAS_CURSADAS)?.toString() || "",
-        periodos: datosExcel.PERIODOS_MATRICULADOS?.toString() || "",
-        porcentaje: datosExcel.PROMEDIO_CARRERA?.toString() || "",
+        creditos: datosExcel?.CREDITOS_APROBADOS?.toString() || "",
+        aprobadas: (datosExcel?.APROBADAS ?? datosExcel?.NUM_ELECTIVAS_CURSADAS)?.toString() || "",
+        periodos: datosExcel?.PERIODOS_MATRICULADOS?.toString() || "",
+        porcentaje: datosExcel?.PROMEDIO_CARRERA?.toString() || "",
       };
     } catch (error) {
       console.error("Error buscando estudiante:", error);
@@ -154,7 +139,7 @@ const InactivesManagementAP: React.FC<AssignmentProcessProps> = ({
     }
   };
 
-  // 4. Cargar inactivos ¿
+  // 3. Cargar inactivos
   useEffect(() => {
     if (showModal && uploadedFiles.length > 0 && excelData.length > 0) {
       cargarInactivos();
@@ -238,11 +223,6 @@ const InactivesManagementAP: React.FC<AssignmentProcessProps> = ({
         return !isNaN(num) && num >= 0 && num <= 100;
       };
 
-      const validarSoloLetras = (valor: string): boolean => {
-        if (!valor) return false;
-        return /^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]+$/.test(valor);
-      };
-
       const creditosValidos =
         row.creditosObligatorios &&
         validarNumeroPositivo(row.creditosObligatorios);
@@ -253,13 +233,9 @@ const InactivesManagementAP: React.FC<AssignmentProcessProps> = ({
         validarNumeroPositivo(row.periodosMatriculados);
       const porcentajeValido =
         row.porcentajeAvance && validarPorcentaje(row.porcentajeAvance);
-      const nombreValido = validarSoloLetras(row.nombre);
-      const apellidoValido = validarSoloLetras(row.apellido);
 
       return (
         camposObligatoriosLlenos &&
-        nombreValido &&
-        apellidoValido &&
         creditosValidos &&
         aprobadasValidas &&
         periodosValidos &&
@@ -279,11 +255,12 @@ const InactivesManagementAP: React.FC<AssignmentProcessProps> = ({
       const incompletas = inactiveRows.length - filasCompletas.length;
       setConfirmMessage(
         `${incompletas} estudiante(s) tienen datos incompletos y NO se incluirán en la asignación. ` +
-        `Solo se procesarán ${filasCompletas.length} estudiante(s) completos. ¿Desea continuar?`
+          `Solo se procesarán ${filasCompletas.length} estudiante(s) completos. ¿Desea continuar?`
       );
       setShowConfirm(true);
       return;
     }
+
     // 3. Si todos están completos o no hay inactivos, continuar directamente
     await procesarYContinuar();
   };

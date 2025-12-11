@@ -705,7 +705,7 @@ class LotesCodigosSeleccionesView(APIView):
             )
 
         try:
-            lote_size = int(request.query_params.get("lote_size", 100))
+            lote_size = int(request.query_params.get("lote_size", 50))
             if lote_size <= 0:
                 raise ValueError
         except ValueError:

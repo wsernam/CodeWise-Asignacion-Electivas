@@ -51,6 +51,7 @@ const Offer: React.FC = () => {
     ofe_anio: number;
     ofe_num_semestre: number;
   } | null>(null);
+  const [cantElectivasAnterior, setCantElectivasAnterior] = useState<number>(0);
 
   // Estados para ofertas existentes y cambios
   const [existingOffers, setExistingOffers] = useState<any[]>([]);
@@ -285,10 +286,12 @@ const Offer: React.FC = () => {
         semester
       );
       setCantElectivas(cantElectivasForm.ofe_cant_electivas);
+      setCantElectivasAnterior(cantElectivasForm.ofe_cant_electivas);
     } catch (error) {
       console.error("[Offer] Error cargando la cantidad de electivas:", error);
       // Si no hay ofertas o hay error, limpiar el estado
       setCantElectivas(0);
+      setCantElectivasAnterior(0);
     } finally {
     }
   };
@@ -526,7 +529,6 @@ const Offer: React.FC = () => {
       });
       return;
     }
-
     // Guardar los cambios calculados para usarlos en handleConfirmSave
     setCambiosPendientes({ agregar, quitar });
     setMensajeConfirmacion(mensajeConfirmacion);
@@ -567,6 +569,59 @@ const Offer: React.FC = () => {
         }
       }
 
+      // Para la cantidad
+      const huboCambioEnCantidad = cantElectivas !== cantElectivasAnterior;
+      const cantidadCambioSoloEnCantidad =
+        huboCambioEnCantidad &&
+        agregar.length === 0 &&
+        quitar.length === 0 && // No hubo cambios en electivas
+        existingOffers.length > 0 && // Hay ofertas existentes
+        cantElectivas > 0; // La cantidad es válida
+
+      if (cantidadCambioSoloEnCantidad) {
+        console.log(
+          "[Offer] Solo cambió la cantidad de electivas, actualizando..."
+        );
+
+        const electivaExistente = existingOffers[0]?.ele_codigo;
+
+        if (electivaExistente) {
+          const bulkData: IOffer = {
+            ofe_anio: year,
+            ofe_num_semestre: semester,
+            ofertas: [
+              {
+                ele_codigo: electivaExistente,
+                pro_codigo: program,
+              },
+            ],
+            ofe_cant_electivas: cantElectivas,
+          };
+
+          console.log(
+            "[Offer] Actualizando solo cantidad de electivas:",
+            bulkData
+          );
+
+          try {
+            await createBulkOffer(bulkData);
+            console.log(
+              "[Offer] Cantidad de electivas actualizada exitosamente"
+            );
+          } catch (error) {
+            console.error("[Offer] Error actualizando cantidad:", error);
+            errores.push("No se pudo actualizar la cantidad de electivas");
+          }
+        } else {
+          console.warn(
+            "[Offer] No hay electivas existentes para actualizar la cantidad"
+          );
+          errores.push(
+            "No hay electivas existentes para actualizar la cantidad"
+          );
+        }
+      }
+
       // 2. CREAR nuevas ofertas
       if (agregar.length > 0) {
         // Construir la oferta SOLO con las nuevas electivas
@@ -583,7 +638,12 @@ const Offer: React.FC = () => {
         };
 
         console.log("[Offer] Creando nuevas ofertas:", bulkData);
-        await createBulkOffer(bulkData);
+        try {
+          await createBulkOffer(bulkData);
+        } catch (error) {
+          console.error("[Offer] Error creando ofertas:", error);
+          errores.push("No se pudieron crear las nuevas ofertas");
+        }
       }
 
       if (cantElectivasChanged !== -1) {
@@ -614,6 +674,11 @@ const Offer: React.FC = () => {
 
         // Mensaje de éxito
         let mensajeExito = `Oferta ${year}-${semester} actualizada para el programa ${nombrePrograma}.`;
+
+        // Agregar información sobre cambios en la cantidad
+        if (huboCambioEnCantidad) {
+          mensajeExito += `\nCantidad de electivas por estudiante: de ${cantElectivasAnterior} a ${cantElectivas}`;
+        }
 
         if (agregar.length === 0 && quitar.length === existingOffers.length) {
           mensajeExito = `Oferta ${year}-${semester} eliminada para el programa ${nombrePrograma} (no se seleccionó ninguna electiva).`;
@@ -756,7 +821,7 @@ const Offer: React.FC = () => {
               </div>
               <div className="offer-config-item">
                 <span className="offer-config-label">
-                  Cantidad de electivas:
+                  Límite de electivas por estudiante:
                 </span>
 
                 <input

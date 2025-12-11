@@ -9,7 +9,7 @@ export type InactiveRow = {
   apellido: string;
   programa: string;
   creditosObligatorios: string;
-  aprobadas: string; // ← NUEVO
+  aprobadas: string;
   periodosMatriculados: string;
   porcentajeAvance: string;
 };
@@ -65,13 +65,7 @@ const InactivesTable: React.FC<InactivesTableProps> = ({
     );
 
     // Validaciones específicas por campo
-    if (field === "nombre" || field === "apellido") {
-      const esValido = validarSoloLetras(value);
-      setValidaciones((prev) => ({
-        ...prev,
-        [`${rowId}-${field}`]: esValido,
-      }));
-    } else if (field === "porcentajeAvance") {
+    if (field === "porcentajeAvance") {
       const esValido = validarPorcentaje(value);
       setValidaciones((prev) => ({
         ...prev,
@@ -79,7 +73,7 @@ const InactivesTable: React.FC<InactivesTableProps> = ({
       }));
     } else if (
       field === "creditosObligatorios" ||
-      field === "aprobadas" || // ← NUEVO
+      field === "aprobadas" ||
       field === "periodosMatriculados"
     ) {
       const esValido = validarNumeroPositivo(value);
@@ -114,9 +108,7 @@ const InactivesTable: React.FC<InactivesTableProps> = ({
 
     if (!camposObligatoriosLlenos) return false;
 
-    // VALIDACIÓN DE FORMATO
-    const nombreValido = validarSoloLetras(row.nombre);
-    const apellidoValido = validarSoloLetras(row.apellido);
+    // VALIDACIÓN DE FORMATO (nombre y apellido ya vienen del Excel, no necesitan validación)
     const creditosValidos = validarNumeroPositivo(row.creditosObligatorios);
     const aprobadasValidas = validarNumeroPositivo(row.aprobadas);
     const periodosValidos = validarNumeroPositivo(row.periodosMatriculados);
@@ -124,8 +116,6 @@ const InactivesTable: React.FC<InactivesTableProps> = ({
 
     // SOLO ES ACTIVO SI TODO ESTÁ LLENO Y VÁLIDO
     return (
-      nombreValido &&
-      apellidoValido &&
       creditosValidos &&
       aprobadasValidas &&
       periodosValidos &&
@@ -136,68 +126,54 @@ const InactivesTable: React.FC<InactivesTableProps> = ({
   return (
     <div className="inactives-table-container">
       <table className="inactives-table">
-          <thead>
-            <tr>
-              <th>Código</th>
-              <th>Nombre</th>
-              <th>Apellido</th>
-              <th>Programa</th>
-              <th>Cr. oblig.</th>
-              <th>Aprobadas</th>
-              <th>Periodos</th>
-              <th>promedio</th>
-              <th>Estado</th>
-            </tr>
-          </thead>
+        <thead>
+          <tr>
+            <th>Código</th>
+            <th>Nombre</th>
+            <th>Apellido</th>
+            <th>Programa</th>
+            <th>Cr. oblig.</th>
+            <th>Aprobadas</th>
+            <th>Periodos</th>
+            <th>Promedio</th>
+            <th>Estado</th>
+          </tr>
+        </thead>
         <tbody>
           {rows.map((row) => (
             <tr key={row.id}>
               <td>
                 <input
                   type="text"
-                  defaultValue={row.codigo}
-                  onBlur={(e) =>
-                    handleInputChange(row.id, "codigo", e.target.value)
-                  }
+                  value={row.codigo}
                   className="inactives-input"
                   placeholder="Código"
+                  readOnly
                 />
               </td>
               <td>
                 <input
                   type="text"
-                  defaultValue={row.nombre}
-                  onBlur={(e) =>
-                    handleInputChange(row.id, "nombre", e.target.value)
-                  }
-                  className={`inactives-input ${
-                    validaciones[`${row.id}-nombre`] === false
-                      ? "input-invalid"
-                      : ""
-                  }`}
+                  value={row.nombre}
+                  className="inactives-input"
                   placeholder="Nombre"
+                  readOnly
                 />
               </td>
               <td>
                 <input
                   type="text"
-                  defaultValue={row.apellido}
-                  onBlur={(e) =>
-                    handleInputChange(row.id, "apellido", e.target.value)
-                  }
-                  className={`inactives-input ${
-                    validaciones[`${row.id}-apellido`] === false
-                      ? "input-invalid"
-                      : ""
-                  }`}
+                  value={row.apellido}
+                  className="inactives-input"
                   placeholder="Apellido"
+                  readOnly
                 />
               </td>
               <td>
                 {programsLoaded ? (
                   <select
                     value={row.programa}
-                    onBlur={(e) =>
+                    onChange={(e) =>
                       handleInputChange(row.id, "programa", e.target.value)
                     }
                     className="inactives-input"
